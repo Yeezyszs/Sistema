@@ -1,0 +1,31 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# builds
+dist/
+build/
+*.tsbuildinfo
+
+# env / secrets
+.env
+.env.local
+.env.*.local
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# caches
+.turbo/
+.vite/
+coverage/
+
+# supabase local
+supabase/.temp/
+supabase/.branches/
+
+# os
+.DS_Store
+Thumbs.db

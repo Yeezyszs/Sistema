@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '../lib/auth';
 import { FullScreen, Spinner } from '../components/ui';
 import { Layout } from './Layout';
@@ -22,7 +22,7 @@ function Protected({ children }: { children: JSX.Element }) {
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <HashRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route
@@ -39,7 +39,7 @@ export default function App() {
           </Route>
           <Route path="*" element={<Navigate to="/lotes" replace />} />
         </Routes>
-      </BrowserRouter>
+      </HashRouter>
     </AuthProvider>
   );
 }

@@ -5,6 +5,7 @@ import {
   listProdutos,
   listClientes,
   criarOrdemProducao,
+  criarLote,
   mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
@@ -77,13 +78,18 @@ export function OrdensPage() {
     };
     const txt = (k: string) => String(form.get(k) ?? '').trim() || null;
 
+    const cliente_id = String(form.get('cliente_id') ?? '') || null;
+    const pedido = txt('pedido');
+    const lote_codigo = String(form.get('lote_codigo') ?? '').trim();
+    const lote_volume = txt('lote_volume');
+
     setSalvando(true);
     try {
-      await criarOrdemProducao({
+      const op = await criarOrdemProducao({
         produto_id,
         data: data_op,
-        pedido: txt('pedido'),
-        cliente_id: String(form.get('cliente_id') ?? '') || null,
+        pedido,
+        cliente_id,
         quantidade: num('quantidade'),
         embalagem: txt('embalagem'),
         qtd_embalagem: num('qtd_embalagem'),
@@ -92,7 +98,22 @@ export function OrdensPage() {
         observacao: txt('observacao'),
         reprocessar: form.get('reprocessar') === 'on',
       });
-      sucesso('Ordem de produção criada.');
+      // Se informou o lote, já cria vinculado à ordem
+      if (lote_codigo) {
+        await criarLote({
+          codigo: lote_codigo,
+          produto_id,
+          ordem_producao_id: op.id,
+          cliente_id,
+          pedido,
+          data_producao: data_op,
+          volume_texto: lote_volume,
+          quantidade: num('quantidade'),
+        });
+        sucesso(`Ordem #${op.numero} criada com lote ${lote_codigo}.`);
+      } else {
+        sucesso(`Ordem #${op.numero} criada.`);
+      }
       setModalAberto(false);
       setRecarregar((n) => n + 1);
     } catch (err) {
@@ -219,6 +240,14 @@ export function OrdensPage() {
               ))}
             </Select>
           </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Lote">
+              <TextInput name="lote_codigo" placeholder="MC0704" />
+            </Field>
+            <Field label="Volume do lote">
+              <TextInput name="lote_volume" placeholder="16 Bag's" />
+            </Field>
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Quantidade total">
               <TextInput name="quantidade" type="number" step="any" min="0" placeholder="0" />

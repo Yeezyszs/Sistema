@@ -33,8 +33,12 @@ jobs:
       - name: Build do frontend
         run: pnpm --filter @sistema/web build
         env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          # base path = nome do repositório (https://<user>.github.io/Sistema/)
+          VITE_BASE_PATH: /Sistema/
+          # A anon/publishable key é pública (protegida por RLS) — ok embutir.
+          # Para sobrescrever, defina os secrets de mesmo nome no repositório.
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://xglbppuiwdfuxdmyvbix.supabase.co' }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'sb_publishable_WaJxB6z86cGeZmpNx8Lr_Q_OyMWL2_r' }}
 
       - uses: actions/upload-pages-artifact@v3
         with:

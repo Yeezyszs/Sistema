@@ -47,7 +47,7 @@ pnpm dev:web           # só o frontend (http://localhost:5173)
 | Etapa | Escopo                                                              | Status |
 | ----- | ------------------------------------------------------------------ | ------ |
 | 1     | Estrutura do monorepo (pnpm workspaces, TS, configs)               | ✅      |
-| 2     | Banco: schemas `core`/`producao`, tabelas Fase 1, RLS, seeds      | ⏳      |
+| 2     | Banco: schemas `core`/`producao`, tabelas Fase 1, RLS, seeds      | ✅      |
 | 3     | `packages/domain`: `Lote`, `EtapaLote`, `StatusLote`…             | ⏳      |
 | 4     | `apps/api`: repositórios → use-cases → rotas                       | ⏳      |
 | 5     | `apps/web`: telas Lotes, Lote (rastreabilidade), Recebimento       | ⏳      |

@@ -1,17 +1,45 @@
-// Shell mínimo da aplicação. Sidebar + topbar + rotas (Lotes, Lote,
-// Recebimento) entram na Etapa 5, reusando os tipos de @sistema/domain.
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from '../lib/auth';
+import { FullScreen, Spinner } from '../components/ui';
+import { Layout } from './Layout';
+import { LoginPage } from './LoginPage';
+import { LotesPage } from '../features/lotes/LotesPage';
+import { LotePage } from '../features/lotes/LotePage';
+import { RecebimentosPage } from '../features/recebimentos/RecebimentosPage';
+
+function Protected({ children }: { children: JSX.Element }) {
+  const { session, loading } = useAuth();
+  if (loading)
+    return (
+      <FullScreen>
+        <Spinner className="h-8 w-8 text-emerald-600" />
+      </FullScreen>
+    );
+  if (!session) return <Navigate to="/login" replace />;
+  return children;
+}
+
 export default function App() {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <header className="border-b border-slate-200 bg-white px-6 py-4">
-        <h1 className="text-xl font-semibold">Sistema — MES Sumaré</h1>
-        <p className="text-sm text-slate-500">Fase 1 · monorepo inicializado</p>
-      </header>
-      <main className="p-6">
-        <p className="text-slate-600">
-          Estrutura pronta. As telas (Lotes, Lote, Recebimento) entram na Etapa 5.
-        </p>
-      </main>
-    </div>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route
+            element={
+              <Protected>
+                <Layout />
+              </Protected>
+            }
+          >
+            <Route path="/" element={<Navigate to="/lotes" replace />} />
+            <Route path="/lotes" element={<LotesPage />} />
+            <Route path="/lotes/:id" element={<LotePage />} />
+            <Route path="/recebimentos" element={<RecebimentosPage />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/lotes" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }

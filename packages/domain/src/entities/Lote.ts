@@ -9,6 +9,12 @@ export interface Lote {
   ordem_producao_id: string | null;
   data_producao: string | null; // ISO date (yyyy-mm-dd)
   status: StatusLote;
+  pedido: string | null;
+  cliente_id: string | null;
+  quantidade: number | null;
+  volume_texto: string | null; // ex.: "16 Bag's"
+  data_carregamento: string | null;
+  data_entrega: string | null;
   created_at: string;
   created_by: string | null;
 }
@@ -17,6 +23,13 @@ export interface NovoLote {
   codigo: string;
   produto_id: string;
   data_producao?: string | null;
+  ordem_producao_id?: string | null;
+  pedido?: string | null;
+  cliente_id?: string | null;
+  quantidade?: number | null;
+  volume_texto?: string | null;
+  data_carregamento?: string | null;
+  data_entrega?: string | null;
 }
 
 // ── Regras puras ───────────────────────────────────────────────

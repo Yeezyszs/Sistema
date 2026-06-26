@@ -263,7 +263,6 @@ function LotePendente({
   const { data: mons } = useAsync(
     async () => {
       if (!expandido) return null;
-      const { getMonitoramentosDoLote } = await import('../../lib/db');
       return getMonitoramentosDoLote(loteId);
     },
     [loteId, expandido],

@@ -17,6 +17,11 @@ import type {
   PontoControle,
   Monitoramento,
   NovoMonitoramento,
+  Cliente,
+  NovoCliente,
+  OrdemProducao,
+  NovaOrdemProducao,
+  StatusOP,
 } from '@sistema/domain';
 
 const producao = () => supabase.schema('producao');
@@ -39,6 +44,52 @@ export async function listProdutos(): Promise<Produto[]> {
 
 export async function listFornecedores(): Promise<Fornecedor[]> {
   return unwrap<Fornecedor[]>(await core().from('fornecedores').select('*').order('razao_social'));
+}
+
+export async function listClientes(): Promise<Cliente[]> {
+  return unwrap<Cliente[]>(
+    await core().from('clientes').select('*').eq('ativo', true).order('nome'),
+  );
+}
+
+export async function criarCliente(payload: NovoCliente): Promise<Cliente> {
+  const res = await core().from('clientes').insert(payload).select('*').single();
+  if (res.error) throw new Error(res.error.message);
+  return res.data as Cliente;
+}
+
+// ── Ordens de produção ─────────────────────────────────────────
+export async function listOrdensProducao(): Promise<OrdemProducao[]> {
+  return unwrap<OrdemProducao[]>(
+    await producao().from('ordens_producao').select('*').order('numero', { ascending: false }),
+  );
+}
+
+export async function getOrdemProducao(id: string): Promise<OrdemProducao | null> {
+  const res = await producao().from('ordens_producao').select('*').eq('id', id).maybeSingle();
+  if (res.error) throw new Error(res.error.message);
+  return res.data as OrdemProducao | null;
+}
+
+export async function criarOrdemProducao(payload: NovaOrdemProducao): Promise<OrdemProducao> {
+  const res = await producao().from('ordens_producao').insert(payload).select('*').single();
+  if (res.error) throw new Error(res.error.message);
+  return res.data as OrdemProducao;
+}
+
+export async function atualizarStatusOP(id: string, status: StatusOP): Promise<void> {
+  const res = await producao().from('ordens_producao').update({ status }).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function getLotesDaOrdem(ordemId: string): Promise<Lote[]> {
+  return unwrap<Lote[]>(
+    await producao()
+      .from('lotes')
+      .select('*')
+      .eq('ordem_producao_id', ordemId)
+      .order('created_at', { ascending: false }),
+  );
 }
 
 // ── Lotes ──────────────────────────────────────────────────────

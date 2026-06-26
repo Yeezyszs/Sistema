@@ -21,3 +21,5 @@ export * from './entities/Produto';
 export * from './entities/Fornecedor';
 export * from './entities/PontoControle';
 export * from './entities/Monitoramento';
+export * from './entities/Cliente';
+export * from './entities/OrdemProducao';

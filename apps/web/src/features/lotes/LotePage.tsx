@@ -10,6 +10,7 @@ import {
   listProdutos,
   listEquipamentos,
   listFuncionarios,
+  listClientes,
   iniciarEtapa,
   finalizarEtapa,
   atualizarStatusLote,
@@ -45,6 +46,7 @@ export function LotePage() {
       produtos,
       equipamentos,
       funcionarios,
+      clientes,
     ] = await Promise.all([
       listEtapas(),
       getEtapasDoLote(id),
@@ -54,6 +56,7 @@ export function LotePage() {
       listProdutos(),
       listEquipamentos(),
       listFuncionarios(),
+      listClientes(),
     ]);
     return {
       lote,
@@ -65,6 +68,7 @@ export function LotePage() {
       produtos: mapBy(produtos, 'id'),
       equipamentos: mapBy(equipamentos, 'id'),
       funcionarios: mapBy(funcionarios, 'id'),
+      clientes: mapBy(clientes, 'id'),
     };
   }, [id, recarregar]);
 
@@ -225,7 +229,23 @@ export function LotePage() {
             </h2>
             <dl className="space-y-3 text-sm">
               <Linha termo="Produto" valor={data.produtos.get(lote.produto_id)?.nome ?? '—'} />
+              {lote.cliente_id && (
+                <Linha termo="Cliente" valor={data.clientes.get(lote.cliente_id)?.nome ?? '—'} />
+              )}
+              {lote.pedido && <Linha termo="Pedido" valor={lote.pedido} />}
               <Linha termo="Data de produção" valor={formatarData(lote.data_producao)} />
+              {(lote.volume_texto || lote.quantidade != null) && (
+                <Linha
+                  termo="Volume"
+                  valor={lote.volume_texto ?? formatarQuantidade(lote.quantidade)}
+                />
+              )}
+              {lote.data_carregamento && (
+                <Linha termo="Carregamento" valor={formatarData(lote.data_carregamento)} />
+              )}
+              {lote.data_entrega && (
+                <Linha termo="Entrega" valor={formatarData(lote.data_entrega)} />
+              )}
               <Linha termo="Matéria-prima" valor={`${recebimentos.length} recebimento(s)`} />
             </dl>
 

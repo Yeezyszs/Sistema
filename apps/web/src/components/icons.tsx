@@ -113,3 +113,11 @@ export const IconX = (p: IconProps) => (
     <path d="M18 6 6 18M6 6l12 12" />
   </svg>
 );
+
+export const IconClipboard = (p: IconProps) => (
+  <svg {...base} {...p}>
+    <path d="M9 2h6a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z" />
+    <path d="M8 4H6a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2" />
+    <path d="M9 12h6M9 16h4" />
+  </svg>
+);

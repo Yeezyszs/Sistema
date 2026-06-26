@@ -8,6 +8,8 @@ import { LotesPage } from '../features/lotes/LotesPage';
 import { LotePage } from '../features/lotes/LotePage';
 import { RecebimentosPage } from '../features/recebimentos/RecebimentosPage';
 import { QualidadePage } from '../features/qualidade/QualidadePage';
+import { OrdensPage } from '../features/ordens/OrdensPage';
+import { OrdemPage } from '../features/ordens/OrdemPage';
 
 function Protected({ children }: { children: JSX.Element }) {
   const { session, loading } = useAuth();
@@ -36,6 +38,8 @@ export default function App() {
             }
           >
             <Route path="/" element={<Navigate to="/lotes" replace />} />
+            <Route path="/ordens" element={<OrdensPage />} />
+            <Route path="/ordens/:id" element={<OrdemPage />} />
             <Route path="/lotes" element={<LotesPage />} />
             <Route path="/lotes/:id" element={<LotePage />} />
             <Route path="/recebimentos" element={<RecebimentosPage />} />

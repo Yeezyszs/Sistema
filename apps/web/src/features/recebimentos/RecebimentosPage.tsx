@@ -10,10 +10,12 @@ import { useAsync } from '../../lib/useAsync';
 import { formatarDataHora, formatarQuantidade } from '../../lib/format';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select } from '../../components/ui';
 import { IconRecebimento } from '../../components/icons';
+import { useToast } from '../../components/Toast';
 
 export function RecebimentosPage() {
   const [recarregar, setRecarregar] = useState(0);
   const [salvando, setSalvando] = useState(false);
+  const { sucesso, erro } = useToast();
   const [erroForm, setErroForm] = useState<string | null>(null);
 
   const { data, loading, error } = useAsync(async () => {
@@ -56,9 +58,11 @@ export function RecebimentosPage() {
         recebido_em: new Date().toISOString(),
       });
       (e.target as HTMLFormElement).reset();
+      sucesso('Recebimento registrado.');
       setRecarregar((n) => n + 1);
     } catch (err) {
-      setErroForm(err instanceof Error ? err.message : 'Falha ao salvar.');
+      erro(err instanceof Error ? err.message : 'Falha ao salvar.');
+      setErroForm(null);
     } finally {
       setSalvando(false);
     }

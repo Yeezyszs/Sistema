@@ -81,3 +81,35 @@ export const IconBox = (p: IconProps) => (
     <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
   </svg>
 );
+
+export const IconPlus = (p: IconProps) => (
+  <svg {...base} {...p}>
+    <path d="M12 5v14M5 12h14" />
+  </svg>
+);
+
+export const IconSearch = (p: IconProps) => (
+  <svg {...base} {...p}>
+    <circle cx="11" cy="11" r="8" />
+    <path d="m21 21-4.35-4.35" />
+  </svg>
+);
+
+export const IconShield = (p: IconProps) => (
+  <svg {...base} {...p}>
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
+    <path d="m9 12 2 2 4-4" />
+  </svg>
+);
+
+export const IconFlask = (p: IconProps) => (
+  <svg {...base} {...p}>
+    <path d="M9 3h6M9 3v8l-4 9h14L15 11V3" />
+  </svg>
+);
+
+export const IconX = (p: IconProps) => (
+  <svg {...base} {...p}>
+    <path d="M18 6 6 18M6 6l12 12" />
+  </svg>
+);

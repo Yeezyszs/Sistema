@@ -9,6 +9,7 @@ export interface TimelineItem {
   estado: TimelineEstado;
   detalhe?: ReactNode;
   meta?: string;
+  acao?: ReactNode;
 }
 
 export function Timeline({ itens }: { itens: TimelineItem[] }) {
@@ -28,11 +29,14 @@ export function Timeline({ itens }: { itens: TimelineItem[] }) {
             )}
             <Marker estado={item.estado} />
             <div className="flex-1 pt-0.5">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-sm font-medium text-slate-800">{item.titulo}</p>
-                {item.meta && <span className="text-xs text-slate-400">{item.meta}</span>}
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-sm font-medium text-slate-800">{item.titulo}</p>
+                  {item.meta && <span className="text-xs text-slate-400">{item.meta}</span>}
+                  {item.detalhe && <div className="mt-1 text-sm text-slate-500">{item.detalhe}</div>}
+                </div>
+                {item.acao && <div className="shrink-0">{item.acao}</div>}
               </div>
-              {item.detalhe && <div className="mt-1 text-sm text-slate-500">{item.detalhe}</div>}
             </div>
           </li>
         );

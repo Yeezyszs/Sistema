@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   getLote,
@@ -9,19 +10,28 @@ import {
   listProdutos,
   listEquipamentos,
   listFuncionarios,
+  iniciarEtapa,
+  finalizarEtapa,
+  atualizarStatusLote,
+  liberarLoteGate,
   mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { formatarData, formatarHora, formatarQuantidade } from '../../lib/format';
-import { etapaConcluida, etapaEmAndamento, TIPO_MOVIMENTO_LABEL } from '@sistema/domain';
+import { etapaConcluida, etapaEmAndamento, TIPO_MOVIMENTO_LABEL, lotePodeSolicitarLiberacao } from '@sistema/domain';
 import type { EtapaLote } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button } from '../../components/ui';
 import { StatusChip } from '../../components/StatusChip';
 import { Timeline, type TimelineItem, type TimelineEstado } from '../../components/Timeline';
 import { IconArrowLeft, IconDoc } from '../../components/icons';
+import { useToast } from '../../components/Toast';
 
 export function LotePage() {
   const { id = '' } = useParams();
+  const [recarregar, setRecarregar] = useState(0);
+  const [acaoEmAndamento, setAcaoEmAndamento] = useState<string | null>(null);
+  const [liberando, setLiberando] = useState(false);
+  const { sucesso, erro } = useToast();
 
   const { data, loading, error } = useAsync(async () => {
     const lote = await getLote(id);
@@ -56,7 +66,72 @@ export function LotePage() {
       equipamentos: mapBy(equipamentos, 'id'),
       funcionarios: mapBy(funcionarios, 'id'),
     };
-  }, [id]);
+  }, [id, recarregar]);
+
+  async function handleIniciar(etapaCodigo: string) {
+    setAcaoEmAndamento(etapaCodigo);
+    try {
+      await iniciarEtapa(id, etapaCodigo);
+      sucesso('Etapa iniciada.');
+      setRecarregar((n) => n + 1);
+    } catch (err) {
+      erro(err instanceof Error ? err.message : 'Falha ao iniciar etapa.');
+    } finally {
+      setAcaoEmAndamento(null);
+    }
+  }
+
+  async function handleFinalizar(etapaCodigo: string) {
+    setAcaoEmAndamento(etapaCodigo);
+    try {
+      await finalizarEtapa(id, etapaCodigo);
+      sucesso('Etapa concluída.');
+      setRecarregar((n) => n + 1);
+    } catch (err) {
+      erro(err instanceof Error ? err.message : 'Falha ao finalizar etapa.');
+    } finally {
+      setAcaoEmAndamento(null);
+    }
+  }
+
+  async function handleSolicitarLiberacao() {
+    setLiberando(true);
+    try {
+      await atualizarStatusLote(id, 'aguardando_liberacao');
+      sucesso('Lote enviado para liberação pela Qualidade.');
+      setRecarregar((n) => n + 1);
+    } catch (err) {
+      erro(err instanceof Error ? err.message : 'Falha.');
+    } finally {
+      setLiberando(false);
+    }
+  }
+
+  async function handleLiberar() {
+    setLiberando(true);
+    try {
+      await liberarLoteGate(id);
+      sucesso('Lote liberado com sucesso.');
+      setRecarregar((n) => n + 1);
+    } catch (err) {
+      erro(err instanceof Error ? err.message : 'Falha ao liberar lote.');
+    } finally {
+      setLiberando(false);
+    }
+  }
+
+  async function handleBloquear() {
+    setLiberando(true);
+    try {
+      await atualizarStatusLote(id, 'bloqueado');
+      sucesso('Lote bloqueado.');
+      setRecarregar((n) => n + 1);
+    } catch (err) {
+      erro(err instanceof Error ? err.message : 'Falha.');
+    } finally {
+      setLiberando(false);
+    }
+  }
 
   if (loading)
     return (
@@ -84,6 +159,28 @@ export function LotePage() {
 
     const operador = el?.operador_id ? data.funcionarios.get(el.operador_id)?.nome : null;
     const equipamento = el?.equipamento_id ? data.equipamentos.get(el.equipamento_id)?.nome : null;
+    const emAcao = acaoEmAndamento === etapa.codigo;
+
+    const acao =
+      estado === 'concluida' ? undefined : estado === 'andamento' ? (
+        <Button
+          variant="outline"
+          className="py-1 px-2.5 text-xs border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+          loading={emAcao}
+          onClick={() => void handleFinalizar(etapa.codigo)}
+        >
+          Finalizar
+        </Button>
+      ) : (
+        <Button
+          variant="outline"
+          className="py-1 px-2.5 text-xs"
+          loading={emAcao}
+          onClick={() => void handleIniciar(etapa.codigo)}
+        >
+          Iniciar
+        </Button>
+      );
 
     return {
       titulo: etapa.nome,
@@ -95,10 +192,9 @@ export function LotePage() {
           : undefined,
       detalhe:
         operador || equipamento ? (
-          <span>
-            {[equipamento, operador].filter(Boolean).join(' · ')}
-          </span>
+          <span>{[equipamento, operador].filter(Boolean).join(' · ')}</span>
         ) : undefined,
+      acao,
     };
   });
 
@@ -132,6 +228,40 @@ export function LotePage() {
               <Linha termo="Data de produção" valor={formatarData(lote.data_producao)} />
               <Linha termo="Matéria-prima" valor={`${recebimentos.length} recebimento(s)`} />
             </dl>
+
+            {/* Ações de liberação */}
+            <div className="mt-5 border-t border-slate-100 pt-5 space-y-2">
+              {lote.status === 'em_processo' && lotePodeSolicitarLiberacao(lote) && (
+                <Button
+                  variant="outline"
+                  className="w-full border-amber-300 text-amber-700 hover:bg-amber-50"
+                  loading={liberando}
+                  onClick={() => void handleSolicitarLiberacao()}
+                >
+                  Solicitar liberação
+                </Button>
+              )}
+              {lote.status === 'aguardando_liberacao' && (
+                <div className="space-y-2">
+                  <p className="text-xs text-slate-400 text-center">Aguardando aprovação da Qualidade</p>
+                  <Button
+                    className="w-full"
+                    loading={liberando}
+                    onClick={() => void handleLiberar()}
+                  >
+                    Liberar lote
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full border-red-300 text-red-700 hover:bg-red-50"
+                    loading={liberando}
+                    onClick={() => void handleBloquear()}
+                  >
+                    Bloquear lote
+                  </Button>
+                </div>
+              )}
+            </div>
           </Card>
 
           <Card className="p-6">
@@ -156,7 +286,7 @@ export function LotePage() {
         </div>
       </div>
 
-      {/* Documentos / registros da rastreabilidade */}
+      {/* Documentos / registros */}
       <Card className="mt-6 p-6">
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-400">
           Documentos e registros

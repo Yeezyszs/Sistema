@@ -4,6 +4,7 @@
 import { supabase } from './supabaseClient';
 import type {
   Lote,
+  NovoLote,
   Produto,
   Fornecedor,
   EtapaLote,
@@ -12,10 +13,15 @@ import type {
   RegistroEtapa,
   MovimentoEstoque,
   NovoRecebimento,
+  StatusLote,
+  PontoControle,
+  Monitoramento,
+  NovoMonitoramento,
 } from '@sistema/domain';
 
 const producao = () => supabase.schema('producao');
 const core = () => supabase.schema('core');
+const qualidade = () => supabase.schema('qualidade');
 
 function unwrap<T>(res: { data: T | null; error: { message: string } | null }): T {
   if (res.error) throw new Error(res.error.message);
@@ -48,12 +54,72 @@ export async function getLote(id: string): Promise<Lote | null> {
   return res.data as Lote | null;
 }
 
+export async function criarLote(payload: NovoLote): Promise<Lote> {
+  const res = await producao().from('lotes').insert(payload).select('*').single();
+  if (res.error) throw new Error(res.error.message);
+  return res.data as Lote;
+}
+
+export async function atualizarStatusLote(loteId: string, status: StatusLote): Promise<void> {
+  const res = await producao().from('lotes').update({ status }).eq('id', loteId);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// Gate de liberação: valida não-conformidades no DB antes de liberar
+export async function liberarLoteGate(loteId: string): Promise<void> {
+  const { error } = await supabase.rpc('liberar_lote', { p_lote_id: loteId });
+  if (error) throw new Error(error.message);
+}
+
+// ── Etapas do lote ─────────────────────────────────────────────
 export async function getEtapasDoLote(loteId: string): Promise<EtapaLote[]> {
   return unwrap<EtapaLote[]>(
     await producao().from('etapas_lote').select('*').eq('lote_id', loteId),
   );
 }
 
+export async function iniciarEtapa(loteId: string, etapaCodigo: string): Promise<void> {
+  const { data: existing, error: selErr } = await producao()
+    .from('etapas_lote')
+    .select('id')
+    .eq('lote_id', loteId)
+    .eq('etapa_codigo', etapaCodigo)
+    .maybeSingle();
+  if (selErr) throw new Error(selErr.message);
+
+  const agora = new Date().toISOString();
+  if (existing) {
+    const res = await producao()
+      .from('etapas_lote')
+      .update({ iniciado_em: agora })
+      .eq('id', existing.id);
+    if (res.error) throw new Error(res.error.message);
+  } else {
+    const res = await producao()
+      .from('etapas_lote')
+      .insert({ lote_id: loteId, etapa_codigo: etapaCodigo, iniciado_em: agora });
+    if (res.error) throw new Error(res.error.message);
+  }
+}
+
+export async function finalizarEtapa(loteId: string, etapaCodigo: string): Promise<void> {
+  const { data: existing, error: selErr } = await producao()
+    .from('etapas_lote')
+    .select('id')
+    .eq('lote_id', loteId)
+    .eq('etapa_codigo', etapaCodigo)
+    .maybeSingle();
+  if (selErr) throw new Error(selErr.message);
+  if (!existing) throw new Error('Etapa não foi iniciada.');
+
+  const res = await producao()
+    .from('etapas_lote')
+    .update({ finalizado_em: new Date().toISOString() })
+    .eq('id', existing.id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// ── Registros e movimentos ─────────────────────────────────────
 export async function getRegistrosDoLote(loteId: string): Promise<RegistroEtapa[]> {
   return unwrap<RegistroEtapa[]>(
     await producao()
@@ -111,6 +177,39 @@ export async function listEquipamentos(): Promise<{ id: string; nome: string }[]
 export async function listFuncionarios(): Promise<{ id: string; nome: string }[]> {
   return unwrap<{ id: string; nome: string }[]>(
     await core().from('funcionarios').select('id,nome').order('nome'),
+  );
+}
+
+// ── Qualidade ──────────────────────────────────────────────────
+export async function listPontosControle(): Promise<PontoControle[]> {
+  return unwrap<PontoControle[]>(
+    await qualidade().from('pontos_controle').select('*').eq('ativo', true).order('ordem'),
+  );
+}
+
+export async function getMonitoramentosDoLote(loteId: string): Promise<Monitoramento[]> {
+  return unwrap<Monitoramento[]>(
+    await qualidade()
+      .from('monitoramentos')
+      .select('*')
+      .eq('lote_id', loteId)
+      .order('registrado_em', { ascending: false }),
+  );
+}
+
+export async function criarMonitoramento(payload: NovoMonitoramento): Promise<Monitoramento> {
+  const res = await qualidade().from('monitoramentos').insert(payload).select('*').single();
+  if (res.error) throw new Error(res.error.message);
+  return res.data as Monitoramento;
+}
+
+export async function listLotesPendentesLiberacao(): Promise<Lote[]> {
+  return unwrap<Lote[]>(
+    await producao()
+      .from('lotes')
+      .select('*')
+      .eq('status', 'aguardando_liberacao')
+      .order('created_at', { ascending: false }),
   );
 }
 

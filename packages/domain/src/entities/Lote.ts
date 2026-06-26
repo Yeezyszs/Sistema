@@ -13,6 +13,12 @@ export interface Lote {
   created_by: string | null;
 }
 
+export interface NovoLote {
+  codigo: string;
+  produto_id: string;
+  data_producao?: string | null;
+}
+
 // ── Regras puras ───────────────────────────────────────────────
 export function loteEstaEmProcesso(lote: Pick<Lote, 'status'>): boolean {
   return lote.status === 'em_processo';

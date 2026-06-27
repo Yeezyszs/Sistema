@@ -22,6 +22,7 @@ import type {
   OrdemProducao,
   NovaOrdemProducao,
   StatusOP,
+  AtualizacaoLote,
 } from '@sistema/domain';
 
 const producao = () => supabase.schema('producao');
@@ -113,6 +114,11 @@ export async function criarLote(payload: NovoLote): Promise<Lote> {
 
 export async function atualizarStatusLote(loteId: string, status: StatusLote): Promise<void> {
   const res = await producao().from('lotes').update({ status }).eq('id', loteId);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function atualizarLote(loteId: string, patch: AtualizacaoLote): Promise<void> {
+  const res = await producao().from('lotes').update(patch).eq('id', loteId);
   if (res.error) throw new Error(res.error.message);
 }
 

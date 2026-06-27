@@ -13,10 +13,21 @@ export interface Lote {
   cliente_id: string | null;
   quantidade: number | null;
   volume_texto: string | null; // ex.: "16 Bag's"
+  tipo_bag: string | null; // ex.: "Big Bag 1000kg"
+  local_barracao: string | null; // ex.: "Barracão 1"
+  local_rua: string | null; // ex.: "Rua 17"
   data_carregamento: string | null;
   data_entrega: string | null;
   created_at: string;
   created_by: string | null;
+}
+
+// Localização legível (ex.: "Barracão 1 · Rua 17"); null se não informada.
+export function localizacaoLote(
+  lote: Pick<Lote, 'local_barracao' | 'local_rua'>,
+): string | null {
+  const partes = [lote.local_barracao, lote.local_rua].filter(Boolean);
+  return partes.length ? partes.join(' · ') : null;
 }
 
 export interface NovoLote {
@@ -27,6 +38,19 @@ export interface NovoLote {
   pedido?: string | null;
   cliente_id?: string | null;
   quantidade?: number | null;
+  volume_texto?: string | null;
+  tipo_bag?: string | null;
+  local_barracao?: string | null;
+  local_rua?: string | null;
+  data_carregamento?: string | null;
+  data_entrega?: string | null;
+}
+
+// Campos editáveis do lote pela UI (dados comerciais/logísticos).
+export interface AtualizacaoLote {
+  tipo_bag?: string | null;
+  local_barracao?: string | null;
+  local_rua?: string | null;
   volume_texto?: string | null;
   data_carregamento?: string | null;
   data_entrega?: string | null;

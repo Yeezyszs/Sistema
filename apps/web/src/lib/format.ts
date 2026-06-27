@@ -32,3 +32,16 @@ export function formatarQuantidade(valor: number | null, unidade = ''): string {
   const n = valor.toLocaleString('pt-BR', { maximumFractionDigits: 2 });
   return unidade ? `${n} ${unidade}` : n;
 }
+
+// Duração entre dois instantes ISO (ex.: "1h 30min", "45min"); null se incompleto.
+export function formatarDuracao(inicio: string | null, fim: string | null): string | null {
+  if (!inicio || !fim) return null;
+  const ms = new Date(fim).getTime() - new Date(inicio).getTime();
+  if (Number.isNaN(ms) || ms < 0) return null;
+  const totalMin = Math.round(ms / 60000);
+  const h = Math.floor(totalMin / 60);
+  const min = totalMin % 60;
+  if (h === 0) return `${min}min`;
+  if (min === 0) return `${h}h`;
+  return `${h}h ${min}min`;
+}

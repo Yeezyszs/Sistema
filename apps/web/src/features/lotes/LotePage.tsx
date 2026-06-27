@@ -11,6 +11,8 @@ import {
   listEquipamentos,
   listFuncionarios,
   listClientes,
+  listPontosControle,
+  getMonitoramentosDoLote,
   iniciarEtapa,
   finalizarEtapa,
   atualizarStatusLote,
@@ -33,7 +35,7 @@ import {
 import type { EtapaLote } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Modal, Field, TextInput } from '../../components/ui';
 import { StatusChip } from '../../components/StatusChip';
-import { EtapaCard, type EtapaEstado } from './EtapaCard';
+import { EtapaCard, EtapaSecao, type EtapaEstado } from './EtapaCard';
 import { IconArrowLeft, IconDoc } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
@@ -59,6 +61,8 @@ export function LotePage() {
       equipamentos,
       funcionarios,
       clientes,
+      pontosControle,
+      monitoramentos,
     ] = await Promise.all([
       listEtapas(),
       getEtapasDoLote(id),
@@ -69,6 +73,8 @@ export function LotePage() {
       listEquipamentos(),
       listFuncionarios(),
       listClientes(),
+      listPontosControle(),
+      getMonitoramentosDoLote(id),
     ]);
     return {
       lote,
@@ -81,6 +87,8 @@ export function LotePage() {
       equipamentos: mapBy(equipamentos, 'id'),
       funcionarios: mapBy(funcionarios, 'id'),
       clientes: mapBy(clientes, 'id'),
+      pontosControle: mapBy(pontosControle, 'codigo'),
+      monitoramentos,
     };
   }, [id, recarregar]);
 
@@ -186,7 +194,7 @@ export function LotePage() {
       </>
     );
 
-  const { lote, etapasCat, etapasLote, registros, movimentos, recebimentos } = data;
+  const { lote, etapasCat, etapasLote, registros, movimentos, recebimentos, monitoramentos, pontosControle } = data;
   const localizacao = localizacaoLote(lote);
 
   function estadoEtapa(el: EtapaLote | undefined): EtapaEstado {
@@ -215,7 +223,14 @@ export function LotePage() {
             {etapasCat.map((etapa) => {
               const el = etapasLote.get(etapa.codigo);
               const estado = estadoEtapa(el);
-              const regsDaEtapa = registros.filter((r) => r.etapa_codigo === etapa.codigo).length;
+              const regsDaEtapa = registros.filter((r) => r.etapa_codigo === etapa.codigo);
+              const movsDaEtapa = movimentos.filter((m) => m.etapa_codigo === etapa.codigo);
+              const monsDaEtapa = monitoramentos.filter(
+                (m) => pontosControle.get(m.ponto_controle_codigo)?.etapa_codigo === etapa.codigo,
+              );
+              const temDetalhes =
+                regsDaEtapa.length > 0 || movsDaEtapa.length > 0 || monsDaEtapa.length > 0 || estado !== 'pendente';
+
               return (
                 <EtapaCard
                   key={etapa.codigo}
@@ -227,11 +242,96 @@ export function LotePage() {
                   duracao={formatarDuracao(el?.iniciado_em ?? null, el?.finalizado_em ?? null)}
                   operador={el?.operador_id ? data.funcionarios.get(el.operador_id)?.nome ?? null : null}
                   equipamento={el?.equipamento_id ? data.equipamentos.get(el.equipamento_id)?.nome ?? null : null}
-                  registros={regsDaEtapa}
                   carregando={acaoEmAndamento === etapa.codigo}
                   onIniciar={() => void handleIniciar(etapa.codigo)}
                   onFinalizar={() => void handleFinalizar(etapa.codigo)}
-                />
+                >
+                  {temDetalhes && (
+                    <>
+                      {/* Controles de qualidade da etapa */}
+                      {monsDaEtapa.length > 0 && (
+                        <EtapaSecao titulo="Controles de qualidade">
+                          <ul className="space-y-2">
+                            {monsDaEtapa.map((m) => {
+                              const pc = pontosControle.get(m.ponto_controle_codigo);
+                              const naoConforme = m.conforme === false;
+                              return (
+                                <li
+                                  key={m.id}
+                                  className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm ${
+                                    naoConforme ? 'bg-red-50' : 'bg-white'
+                                  }`}
+                                >
+                                  <div>
+                                    <p className="font-medium text-slate-700">{pc?.nome ?? m.ponto_controle_codigo}</p>
+                                    <p className="text-xs text-slate-400">
+                                      {m.valor != null ? `${m.valor} ${pc?.unidade ?? ''} · ` : ''}
+                                      {formatarHora(m.registrado_em)}
+                                    </p>
+                                  </div>
+                                  <span
+                                    className={`text-xs font-semibold ${naoConforme ? 'text-red-600' : 'text-emerald-600'}`}
+                                  >
+                                    {m.conforme === false ? 'Não conforme' : 'Conforme'}
+                                  </span>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </EtapaSecao>
+                      )}
+
+                      {/* Movimentos da etapa */}
+                      {movsDaEtapa.length > 0 && (
+                        <EtapaSecao titulo="Movimentação de estoque">
+                          <ul className="space-y-1.5 text-sm">
+                            {movsDaEtapa.map((m) => {
+                              const produto = data.produtos.get(m.produto_id);
+                              const sinal = sinalMovimento(m.tipo);
+                              const tom = TIPO_MOVIMENTO_TOM[m.tipo];
+                              return (
+                                <li key={m.id} className="flex items-center justify-between gap-3">
+                                  <span className="text-slate-600">
+                                    <span className="font-medium">{TIPO_MOVIMENTO_LABEL[m.tipo]}</span>
+                                    {' · '}
+                                    {produto?.nome ?? 'Produto'}
+                                  </span>
+                                  <span
+                                    className={`shrink-0 font-semibold ${
+                                      tom === 'positivo' ? 'text-emerald-600' : tom === 'negativo' ? 'text-red-600' : 'text-slate-600'
+                                    }`}
+                                  >
+                                    {sinal > 0 ? '+' : sinal < 0 ? '−' : ''}
+                                    {formatarQuantidade(m.quantidade, produto?.unidade ?? 'kg')}
+                                  </span>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </EtapaSecao>
+                      )}
+
+                      {/* Documentos da etapa */}
+                      {regsDaEtapa.length > 0 && (
+                        <EtapaSecao titulo="Documentos e registros">
+                          <ul className="space-y-1.5 text-sm">
+                            {regsDaEtapa.map((r) => (
+                              <li key={r.id} className="flex items-center gap-2 text-slate-600">
+                                <IconDoc width={15} height={15} className="text-slate-400" />
+                                <span className="capitalize">{r.tipo_documento.replace(/_/g, ' ')}</span>
+                                <span className="text-xs text-slate-400">· {formatarHora(r.registrado_em)}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </EtapaSecao>
+                      )}
+
+                      {regsDaEtapa.length === 0 && movsDaEtapa.length === 0 && monsDaEtapa.length === 0 && (
+                        <p className="text-sm text-slate-400">Nenhum registro nesta etapa ainda.</p>
+                      )}
+                    </>
+                  )}
+                </EtapaCard>
               );
             })}
           </div>

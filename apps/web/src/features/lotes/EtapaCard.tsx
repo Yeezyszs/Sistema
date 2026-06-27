@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Card, Button } from '../../components/ui';
-import { IconCheck, IconClock } from '../../components/icons';
+import { IconCheck, IconClock, IconChevronRight } from '../../components/icons';
 
 export type EtapaEstado = 'concluida' | 'andamento' | 'pendente';
 
@@ -14,10 +14,11 @@ export interface EtapaCardProps {
   operador?: string | null;
   equipamento?: string | null;
   setor?: string | null;
-  registros?: number;
   onIniciar?: () => void;
   onFinalizar?: () => void;
   carregando?: boolean;
+  /** Conteúdo revelado ao expandir o card (ações/registros da etapa). */
+  children?: ReactNode;
 }
 
 const ESTADO_META: Record<EtapaEstado, { label: string; chip: string; ring: string }> = {
@@ -29,14 +30,22 @@ const ESTADO_META: Record<EtapaEstado, { label: string; chip: string; ring: stri
 export function EtapaCard(props: EtapaCardProps) {
   const { estado } = props;
   const meta = ESTADO_META[estado];
+  const [aberto, setAberto] = useState(false);
+  const expansivel = Boolean(props.children);
 
   return (
     <Card
-      className={`p-5 transition ${
+      className={`overflow-hidden transition ${
         estado === 'andamento' ? 'ring-2 ' + meta.ring : 'ring-1 ring-transparent'
       }`}
     >
-      <div className="flex items-start gap-4">
+      {/* Cabeçalho clicável */}
+      <div
+        className={`flex items-start gap-4 p-5 ${expansivel ? 'cursor-pointer hover:bg-slate-50' : ''}`}
+        onClick={expansivel ? () => setAberto((v) => !v) : undefined}
+        role={expansivel ? 'button' : undefined}
+        aria-expanded={expansivel ? aberto : undefined}
+      >
         <Marker estado={estado} ordem={props.ordem} />
 
         <div className="min-w-0 flex-1">
@@ -47,7 +56,6 @@ export function EtapaCard(props: EtapaCardProps) {
             </span>
           </div>
 
-          {/* Detalhes */}
           <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-xs sm:grid-cols-3">
             {props.inicio && <Detalhe termo="Início" valor={props.inicio} />}
             {props.fim && <Detalhe termo="Fim" valor={props.fim} />}
@@ -55,18 +63,26 @@ export function EtapaCard(props: EtapaCardProps) {
             {props.equipamento && <Detalhe termo="Equipamento" valor={props.equipamento} />}
             {props.operador && <Detalhe termo="Operador" valor={props.operador} />}
             {props.setor && <Detalhe termo="Setor" valor={props.setor} />}
-            {props.registros != null && props.registros > 0 && (
-              <Detalhe termo="Registros" valor={`${props.registros} documento(s)`} />
-            )}
           </dl>
 
           {estado === 'pendente' && !props.inicio && (
             <p className="mt-3 text-xs text-slate-400">Esta etapa ainda não foi iniciada.</p>
           )}
+
+          {expansivel && (
+            <p className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
+              {aberto ? 'Ocultar detalhes' : 'Ver detalhes da etapa'}
+              <IconChevronRight
+                width={14}
+                height={14}
+                className={`transition-transform ${aberto ? 'rotate-90' : ''}`}
+              />
+            </p>
+          )}
         </div>
 
-        {/* Ação */}
-        <div className="shrink-0">
+        {/* Ação — não dispara o expand */}
+        <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
           {estado === 'andamento' && props.onFinalizar && (
             <Button
               variant="outline"
@@ -89,6 +105,11 @@ export function EtapaCard(props: EtapaCardProps) {
           )}
         </div>
       </div>
+
+      {/* Painel expandido */}
+      {expansivel && aberto && (
+        <div className="border-t border-slate-100 bg-slate-50/60 px-5 py-4">{props.children}</div>
+      )}
     </Card>
   );
 }
@@ -118,6 +139,16 @@ function Detalhe({ termo, valor }: { termo: string; valor: ReactNode }) {
     <div>
       <dt className="text-slate-400">{termo}</dt>
       <dd className="mt-0.5 font-medium text-slate-700">{valor}</dd>
+    </div>
+  );
+}
+
+// ── Blocos reutilizáveis do painel de detalhes ──────────────────
+export function EtapaSecao({ titulo, children }: { titulo: string; children: ReactNode }) {
+  return (
+    <div className="mb-4 last:mb-0">
+      <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">{titulo}</h4>
+      {children}
     </div>
   );
 }

@@ -33,7 +33,7 @@ import {
   lotePodeSolicitarLiberacao,
 } from '@sistema/domain';
 import type { EtapaLote } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Modal, Field, TextInput } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Modal, Field, TextInput, Select } from '../../components/ui';
 import { StatusChip } from '../../components/StatusChip';
 import { EtapaCard, EtapaSecao, type EtapaEstado } from './EtapaCard';
 import { IconArrowLeft, IconDoc } from '../../components/icons';
@@ -87,6 +87,7 @@ export function LotePage() {
       equipamentos: mapBy(equipamentos, 'id'),
       funcionarios: mapBy(funcionarios, 'id'),
       clientes: mapBy(clientes, 'id'),
+      clientesList: clientes,
       pontosControle: mapBy(pontosControle, 'codigo'),
       monitoramentos,
     };
@@ -161,12 +162,20 @@ export function LotePage() {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
     const txt = (k: string) => String(form.get(k) ?? '').trim() || null;
+    const qtdStr = String(form.get('quantidade') ?? '').trim();
     setSalvandoEdicao(true);
     try {
       await atualizarLote(id, {
+        cliente_id: String(form.get('cliente_id') ?? '') || null,
+        pedido: txt('pedido'),
+        data_producao: txt('data_producao'),
+        quantidade: qtdStr ? Number(qtdStr) : null,
+        volume_texto: txt('volume_texto'),
         tipo_bag: txt('tipo_bag'),
         local_barracao: txt('local_barracao'),
         local_rua: txt('local_rua'),
+        data_carregamento: txt('data_carregamento'),
+        data_entrega: txt('data_entrega'),
       });
       sucesso('Dados do lote atualizados.');
       setEditando(false);
@@ -487,9 +496,22 @@ export function LotePage() {
         )}
       </Card>
 
-      {/* Modal edição: tipo de bag + localização */}
+      {/* Modal edição: dados do lote */}
       <Modal open={editando} onClose={() => setEditando(false)} title="Editar dados do lote">
         <form onSubmit={handleSalvarEdicao} className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Cliente">
+              <Select name="cliente_id" defaultValue={lote.cliente_id ?? ''}>
+                <option value="">— não informado —</option>
+                {data.clientesList.map((c) => (
+                  <option key={c.id} value={c.id}>{c.nome}</option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Pedido">
+              <TextInput name="pedido" defaultValue={lote.pedido ?? ''} placeholder="Nº do pedido" />
+            </Field>
+          </div>
           <Field label="Tipo de bag / embalagem">
             <TextInput
               name="tipo_bag"
@@ -507,11 +529,37 @@ export function LotePage() {
             </datalist>
           </Field>
           <div className="grid grid-cols-2 gap-3">
+            <Field label="Volume">
+              <TextInput name="volume_texto" defaultValue={lote.volume_texto ?? ''} placeholder="16 Bag's" />
+            </Field>
+            <Field label="Quantidade (kg)">
+              <TextInput
+                name="quantidade"
+                type="number"
+                step="any"
+                min="0"
+                defaultValue={lote.quantidade ?? ''}
+                placeholder="0"
+              />
+            </Field>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
             <Field label="Barracão">
               <TextInput name="local_barracao" defaultValue={lote.local_barracao ?? ''} placeholder="Barracão 1" />
             </Field>
             <Field label="Rua / posição">
               <TextInput name="local_rua" defaultValue={lote.local_rua ?? ''} placeholder="Rua 17" />
+            </Field>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <Field label="Produção">
+              <TextInput name="data_producao" type="date" defaultValue={lote.data_producao ?? ''} />
+            </Field>
+            <Field label="Carregamento">
+              <TextInput name="data_carregamento" type="date" defaultValue={lote.data_carregamento ?? ''} />
+            </Field>
+            <Field label="Entrega">
+              <TextInput name="data_entrega" type="date" defaultValue={lote.data_entrega ?? ''} />
             </Field>
           </div>
           <div className="flex justify-end gap-3 pt-1">

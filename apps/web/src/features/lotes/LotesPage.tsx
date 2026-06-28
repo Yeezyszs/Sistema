@@ -1,26 +1,22 @@
-import { useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
-import { listLotes, listProdutos, criarLote, mapBy } from '../../lib/db';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { listLotes, listProdutos, mapBy } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { formatarData } from '../../lib/format';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button } from '../../components/ui';
 import { StatusChip } from '../../components/StatusChip';
 import { IconBox, IconChevronRight, IconPlus, IconSearch } from '../../components/icons';
-import { useToast } from '../../components/Toast';
 
 export function LotesPage() {
-  const [recarregar, setRecarregar] = useState(0);
-  const [modalAberto, setModalAberto] = useState(false);
-  const [salvando, setSalvando] = useState(false);
   const [busca, setBusca] = useState('');
-  const { sucesso, erro } = useToast();
+  const navigate = useNavigate();
 
   const { data, loading, error } = useAsync(
     async () => {
       const [lotes, produtos] = await Promise.all([listLotes(), listProdutos()]);
       return { lotes, produtos: mapBy(produtos, 'id'), produtosList: produtos };
     },
-    [recarregar],
+    [],
   );
 
   const lotesFiltrados = (data?.lotes ?? []).filter((l) => {
@@ -30,36 +26,13 @@ export function LotesPage() {
     return l.codigo.toLowerCase().includes(q) || nomeProduto.includes(q);
   });
 
-  const produtosList = data?.produtosList ?? [];
-
-  async function onSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const form = new FormData(e.currentTarget);
-    const codigo = String(form.get('codigo') ?? '').trim();
-    const produto_id = String(form.get('produto_id') ?? '');
-    const data_producao = String(form.get('data_producao') ?? '').trim() || null;
-
-    if (!codigo || !produto_id) return;
-    setSalvando(true);
-    try {
-      await criarLote({ codigo, produto_id, data_producao });
-      sucesso(`Lote ${codigo} criado.`);
-      setModalAberto(false);
-      setRecarregar((n) => n + 1);
-    } catch (err) {
-      erro(err instanceof Error ? err.message : 'Falha ao criar lote.');
-    } finally {
-      setSalvando(false);
-    }
-  }
-
   return (
     <>
       <PageHeader
         title="Lotes"
         subtitle="Produção e rastreabilidade dos lotes"
         action={
-          <Button onClick={() => setModalAberto(true)}>
+          <Button onClick={() => navigate('/ordens')}>
             <IconPlus width={16} height={16} />
             Novo lote
           </Button>
@@ -89,7 +62,7 @@ export function LotesPage() {
         <EmptyState
           icon={<IconBox width={40} height={40} />}
           title="Nenhum lote ainda"
-          description='Clique em "Novo lote" para registrar o primeiro lote de produção.'
+          description='Os lotes nascem das ordens de produção. Clique em "Novo lote" para abrir uma ordem.'
         />
       )}
 
@@ -141,33 +114,6 @@ export function LotesPage() {
           </table>
         </Card>
       )}
-
-      <Modal open={modalAberto} onClose={() => setModalAberto(false)} title="Novo lote">
-        <form onSubmit={onSubmit} className="space-y-4">
-          <Field label="Código do lote">
-            <TextInput name="codigo" placeholder="FEC-2026-004" required autoFocus />
-          </Field>
-          <Field label="Produto">
-            <Select name="produto_id" defaultValue="" required>
-              <option value="" disabled>Selecione…</option>
-              {produtosList.map((p) => (
-                <option key={p.id} value={p.id}>{p.nome}</option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Data de produção">
-            <TextInput name="data_producao" type="date" />
-          </Field>
-          <div className="flex justify-end gap-3 pt-1">
-            <Button type="button" variant="outline" onClick={() => setModalAberto(false)}>
-              Cancelar
-            </Button>
-            <Button type="submit" loading={salvando}>
-              Criar lote
-            </Button>
-          </div>
-        </form>
-      </Modal>
     </>
   );
 }

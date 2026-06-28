@@ -52,8 +52,9 @@ export function RecebimentosPage() {
       await criarRecebimento({
         produto_id,
         fornecedor_id: fornecedor || null,
-        lote_mp: (String(form.get('lote_mp') ?? '').trim() || null) as string | null,
         variedade: (String(form.get('variedade') ?? '').trim() || null) as string | null,
+        renda: (String(form.get('renda') ?? '').trim() || null) as string | null,
+        rosca: (String(form.get('rosca') ?? '').trim() || null) as string | null,
         quantidade: qtd ? Number(qtd) : null,
         recebido_em: new Date().toISOString(),
       });
@@ -101,12 +102,15 @@ export function RecebimentosPage() {
                 ))}
               </Select>
             </Field>
+            <Field label="Variedade">
+              <TextInput name="variedade" placeholder="Cascuda" />
+            </Field>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Lote da MP">
-                <TextInput name="lote_mp" placeholder="MP-0001" />
+              <Field label="Renda (descarga)">
+                <TextInput name="renda" placeholder="Ex.: Renda 1" />
               </Field>
-              <Field label="Variedade">
-                <TextInput name="variedade" placeholder="Cascuda" />
+              <Field label="Rosca">
+                <TextInput name="rosca" placeholder="Ex.: Rosca 2" />
               </Field>
             </div>
             <Field label="Quantidade (kg)">
@@ -143,6 +147,7 @@ export function RecebimentosPage() {
                   <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
                     <th className="px-5 py-3 font-medium">Produto</th>
                     <th className="hidden px-5 py-3 font-medium sm:table-cell">Fornecedor</th>
+                    <th className="hidden px-5 py-3 font-medium md:table-cell">Descarga</th>
                     <th className="px-5 py-3 font-medium">Qtd.</th>
                     <th className="hidden px-5 py-3 font-medium md:table-cell">Recebido</th>
                   </tr>
@@ -160,6 +165,9 @@ export function RecebimentosPage() {
                       </td>
                       <td className="hidden px-5 py-3.5 text-slate-600 sm:table-cell">
                         {r.fornecedor_id ? data.fornecedoresMap.get(r.fornecedor_id)?.razao_social ?? '—' : '—'}
+                      </td>
+                      <td className="hidden px-5 py-3.5 text-slate-500 md:table-cell">
+                        {[r.renda, r.rosca].filter(Boolean).join(' · ') || '—'}
                       </td>
                       <td className="px-5 py-3.5 text-slate-600">
                         {formatarQuantidade(r.quantidade, 'kg')}

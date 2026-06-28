@@ -82,6 +82,9 @@ export function OrdensPage() {
     const pedido = txt('pedido');
     const lote_codigo = String(form.get('lote_codigo') ?? '').trim();
     const lote_volume = txt('lote_volume');
+    const tipo_bag = txt('tipo_bag');
+    const local_barracao = txt('local_barracao');
+    const local_rua = txt('local_rua');
 
     setSalvando(true);
     try {
@@ -109,6 +112,9 @@ export function OrdensPage() {
           data_producao: data_op,
           volume_texto: lote_volume,
           quantidade: num('quantidade'),
+          tipo_bag,
+          local_barracao,
+          local_rua,
         });
         sucesso(`Ordem #${op.numero} criada com lote ${lote_codigo}.`);
       } else {
@@ -246,6 +252,25 @@ export function OrdensPage() {
             </Field>
             <Field label="Volume do lote">
               <TextInput name="lote_volume" placeholder="16 Bag's" />
+            </Field>
+          </div>
+          <Field label="Tipo de bag">
+            <TextInput name="tipo_bag" list="tipos-bag-op" placeholder="Ex.: Big Bag 1000kg" />
+            <datalist id="tipos-bag-op">
+              <option value="Big Bag 1000kg" />
+              <option value="Big Bag 1250kg" />
+              <option value="Big Bag 750kg" />
+              <option value="Saco 25kg" />
+              <option value="Saco 50kg" />
+              <option value="Fardo" />
+            </datalist>
+          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Localização — Barracão">
+              <TextInput name="local_barracao" placeholder="Barracão 1" />
+            </Field>
+            <Field label="Localização — Rua">
+              <TextInput name="local_rua" placeholder="Rua 17" />
             </Field>
           </div>
           <div className="grid grid-cols-2 gap-3">

@@ -48,10 +48,14 @@ export interface NovoLote {
 
 // Campos editáveis do lote pela UI (dados comerciais/logísticos).
 export interface AtualizacaoLote {
+  cliente_id?: string | null;
+  pedido?: string | null;
+  data_producao?: string | null;
+  quantidade?: number | null;
+  volume_texto?: string | null;
   tipo_bag?: string | null;
   local_barracao?: string | null;
   local_rua?: string | null;
-  volume_texto?: string | null;
   data_carregamento?: string | null;
   data_entrega?: string | null;
 }

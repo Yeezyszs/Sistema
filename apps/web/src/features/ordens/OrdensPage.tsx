@@ -223,9 +223,9 @@ export function OrdensPage() {
         </Card>
       )}
 
-      <Modal open={modalAberto} onClose={() => setModalAberto(false)} title="Nova ordem de produção">
+      <Modal open={modalAberto} onClose={() => setModalAberto(false)} title="Nova ordem de produção" size="xl">
         <form onSubmit={onSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
             <Field label="Cliente">
               <Select name="cliente_id" defaultValue="">
                 <option value="">— não informado —</option>
@@ -237,80 +237,86 @@ export function OrdensPage() {
             <Field label="Pedido">
               <TextInput name="pedido" placeholder="Nº do pedido" />
             </Field>
-          </div>
-          <Field label="Produto">
-            <Select name="produto_id" defaultValue="" required>
-              <option value="" disabled>Selecione…</option>
-              {(data?.produtosList ?? []).map((p) => (
-                <option key={p.id} value={p.id}>{p.nome}</option>
-              ))}
-            </Select>
-          </Field>
-          <div className="grid grid-cols-2 gap-3">
+            <Field label="Data de produção">
+              <TextInput name="data" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} />
+            </Field>
+
+            {/* Produto ocupa a linha inteira */}
+            <div className="col-span-2 sm:col-span-3">
+              <Field label="Produto">
+                <Select name="produto_id" defaultValue="" required>
+                  <option value="" disabled>Selecione…</option>
+                  {(data?.produtosList ?? []).map((p) => (
+                    <option key={p.id} value={p.id}>{p.nome}</option>
+                  ))}
+                </Select>
+              </Field>
+            </div>
+
             <Field label="Lote">
               <TextInput name="lote_codigo" placeholder="MC0704" />
             </Field>
             <Field label="Volume do lote">
               <TextInput name="lote_volume" placeholder="16 Bag's" />
             </Field>
-          </div>
-          <Field label="Tipo de bag">
-            <TextInput name="tipo_bag" list="tipos-bag-op" placeholder="Ex.: Big Bag 1000kg" />
-            <datalist id="tipos-bag-op">
-              <option value="Big Bag 1000kg" />
-              <option value="Big Bag 1250kg" />
-              <option value="Big Bag 750kg" />
-              <option value="Saco 25kg" />
-              <option value="Saco 50kg" />
-              <option value="Fardo" />
-            </datalist>
-          </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Localização — Barracão">
+            <Field label="Tipo de bag">
+              <TextInput name="tipo_bag" list="tipos-bag-op" placeholder="Ex.: Big Bag 1000kg" />
+              <datalist id="tipos-bag-op">
+                <option value="Big Bag 1000kg" />
+                <option value="Big Bag 1250kg" />
+                <option value="Big Bag 750kg" />
+                <option value="Saco 25kg" />
+                <option value="Saco 50kg" />
+                <option value="Fardo" />
+              </datalist>
+            </Field>
+
+            <Field label="Loc. — Barracão">
               <TextInput name="local_barracao" placeholder="Barracão 1" />
             </Field>
-            <Field label="Localização — Rua">
+            <Field label="Loc. — Rua">
               <TextInput name="local_rua" placeholder="Rua 17" />
             </Field>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
             <Field label="Quantidade total">
               <TextInput name="quantidade" type="number" step="any" min="0" placeholder="0" />
             </Field>
-            <Field label="Data de produção">
-              <TextInput name="data" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} />
-            </Field>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
+
             <Field label="Embalagem">
               <TextInput name="embalagem" placeholder="KG / BAG / SCS" />
             </Field>
             <Field label="Qtd / embalagem">
               <TextInput name="qtd_embalagem" type="number" step="any" min="0" placeholder="24" />
             </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Peso mín.">
+                <TextInput name="peso_min" type="number" step="any" min="0" placeholder="23.88" />
+              </Field>
+              <Field label="Peso máx.">
+                <TextInput name="peso_max" type="number" step="any" min="0" placeholder="24.12" />
+              </Field>
+            </div>
+
+            {/* Observação ocupa a linha inteira */}
+            <div className="col-span-2 sm:col-span-3">
+              <Field label="Observação">
+                <TextInput name="observacao" placeholder="Observações da ordem" />
+              </Field>
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Peso mínimo">
-              <TextInput name="peso_min" type="number" step="any" min="0" placeholder="23.88" />
-            </Field>
-            <Field label="Peso máximo">
-              <TextInput name="peso_max" type="number" step="any" min="0" placeholder="24.12" />
-            </Field>
-          </div>
-          <Field label="Observação">
-            <TextInput name="observacao" placeholder="Observações da ordem" />
-          </Field>
-          <label className="flex items-center gap-2 text-sm text-slate-600">
-            <input type="checkbox" name="reprocessar" className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" />
-            Reprocessar
-          </label>
-          <div className="flex justify-end gap-3 pt-1">
-            <Button type="button" variant="outline" onClick={() => setModalAberto(false)}>
-              Cancelar
-            </Button>
-            <Button type="submit" loading={salvando}>
-              Criar ordem
-            </Button>
+
+          <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-4">
+            <label className="flex items-center gap-2 text-sm text-slate-600">
+              <input type="checkbox" name="reprocessar" className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" />
+              Reprocessar
+            </label>
+            <div className="flex gap-3">
+              <Button type="button" variant="outline" onClick={() => setModalAberto(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" loading={salvando}>
+                Criar ordem
+              </Button>
+            </div>
           </div>
         </form>
       </Modal>

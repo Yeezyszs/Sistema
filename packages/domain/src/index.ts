@@ -29,3 +29,5 @@ export * from './entities/NaoConformidade';
 export * from './entities/PccFisico';
 export * from './entities/Checklist';
 export * from './entities/Ppho';
+export * from './entities/Manutencao';
+export * from './entities/Calibracao';

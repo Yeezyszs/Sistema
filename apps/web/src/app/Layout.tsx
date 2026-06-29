@@ -1,7 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { useAuth } from '../lib/auth';
-import { IconLotes, IconRecebimento, IconLogout, IconLeaf, IconShield, IconClipboard, IconDoc, IconFlask, IconBox, IconCheck } from '../components/icons';
+import { IconLotes, IconRecebimento, IconLogout, IconLeaf, IconShield, IconClipboard, IconDoc, IconFlask, IconBox, IconCheck, IconClock } from '../components/icons';
 
 function NavItem({ to, icon, label }: { to: string; icon: ReactNode; label: string }) {
   return (
@@ -47,7 +47,9 @@ export function Layout() {
           <NavItem to="/pcc-fisico" icon={<IconBox />} label="PCC Físico" />
           <NavItem to="/ppho" icon={<IconCheck />} label="PPHO & Higiene" />
           <NavItem to="/especificacoes" icon={<IconFlask />} label="Especificações" />
+          <NavItem to="/calibracao" icon={<IconClock />} label="Calibração" />
           <NavItem to="/nao-conformidades" icon={<IconDoc />} label="Não conformidades" />
+          <NavItem to="/manutencao" icon={<IconClipboard />} label="Manutenção" />
         </nav>
 
         <div className="border-t border-slate-200 p-3">

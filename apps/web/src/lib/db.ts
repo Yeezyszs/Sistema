@@ -51,11 +51,21 @@ import type {
   NovaRespostaChecklist,
   Ppho,
   NovaPpho,
+  OrdemServico,
+  NovaOrdemServico,
+  StatusOS,
+  PlanoPreventivo,
+  ExecucaoPreventiva,
+  Instrumento,
+  NovoInstrumento,
+  Calibracao,
+  NovaCalibracao,
 } from '@sistema/domain';
 
 const producao = () => supabase.schema('producao');
 const core = () => supabase.schema('core');
 const qualidade = () => supabase.schema('qualidade');
+const manutencao = () => supabase.schema('manutencao');
 
 function unwrap<T>(res: { data: T | null; error: { message: string } | null }): T {
   if (res.error) throw new Error(res.error.message);
@@ -542,6 +552,87 @@ export async function criarPpho(ficha: Omit<NovaPpho, 'checklist_id'>, itens: st
   const res = await qualidade().from('pphos').insert({ ...ficha, checklist_id: checklist.id }).select('*').single();
   if (res.error) throw new Error(res.error.message);
   return res.data as Ppho;
+}
+
+// ── Manutenção: Ordens de Serviço ──────────────────────────────
+export async function listOrdensServico(): Promise<OrdemServico[]> {
+  return unwrap<OrdemServico[]>(
+    await manutencao().from('ordens_servico').select('*').order('numero', { ascending: false }),
+  );
+}
+
+export async function criarOrdemServico(payload: NovaOrdemServico): Promise<OrdemServico> {
+  const res = await manutencao().from('ordens_servico').insert(payload).select('*').single();
+  if (res.error) throw new Error(res.error.message);
+  return res.data as OrdemServico;
+}
+
+export async function atualizarStatusOS(
+  id: string,
+  status: StatusOS,
+  descricao_realizada?: string | null,
+): Promise<void> {
+  const patch: Record<string, unknown> = { status };
+  if (descricao_realizada !== undefined) patch.descricao_realizada = descricao_realizada;
+  if (status === 'concluida') patch.concluida_em = new Date().toISOString();
+  const res = await manutencao().from('ordens_servico').update(patch).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// ── Manutenção: plano preventivo + execuções ───────────────────
+export async function listPlanoPreventivo(): Promise<PlanoPreventivo[]> {
+  return unwrap<PlanoPreventivo[]>(
+    await manutencao().from('plano_preventivo').select('*').eq('ativo', true).order('componente'),
+  );
+}
+
+export async function criarItemPreventivo(payload: {
+  equipamento_id?: string | null;
+  componente: string;
+  periodicidade?: string | null;
+}): Promise<void> {
+  const res = await manutencao().from('plano_preventivo').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function listExecucoesPreventiva(limite = 50): Promise<ExecucaoPreventiva[]> {
+  return unwrap<ExecucaoPreventiva[]>(
+    await manutencao().from('execucoes_preventiva').select('*').order('realizada_em', { ascending: false }).limit(limite),
+  );
+}
+
+export async function registrarExecucaoPreventiva(payload: {
+  plano_item_id: string;
+  realizada_em?: string;
+  executor_id?: string | null;
+  observacao?: string | null;
+}): Promise<void> {
+  const res = await manutencao().from('execucoes_preventiva').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// ── Calibração: instrumentos + calibrações ─────────────────────
+export async function listInstrumentos(): Promise<Instrumento[]> {
+  return unwrap<Instrumento[]>(
+    await qualidade().from('instrumentos').select('*').eq('ativo', true).order('codigo'),
+  );
+}
+
+export async function criarInstrumento(payload: NovoInstrumento): Promise<Instrumento> {
+  const res = await qualidade().from('instrumentos').insert(payload).select('*').single();
+  if (res.error) throw new Error(res.error.message);
+  return res.data as Instrumento;
+}
+
+export async function listCalibracoes(limite = 100): Promise<Calibracao[]> {
+  return unwrap<Calibracao[]>(
+    await qualidade().from('calibracoes').select('*').order('calibrado_em', { ascending: false }).limit(limite),
+  );
+}
+
+export async function criarCalibracao(payload: NovaCalibracao): Promise<void> {
+  const res = await qualidade().from('calibracoes').insert(payload);
+  if (res.error) throw new Error(res.error.message);
 }
 
 // ── Helpers de lookup ──────────────────────────────────────────

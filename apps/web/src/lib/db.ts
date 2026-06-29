@@ -63,6 +63,12 @@ import type {
   AnaliseRisco,
   NovaAnaliseRisco,
   TipoAnaliseRisco,
+  Auditoria,
+  AuditoriaItem,
+  NovaAuditoria,
+  NovoItemAuditoria,
+  StatusAuditoria,
+  VerificacaoPpr,
 } from '@sistema/domain';
 
 const producao = () => supabase.schema('producao');
@@ -647,6 +653,53 @@ export async function listAnalisesRisco(tipo: TipoAnaliseRisco): Promise<Analise
 
 export async function criarAnaliseRisco(payload: NovaAnaliseRisco): Promise<void> {
   const res = await qualidade().from('analises_risco').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// ── Auditoria interna ──────────────────────────────────────────
+export async function listAuditorias(): Promise<Auditoria[]> {
+  return unwrap<Auditoria[]>(
+    await qualidade().from('auditorias').select('*').order('numero', { ascending: false }),
+  );
+}
+
+export async function criarAuditoria(payload: NovaAuditoria): Promise<Auditoria> {
+  const res = await qualidade().from('auditorias').insert(payload).select('*').single();
+  if (res.error) throw new Error(res.error.message);
+  return res.data as Auditoria;
+}
+
+export async function atualizarStatusAuditoria(id: string, status: StatusAuditoria): Promise<void> {
+  const res = await qualidade().from('auditorias').update({ status }).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function getItensDaAuditoria(auditoriaId: string): Promise<AuditoriaItem[]> {
+  return unwrap<AuditoriaItem[]>(
+    await qualidade().from('auditoria_itens').select('*').eq('auditoria_id', auditoriaId).order('ordem'),
+  );
+}
+
+export async function criarItemAuditoria(payload: NovoItemAuditoria): Promise<void> {
+  const res = await qualidade().from('auditoria_itens').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// ── Verificação de PPR ─────────────────────────────────────────
+export async function listVerificacoesPpr(limite = 50): Promise<VerificacaoPpr[]> {
+  return unwrap<VerificacaoPpr[]>(
+    await qualidade().from('verificacoes_ppr').select('*').order('verificado_em', { ascending: false }).limit(limite),
+  );
+}
+
+export async function criarVerificacaoPpr(payload: {
+  programa: string;
+  registro_codigo?: string | null;
+  frequencia?: string | null;
+  conforme: boolean;
+  acao?: string | null;
+}): Promise<void> {
+  const res = await qualidade().from('verificacoes_ppr').insert(payload);
   if (res.error) throw new Error(res.error.message);
 }
 

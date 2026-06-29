@@ -49,6 +49,7 @@ export function Layout() {
           <NavItem to="/especificacoes" icon={<IconFlask />} label="Especificações" />
           <NavItem to="/calibracao" icon={<IconClock />} label="Calibração" />
           <NavItem to="/analise-risco" icon={<IconShield />} label="Análise de risco" />
+          <NavItem to="/auditoria" icon={<IconCheck />} label="Auditoria & PPR" />
           <NavItem to="/nao-conformidades" icon={<IconDoc />} label="Não conformidades" />
           <NavItem to="/manutencao" icon={<IconClipboard />} label="Manutenção" />
         </nav>

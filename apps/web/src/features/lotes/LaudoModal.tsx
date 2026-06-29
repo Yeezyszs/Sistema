@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { criarLaudo } from '../../lib/db';
+import { criarLaudo, getEspecificacaoAplicavel } from '../../lib/db';
 import {
   TIPO_LAUDO_LABEL,
   TEMPLATE_FISICO_QUIMICO,
@@ -7,6 +7,7 @@ import {
   RESULTADO_VISUAL_OPCOES,
   AMOSTRAGEM_VISUAL_PADRAO,
   resultadoVisualConforme,
+  limiteTexto,
 } from '@sistema/domain';
 import type { TipoLaudo } from '@sistema/domain';
 import { Modal, Button, Field, TextInput, TextArea, Select } from '../../components/ui';
@@ -61,21 +62,42 @@ export function LaudoModal({
   const [salvando, setSalvando] = useState(false);
   const { sucesso, erro } = useToast();
 
-  // Carrega os templates ao abrir / trocar de tipo
+  // Carrega ao abrir: prefere a especificação cadastrada (produto × cliente);
+  // se não houver, cai no template padrão da farinha.
   useEffect(() => {
     if (!open) return;
     setObservacao('');
-    setLinhasFQ(
-      TEMPLATE_FISICO_QUIMICO.map((t) => ({
-        ensaio: t.ensaio,
-        resultado: '',
-        unidade: t.unidade,
-        referencia_texto: t.referencia_texto,
-        metodologia: t.metodologia,
-        limite_min: t.limite_min,
-        limite_max: t.limite_max,
-      })),
-    );
+    const fallbackFQ = () =>
+      setLinhasFQ(
+        TEMPLATE_FISICO_QUIMICO.map((t) => ({
+          ensaio: t.ensaio,
+          resultado: '',
+          unidade: t.unidade,
+          referencia_texto: t.referencia_texto,
+          metodologia: t.metodologia,
+          limite_min: t.limite_min,
+          limite_max: t.limite_max,
+        })),
+      );
+    getEspecificacaoAplicavel(produtoId, clienteId)
+      .then((res) => {
+        if (res && res.parametros.length > 0) {
+          setLinhasFQ(
+            res.parametros.map((p) => ({
+              ensaio: p.ensaio,
+              resultado: '',
+              unidade: p.unidade ?? '',
+              referencia_texto: limiteTexto(p),
+              metodologia: p.metodologia ?? '',
+              limite_min: p.limite_min,
+              limite_max: p.limite_max,
+            })),
+          );
+        } else {
+          fallbackFQ();
+        }
+      })
+      .catch(fallbackFQ);
     setItensVisual(
       TEMPLATE_VERIFICACAO_VISUAL.map((t) => ({
         ensaio: t.ensaio,

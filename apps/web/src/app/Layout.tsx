@@ -1,7 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { useAuth } from '../lib/auth';
-import { IconLotes, IconRecebimento, IconLogout, IconLeaf, IconShield, IconClipboard, IconDoc } from '../components/icons';
+import { IconLotes, IconRecebimento, IconLogout, IconLeaf, IconShield, IconClipboard, IconDoc, IconFlask } from '../components/icons';
 
 function NavItem({ to, icon, label }: { to: string; icon: ReactNode; label: string }) {
   return (
@@ -44,6 +44,7 @@ export function Layout() {
           <NavItem to="/lotes" icon={<IconLotes />} label="Lotes" />
           <NavItem to="/recebimentos" icon={<IconRecebimento />} label="Recebimentos" />
           <NavItem to="/qualidade" icon={<IconShield />} label="Qualidade" />
+          <NavItem to="/especificacoes" icon={<IconFlask />} label="Especificações" />
           <NavItem to="/nao-conformidades" icon={<IconDoc />} label="Não conformidades" />
         </nav>
 

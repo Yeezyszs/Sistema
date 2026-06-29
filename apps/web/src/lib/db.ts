@@ -35,6 +35,14 @@ import type {
   NovaNaoConformidade,
   NcCorrecao,
   StatusNC,
+  DetectorMetais,
+  VerificacaoDM,
+  NovaVerificacaoDM,
+  Ima,
+  VerificacaoIma,
+  NovaVerificacaoIma,
+  QuebraVidro,
+  NovaQuebraVidro,
 } from '@sistema/domain';
 
 const producao = () => supabase.schema('producao');
@@ -412,6 +420,52 @@ export async function criarCorrecaoNC(payload: {
   data_implementacao?: string | null;
 }): Promise<void> {
   const res = await qualidade().from('nc_correcoes').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// ── PCC Físico: detector de metais ─────────────────────────────
+export async function listDetectoresMetais(): Promise<DetectorMetais[]> {
+  return unwrap<DetectorMetais[]>(
+    await qualidade().from('detectores_metais').select('*').eq('ativo', true).order('linha'),
+  );
+}
+
+export async function listVerificacoesDM(limite = 30): Promise<VerificacaoDM[]> {
+  return unwrap<VerificacaoDM[]>(
+    await qualidade().from('verificacoes_dm').select('*').order('registrado_em', { ascending: false }).limit(limite),
+  );
+}
+
+export async function criarVerificacaoDM(payload: NovaVerificacaoDM): Promise<void> {
+  const res = await qualidade().from('verificacoes_dm').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// ── PCC Físico: imãs ───────────────────────────────────────────
+export async function listImas(): Promise<Ima[]> {
+  return unwrap<Ima[]>(await qualidade().from('imas').select('*').eq('ativo', true).order('local'));
+}
+
+export async function listVerificacoesIma(limite = 30): Promise<VerificacaoIma[]> {
+  return unwrap<VerificacaoIma[]>(
+    await qualidade().from('verificacoes_ima').select('*').order('registrado_em', { ascending: false }).limit(limite),
+  );
+}
+
+export async function criarVerificacaoIma(payload: NovaVerificacaoIma): Promise<void> {
+  const res = await qualidade().from('verificacoes_ima').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// ── PCC Físico: quebra de vidros ───────────────────────────────
+export async function listQuebrasVidro(limite = 30): Promise<QuebraVidro[]> {
+  return unwrap<QuebraVidro[]>(
+    await qualidade().from('quebras_vidro').select('*').order('registrado_em', { ascending: false }).limit(limite),
+  );
+}
+
+export async function criarQuebraVidro(payload: NovaQuebraVidro): Promise<void> {
+  const res = await qualidade().from('quebras_vidro').insert(payload);
   if (res.error) throw new Error(res.error.message);
 }
 

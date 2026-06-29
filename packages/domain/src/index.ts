@@ -26,3 +26,4 @@ export * from './entities/OrdemProducao';
 export * from './entities/Especificacao';
 export * from './entities/Laudo';
 export * from './entities/NaoConformidade';
+export * from './entities/PccFisico';

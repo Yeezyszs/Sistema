@@ -10,6 +10,7 @@ import { RecebimentosPage } from '../features/recebimentos/RecebimentosPage';
 import { QualidadePage } from '../features/qualidade/QualidadePage';
 import { NaoConformidadesPage } from '../features/qualidade/NaoConformidadesPage';
 import { EspecificacoesPage } from '../features/qualidade/EspecificacoesPage';
+import { PccFisicoPage } from '../features/qualidade/PccFisicoPage';
 import { LaudoPrint } from '../features/lotes/LaudoPrint';
 import { OrdensPage } from '../features/ordens/OrdensPage';
 import { OrdemPage } from '../features/ordens/OrdemPage';
@@ -58,6 +59,7 @@ export default function App() {
             <Route path="/qualidade" element={<QualidadePage />} />
             <Route path="/nao-conformidades" element={<NaoConformidadesPage />} />
             <Route path="/especificacoes" element={<EspecificacoesPage />} />
+            <Route path="/pcc-fisico" element={<PccFisicoPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/lotes" replace />} />
         </Routes>

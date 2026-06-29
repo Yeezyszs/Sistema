@@ -8,6 +8,7 @@ import { LotesPage } from '../features/lotes/LotesPage';
 import { LotePage } from '../features/lotes/LotePage';
 import { RecebimentosPage } from '../features/recebimentos/RecebimentosPage';
 import { QualidadePage } from '../features/qualidade/QualidadePage';
+import { NaoConformidadesPage } from '../features/qualidade/NaoConformidadesPage';
 import { OrdensPage } from '../features/ordens/OrdensPage';
 import { OrdemPage } from '../features/ordens/OrdemPage';
 
@@ -44,6 +45,7 @@ export default function App() {
             <Route path="/lotes/:id" element={<LotePage />} />
             <Route path="/recebimentos" element={<RecebimentosPage />} />
             <Route path="/qualidade" element={<QualidadePage />} />
+            <Route path="/nao-conformidades" element={<NaoConformidadesPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/lotes" replace />} />
         </Routes>

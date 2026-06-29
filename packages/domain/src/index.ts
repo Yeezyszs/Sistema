@@ -23,3 +23,6 @@ export * from './entities/PontoControle';
 export * from './entities/Monitoramento';
 export * from './entities/Cliente';
 export * from './entities/OrdemProducao';
+export * from './entities/Especificacao';
+export * from './entities/Laudo';
+export * from './entities/NaoConformidade';

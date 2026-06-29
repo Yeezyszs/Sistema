@@ -13,6 +13,7 @@ import {
   listClientes,
   listPontosControle,
   getMonitoramentosDoLote,
+  getLaudosDoLote,
   iniciarEtapa,
   finalizarEtapa,
   atualizarStatusLote,
@@ -36,7 +37,8 @@ import type { EtapaLote } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Modal, Field, TextInput, Select } from '../../components/ui';
 import { StatusChip } from '../../components/StatusChip';
 import { EtapaCard, EtapaSecao, type EtapaEstado } from './EtapaCard';
-import { IconArrowLeft, IconDoc } from '../../components/icons';
+import { LaudoModal } from './LaudoModal';
+import { IconArrowLeft, IconDoc, IconFlask } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
 export function LotePage() {
@@ -46,6 +48,7 @@ export function LotePage() {
   const [liberando, setLiberando] = useState(false);
   const [editando, setEditando] = useState(false);
   const [salvandoEdicao, setSalvandoEdicao] = useState(false);
+  const [emitindoLaudo, setEmitindoLaudo] = useState(false);
   const { sucesso, erro } = useToast();
 
   const { data, loading, error } = useAsync(async () => {
@@ -63,6 +66,7 @@ export function LotePage() {
       clientes,
       pontosControle,
       monitoramentos,
+      laudos,
     ] = await Promise.all([
       listEtapas(),
       getEtapasDoLote(id),
@@ -75,6 +79,7 @@ export function LotePage() {
       listClientes(),
       listPontosControle(),
       getMonitoramentosDoLote(id),
+      getLaudosDoLote(id),
     ]);
     return {
       lote,
@@ -90,6 +95,7 @@ export function LotePage() {
       clientesList: clientes,
       pontosControle: mapBy(pontosControle, 'codigo'),
       monitoramentos,
+      laudos,
     };
   }, [id, recarregar]);
 
@@ -203,7 +209,7 @@ export function LotePage() {
       </>
     );
 
-  const { lote, etapasCat, etapasLote, registros, movimentos, recebimentos, monitoramentos, pontosControle } = data;
+  const { lote, etapasCat, etapasLote, registros, movimentos, recebimentos, monitoramentos, pontosControle, laudos } = data;
   const localizacao = localizacaoLote(lote);
 
   function estadoEtapa(el: EtapaLote | undefined): EtapaEstado {
@@ -418,6 +424,45 @@ export function LotePage() {
             </div>
           </Card>
 
+          {/* Laudos físico-químicos */}
+          <Card className="p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+                Laudos do laboratório
+              </h2>
+              <Button
+                variant="outline"
+                className="px-3 py-1.5 text-xs"
+                onClick={() => setEmitindoLaudo(true)}
+              >
+                <IconFlask width={14} height={14} />
+                Emitir laudo
+              </Button>
+            </div>
+            {laudos.length === 0 ? (
+              <p className="text-sm text-slate-400">Nenhum laudo emitido para este lote.</p>
+            ) : (
+              <ul className="space-y-2">
+                {laudos.map((l) => (
+                  <li
+                    key={l.id}
+                    className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm ${
+                      l.conforme ? 'bg-emerald-50' : 'bg-red-50'
+                    }`}
+                  >
+                    <div>
+                      <p className="font-medium text-slate-700">Laudo nº {l.numero}</p>
+                      <p className="text-xs text-slate-400">{formatarData(l.emitido_em)}</p>
+                    </div>
+                    <span className={`text-xs font-semibold ${l.conforme ? 'text-emerald-600' : 'text-red-600'}`}>
+                      {l.conforme ? 'Aprovado' : 'Reprovado'}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+
           {/* Movimentos de estoque detalhados */}
           <Card className="p-6">
             <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-slate-400">
@@ -572,6 +617,15 @@ export function LotePage() {
           </div>
         </form>
       </Modal>
+
+      <LaudoModal
+        open={emitindoLaudo}
+        onClose={() => setEmitindoLaudo(false)}
+        loteId={id}
+        produtoId={lote.produto_id}
+        clienteId={lote.cliente_id}
+        onSaved={() => setRecarregar((n) => n + 1)}
+      />
     </>
   );
 }

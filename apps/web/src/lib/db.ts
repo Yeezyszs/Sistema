@@ -23,6 +23,18 @@ import type {
   NovaOrdemProducao,
   StatusOP,
   AtualizacaoLote,
+  Especificacao,
+  EspecificacaoParametro,
+  NovaEspecificacao,
+  NovoParametro,
+  LaudoInterno,
+  LaudoResultado,
+  NovoLaudo,
+  NovoResultadoLaudo,
+  NaoConformidade,
+  NovaNaoConformidade,
+  NcCorrecao,
+  StatusNC,
 } from '@sistema/domain';
 
 const producao = () => supabase.schema('producao');
@@ -268,6 +280,121 @@ export async function listLotesPendentesLiberacao(): Promise<Lote[]> {
       .eq('status', 'aguardando_liberacao')
       .order('created_at', { ascending: false }),
   );
+}
+
+// ── Especificações (limites por produto × cliente) ─────────────
+export async function listEspecificacoes(): Promise<Especificacao[]> {
+  return unwrap<Especificacao[]>(
+    await qualidade().from('especificacoes').select('*').eq('vigente', true).order('created_at', { ascending: false }),
+  );
+}
+
+export async function getParametrosDaEspecificacao(espId: string): Promise<EspecificacaoParametro[]> {
+  return unwrap<EspecificacaoParametro[]>(
+    await qualidade().from('especificacao_parametros').select('*').eq('especificacao_id', espId).order('ordem'),
+  );
+}
+
+export async function criarEspecificacao(payload: NovaEspecificacao): Promise<Especificacao> {
+  const res = await qualidade().from('especificacoes').insert(payload).select('*').single();
+  if (res.error) throw new Error(res.error.message);
+  return res.data as Especificacao;
+}
+
+export async function criarParametro(payload: NovoParametro): Promise<void> {
+  const res = await qualidade().from('especificacao_parametros').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// Especificação aplicável a um produto (preferindo a do cliente, senão a interna)
+export async function getEspecificacaoAplicavel(
+  produtoId: string,
+  clienteId: string | null,
+): Promise<{ especificacao: Especificacao; parametros: EspecificacaoParametro[] } | null> {
+  const especs = unwrap<Especificacao[]>(
+    await qualidade().from('especificacoes').select('*').eq('produto_id', produtoId).eq('vigente', true),
+  );
+  const escolhida =
+    (clienteId ? especs.find((e) => e.cliente_id === clienteId) : undefined) ??
+    especs.find((e) => e.cliente_id == null) ??
+    especs[0];
+  if (!escolhida) return null;
+  const parametros = await getParametrosDaEspecificacao(escolhida.id);
+  return { especificacao: escolhida, parametros };
+}
+
+// ── Laudos internos ────────────────────────────────────────────
+export async function getLaudosDoLote(loteId: string): Promise<LaudoInterno[]> {
+  return unwrap<LaudoInterno[]>(
+    await qualidade().from('laudos_internos').select('*').eq('lote_id', loteId).order('emitido_em', { ascending: false }),
+  );
+}
+
+export async function getResultadosDoLaudo(laudoId: string): Promise<LaudoResultado[]> {
+  return unwrap<LaudoResultado[]>(
+    await qualidade().from('laudo_resultados').select('*').eq('laudo_id', laudoId).order('ordem'),
+  );
+}
+
+export async function criarLaudo(
+  laudo: NovoLaudo,
+  resultados: Omit<NovoResultadoLaudo, 'laudo_id'>[],
+): Promise<LaudoInterno> {
+  const res = await qualidade().from('laudos_internos').insert(laudo).select('*').single();
+  if (res.error) throw new Error(res.error.message);
+  const novo = res.data as LaudoInterno;
+  if (resultados.length > 0) {
+    const linhas = resultados.map((r, i) => ({ ...r, laudo_id: novo.id, ordem: r.ordem ?? i }));
+    const resR = await qualidade().from('laudo_resultados').insert(linhas);
+    if (resR.error) throw new Error(resR.error.message);
+  }
+  return novo;
+}
+
+// ── Não Conformidades ──────────────────────────────────────────
+export async function listNaoConformidades(): Promise<NaoConformidade[]> {
+  return unwrap<NaoConformidade[]>(
+    await qualidade().from('nao_conformidades').select('*').order('numero', { ascending: false }),
+  );
+}
+
+export async function getNaoConformidadesDoLote(loteId: string): Promise<NaoConformidade[]> {
+  return unwrap<NaoConformidade[]>(
+    await qualidade().from('nao_conformidades').select('*').eq('lote_id', loteId).order('numero', { ascending: false }),
+  );
+}
+
+export async function criarNaoConformidade(payload: NovaNaoConformidade): Promise<NaoConformidade> {
+  const res = await qualidade().from('nao_conformidades').insert(payload).select('*').single();
+  if (res.error) throw new Error(res.error.message);
+  return res.data as NaoConformidade;
+}
+
+export async function atualizarStatusNC(
+  id: string,
+  status: StatusNC,
+  extra?: { disposicao?: string | null; eficacia?: string | null; encerrada_em?: string | null },
+): Promise<void> {
+  const patch: Record<string, unknown> = { status, ...extra };
+  if (status === 'concluida' && !extra?.encerrada_em) patch.encerrada_em = new Date().toISOString();
+  const res = await qualidade().from('nao_conformidades').update(patch).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function getCorrecoesDaNC(ncId: string): Promise<NcCorrecao[]> {
+  return unwrap<NcCorrecao[]>(
+    await qualidade().from('nc_correcoes').select('*').eq('nc_id', ncId).order('created_at'),
+  );
+}
+
+export async function criarCorrecaoNC(payload: {
+  nc_id: string;
+  descricao: string;
+  responsavel_id?: string | null;
+  data_implementacao?: string | null;
+}): Promise<void> {
+  const res = await qualidade().from('nc_correcoes').insert(payload);
+  if (res.error) throw new Error(res.error.message);
 }
 
 // ── Helpers de lookup ──────────────────────────────────────────

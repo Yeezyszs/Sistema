@@ -60,6 +60,9 @@ import type {
   NovoInstrumento,
   Calibracao,
   NovaCalibracao,
+  AnaliseRisco,
+  NovaAnaliseRisco,
+  TipoAnaliseRisco,
 } from '@sistema/domain';
 
 const producao = () => supabase.schema('producao');
@@ -632,6 +635,18 @@ export async function listCalibracoes(limite = 100): Promise<Calibracao[]> {
 
 export async function criarCalibracao(payload: NovaCalibracao): Promise<void> {
   const res = await qualidade().from('calibracoes').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// ── Análises de risco (Food Defense / Food Fraud / APPCC) ──────
+export async function listAnalisesRisco(tipo: TipoAnaliseRisco): Promise<AnaliseRisco[]> {
+  return unwrap<AnaliseRisco[]>(
+    await qualidade().from('analises_risco').select('*').eq('tipo', tipo).order('avaliado_em', { ascending: false }),
+  );
+}
+
+export async function criarAnaliseRisco(payload: NovaAnaliseRisco): Promise<void> {
+  const res = await qualidade().from('analises_risco').insert(payload);
   if (res.error) throw new Error(res.error.message);
 }
 

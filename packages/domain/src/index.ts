@@ -31,3 +31,4 @@ export * from './entities/Checklist';
 export * from './entities/Ppho';
 export * from './entities/Manutencao';
 export * from './entities/Calibracao';
+export * from './entities/AnaliseRisco';

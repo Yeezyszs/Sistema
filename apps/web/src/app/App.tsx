@@ -9,6 +9,7 @@ import { LotePage } from '../features/lotes/LotePage';
 import { RecebimentosPage } from '../features/recebimentos/RecebimentosPage';
 import { QualidadePage } from '../features/qualidade/QualidadePage';
 import { NaoConformidadesPage } from '../features/qualidade/NaoConformidadesPage';
+import { LaudoPrint } from '../features/lotes/LaudoPrint';
 import { OrdensPage } from '../features/ordens/OrdensPage';
 import { OrdemPage } from '../features/ordens/OrdemPage';
 
@@ -31,6 +32,15 @@ export default function App() {
       <HashRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          {/* Impressão de laudo — página cheia, fora do Layout */}
+          <Route
+            path="/laudos/:id/imprimir"
+            element={
+              <Protected>
+                <LaudoPrint />
+              </Protected>
+            }
+          />
           <Route
             element={
               <Protected>

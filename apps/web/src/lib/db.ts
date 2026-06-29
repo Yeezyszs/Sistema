@@ -65,6 +65,18 @@ export async function listClientes(): Promise<Cliente[]> {
   );
 }
 
+export async function getProduto(id: string): Promise<Produto | null> {
+  const res = await core().from('produtos').select('*').eq('id', id).maybeSingle();
+  if (res.error) throw new Error(res.error.message);
+  return res.data as Produto | null;
+}
+
+export async function getCliente(id: string): Promise<Cliente | null> {
+  const res = await core().from('clientes').select('*').eq('id', id).maybeSingle();
+  if (res.error) throw new Error(res.error.message);
+  return res.data as Cliente | null;
+}
+
 export async function criarCliente(payload: NovoCliente): Promise<Cliente> {
   const res = await core().from('clientes').insert(payload).select('*').single();
   if (res.error) throw new Error(res.error.message);
@@ -328,6 +340,12 @@ export async function getLaudosDoLote(loteId: string): Promise<LaudoInterno[]> {
   return unwrap<LaudoInterno[]>(
     await qualidade().from('laudos_internos').select('*').eq('lote_id', loteId).order('emitido_em', { ascending: false }),
   );
+}
+
+export async function getLaudo(id: string): Promise<LaudoInterno | null> {
+  const res = await qualidade().from('laudos_internos').select('*').eq('id', id).maybeSingle();
+  if (res.error) throw new Error(res.error.message);
+  return res.data as LaudoInterno | null;
 }
 
 export async function getResultadosDoLaudo(laudoId: string): Promise<LaudoResultado[]> {

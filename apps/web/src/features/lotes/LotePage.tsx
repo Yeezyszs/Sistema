@@ -446,17 +446,30 @@ export function LotePage() {
                 {laudos.map((l) => (
                   <li
                     key={l.id}
-                    className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm ${
+                    className={`flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm ${
                       l.conforme ? 'bg-emerald-50' : 'bg-red-50'
                     }`}
                   >
-                    <div>
-                      <p className="font-medium text-slate-700">Laudo nº {l.numero}</p>
+                    <div className="min-w-0">
+                      <p className="font-medium text-slate-700">
+                        Laudo nº {l.numero}
+                        <span className="ml-1.5 text-xs font-normal text-slate-400">
+                          {l.tipo === 'verificacao_visual' ? 'Visual' : 'Físico-químico'}
+                        </span>
+                      </p>
                       <p className="text-xs text-slate-400">{formatarData(l.emitido_em)}</p>
                     </div>
-                    <span className={`text-xs font-semibold ${l.conforme ? 'text-emerald-600' : 'text-red-600'}`}>
-                      {l.conforme ? 'Aprovado' : 'Reprovado'}
-                    </span>
+                    <div className="flex shrink-0 items-center gap-3">
+                      <span className={`text-xs font-semibold ${l.conforme ? 'text-emerald-600' : 'text-red-600'}`}>
+                        {l.conforme ? 'Aprovado' : 'Reprovado'}
+                      </span>
+                      <Link
+                        to={`/laudos/${l.id}/imprimir`}
+                        className="text-xs font-medium text-emerald-600 hover:text-emerald-700"
+                      >
+                        Imprimir
+                      </Link>
+                    </div>
                   </li>
                 ))}
               </ul>

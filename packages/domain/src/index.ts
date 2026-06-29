@@ -33,3 +33,4 @@ export * from './entities/Manutencao';
 export * from './entities/Calibracao';
 export * from './entities/AnaliseRisco';
 export * from './entities/Auditoria';
+export * from './entities/Ambiental';

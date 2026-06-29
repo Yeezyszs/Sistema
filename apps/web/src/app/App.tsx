@@ -16,6 +16,7 @@ import { CalibracaoPage } from '../features/qualidade/CalibracaoPage';
 import { ManutencaoPage } from '../features/manutencao/ManutencaoPage';
 import { AnaliseRiscoPage } from '../features/qualidade/AnaliseRiscoPage';
 import { AuditoriaPage } from '../features/qualidade/AuditoriaPage';
+import { AmbientalPage } from '../features/qualidade/AmbientalPage';
 import { LaudoPrint } from '../features/lotes/LaudoPrint';
 import { OrdensPage } from '../features/ordens/OrdensPage';
 import { OrdemPage } from '../features/ordens/OrdemPage';
@@ -70,6 +71,7 @@ export default function App() {
             <Route path="/manutencao" element={<ManutencaoPage />} />
             <Route path="/analise-risco" element={<AnaliseRiscoPage />} />
             <Route path="/auditoria" element={<AuditoriaPage />} />
+            <Route path="/ambiental" element={<AmbientalPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/lotes" replace />} />
         </Routes>

@@ -69,6 +69,10 @@ import type {
   NovoItemAuditoria,
   StatusAuditoria,
   VerificacaoPpr,
+  PontoAmostragem,
+  NovoPontoAmostragem,
+  MonitoramentoAmbiental,
+  NovoMonitoramentoAmbiental,
 } from '@sistema/domain';
 
 const producao = () => supabase.schema('producao');
@@ -700,6 +704,29 @@ export async function criarVerificacaoPpr(payload: {
   acao?: string | null;
 }): Promise<void> {
   const res = await qualidade().from('verificacoes_ppr').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// ── Ambiental & pragas ─────────────────────────────────────────
+export async function listPontosAmostragem(): Promise<PontoAmostragem[]> {
+  return unwrap<PontoAmostragem[]>(
+    await qualidade().from('pontos_amostragem').select('*').eq('ativo', true).order('area'),
+  );
+}
+
+export async function criarPontoAmostragem(payload: NovoPontoAmostragem): Promise<void> {
+  const res = await qualidade().from('pontos_amostragem').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function listMonitoramentoAmbiental(limite = 80): Promise<MonitoramentoAmbiental[]> {
+  return unwrap<MonitoramentoAmbiental[]>(
+    await qualidade().from('monitoramento_ambiental').select('*').order('enviado_em', { ascending: false }).limit(limite),
+  );
+}
+
+export async function criarMonitoramentoAmbiental(payload: NovoMonitoramentoAmbiental): Promise<void> {
+  const res = await qualidade().from('monitoramento_ambiental').insert(payload);
   if (res.error) throw new Error(res.error.message);
 }
 

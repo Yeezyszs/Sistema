@@ -8,6 +8,7 @@ import {
   criarVerificacaoIma,
   listQuebrasVidro,
   criarQuebraVidro,
+  listLotes,
   mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
@@ -24,12 +25,13 @@ export function PccFisicoPage() {
   const [recarregar, setRecarregar] = useState(0);
 
   const { data, loading } = useAsync(async () => {
-    const [detectores, verifsDM, imas, verifsIma, vidros] = await Promise.all([
+    const [detectores, verifsDM, imas, verifsIma, vidros, lotes] = await Promise.all([
       listDetectoresMetais(),
       listVerificacoesDM(),
       listImas(),
       listVerificacoesIma(),
       listQuebrasVidro(),
+      listLotes(),
     ]);
     return {
       detectores,
@@ -39,6 +41,7 @@ export function PccFisicoPage() {
       imasMap: mapBy(imas, 'id'),
       verifsIma,
       vidros,
+      lotes: lotes.filter((l) => l.status === 'em_processo' || l.status === 'aguardando_liberacao'),
     };
   }, [recarregar]);
 
@@ -93,19 +96,29 @@ function DetectorAba({ data, onSaved }: { data: any; onSaved: () => void }) {
     const form = new FormData(e.currentTarget);
     const detector_id = String(form.get('detector_id') ?? '');
     const tipo_teste = String(form.get('tipo_teste') ?? '') as TipoTesteDM;
+    const lote_id = String(form.get('lote_id') ?? '') || null;
     if (!detector_id || !tipo_teste) return;
     setSalvando(true);
     try {
       await criarVerificacaoDM({
         detector_id,
         tipo_teste,
+        lote_id,
         resultado_ferroso: fe,
         resultado_nao_ferroso: nf,
         resultado_inox: inox,
         conforme,
         acao_corretiva: conforme ? null : String(form.get('acao_corretiva') ?? '').trim() || null,
       });
-      sucesso(conforme ? 'Verificação registrada (conforme).' : 'Verificação registrada — REPROVADA, segregar produção.');
+      if (conforme) {
+        sucesso('Verificação registrada (conforme).');
+      } else {
+        erro(
+          lote_id
+            ? 'Reprovada! NC aberta automaticamente — o lote ficará bloqueado para liberação.'
+            : 'Reprovada! NC aberta automaticamente. Segregue a produção do período.',
+        );
+      }
       setFe(true); setNf(true); setInox(true);
       onSaved();
     } catch (err) {
@@ -132,6 +145,14 @@ function DetectorAba({ data, onSaved }: { data: any; onSaved: () => void }) {
             <Select name="tipo_teste" defaultValue="durante_producao" required>
               {TIPO_TESTE_DM.map((t) => (
                 <option key={t} value={t}>{TIPO_TESTE_DM_LABEL[t]}</option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Lote em produção (para bloqueio em caso de falha)">
+            <Select name="lote_id" defaultValue="">
+              <option value="">— não vincular —</option>
+              {data.lotes.map((l: any) => (
+                <option key={l.id} value={l.id}>{l.codigo}</option>
               ))}
             </Select>
           </Field>

@@ -43,6 +43,14 @@ import type {
   NovaVerificacaoIma,
   QuebraVidro,
   NovaQuebraVidro,
+  Checklist,
+  ChecklistItem,
+  ChecklistExecucao,
+  ChecklistResposta,
+  NovaExecucaoChecklist,
+  NovaRespostaChecklist,
+  Ppho,
+  NovaPpho,
 } from '@sistema/domain';
 
 const producao = () => supabase.schema('producao');
@@ -467,6 +475,73 @@ export async function listQuebrasVidro(limite = 30): Promise<QuebraVidro[]> {
 export async function criarQuebraVidro(payload: NovaQuebraVidro): Promise<void> {
   const res = await qualidade().from('quebras_vidro').insert(payload);
   if (res.error) throw new Error(res.error.message);
+}
+
+// ── Checklist genérico (coringa) ───────────────────────────────
+export async function getItensDoChecklist(checklistId: string): Promise<ChecklistItem[]> {
+  return unwrap<ChecklistItem[]>(
+    await qualidade().from('checklist_itens').select('*').eq('checklist_id', checklistId).order('ordem'),
+  );
+}
+
+export async function criarChecklistComItens(
+  contexto: string,
+  nome: string,
+  itens: string[],
+): Promise<Checklist> {
+  const res = await qualidade().from('checklists').insert({ contexto, nome }).select('*').single();
+  if (res.error) throw new Error(res.error.message);
+  const checklist = res.data as Checklist;
+  if (itens.length > 0) {
+    const linhas = itens.map((item, i) => ({ checklist_id: checklist.id, item, ordem: i }));
+    const resI = await qualidade().from('checklist_itens').insert(linhas);
+    if (resI.error) throw new Error(resI.error.message);
+  }
+  return checklist;
+}
+
+export async function getExecucoesDoChecklist(checklistId: string, limite = 30): Promise<ChecklistExecucao[]> {
+  return unwrap<ChecklistExecucao[]>(
+    await qualidade()
+      .from('checklist_execucoes')
+      .select('*')
+      .eq('checklist_id', checklistId)
+      .order('registrado_em', { ascending: false })
+      .limit(limite),
+  );
+}
+
+export async function getRespostasDaExecucao(execucaoId: string): Promise<ChecklistResposta[]> {
+  return unwrap<ChecklistResposta[]>(
+    await qualidade().from('checklist_respostas').select('*').eq('execucao_id', execucaoId).order('ordem'),
+  );
+}
+
+export async function registrarExecucaoChecklist(
+  execucao: NovaExecucaoChecklist,
+  respostas: Omit<NovaRespostaChecklist, 'execucao_id'>[],
+): Promise<ChecklistExecucao> {
+  const res = await qualidade().from('checklist_execucoes').insert(execucao).select('*').single();
+  if (res.error) throw new Error(res.error.message);
+  const exec = res.data as ChecklistExecucao;
+  if (respostas.length > 0) {
+    const linhas = respostas.map((r, i) => ({ ...r, execucao_id: exec.id, ordem: r.ordem ?? i }));
+    const resR = await qualidade().from('checklist_respostas').insert(linhas);
+    if (resR.error) throw new Error(resR.error.message);
+  }
+  return exec;
+}
+
+// ── PPHO ───────────────────────────────────────────────────────
+export async function listPphos(): Promise<Ppho[]> {
+  return unwrap<Ppho[]>(await qualidade().from('pphos').select('*').eq('ativo', true).order('codigo'));
+}
+
+export async function criarPpho(ficha: Omit<NovaPpho, 'checklist_id'>, itens: string[]): Promise<Ppho> {
+  const checklist = await criarChecklistComItens('ppho', ficha.nome, itens);
+  const res = await qualidade().from('pphos').insert({ ...ficha, checklist_id: checklist.id }).select('*').single();
+  if (res.error) throw new Error(res.error.message);
+  return res.data as Ppho;
 }
 
 // ── Helpers de lookup ──────────────────────────────────────────

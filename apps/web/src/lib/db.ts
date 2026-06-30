@@ -73,6 +73,10 @@ import type {
   NovoPontoAmostragem,
   MonitoramentoAmbiental,
   NovoMonitoramentoAmbiental,
+  TipoInspecao,
+  InspecaoRecebimento,
+  Homologacao,
+  NovaHomologacao,
 } from '@sistema/domain';
 
 const producao = () => supabase.schema('producao');
@@ -727,6 +731,59 @@ export async function listMonitoramentoAmbiental(limite = 80): Promise<Monitoram
 
 export async function criarMonitoramentoAmbiental(payload: NovoMonitoramentoAmbiental): Promise<void> {
   const res = await qualidade().from('monitoramento_ambiental').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// ── Inspeção de recebimento (reusa o motor de checklist) ───────
+// Garante um checklist para o contexto (cria com itens padrão na 1ª vez).
+export async function garantirChecklist(
+  contexto: string,
+  nome: string,
+  itensPadrao: string[],
+): Promise<{ checklist: Checklist; itens: ChecklistItem[] }> {
+  const existentes = unwrap<Checklist[]>(
+    await qualidade().from('checklists').select('*').eq('contexto', contexto).limit(1),
+  );
+  const existente = existentes[0];
+  if (existente) {
+    const itens = await getItensDoChecklist(existente.id);
+    return { checklist: existente, itens };
+  }
+  const novo = await criarChecklistComItens(contexto, nome, itensPadrao);
+  const itens = await getItensDoChecklist(novo.id);
+  return { checklist: novo, itens };
+}
+
+export async function listInspecoesRecebimento(limite = 50): Promise<InspecaoRecebimento[]> {
+  return unwrap<InspecaoRecebimento[]>(
+    await qualidade().from('inspecoes_recebimento').select('*').order('inspecionado_em', { ascending: false }).limit(limite),
+  );
+}
+
+export async function registrarInspecaoRecebimento(payload: {
+  tipo: TipoInspecao;
+  fornecedor_id?: string | null;
+  recebimento_id?: string | null;
+  execucao_id?: string | null;
+  placa?: string | null;
+  ticket?: string | null;
+  variedade?: string | null;
+  conforme: boolean;
+  observacao?: string | null;
+}): Promise<void> {
+  const res = await qualidade().from('inspecoes_recebimento').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// ── Fornecedores: homologação ──────────────────────────────────
+export async function listHomologacoes(): Promise<Homologacao[]> {
+  return unwrap<Homologacao[]>(
+    await qualidade().from('homologacoes').select('*').order('avaliado_em', { ascending: false }),
+  );
+}
+
+export async function criarHomologacao(payload: NovaHomologacao): Promise<void> {
+  const res = await qualidade().from('homologacoes').insert(payload);
   if (res.error) throw new Error(res.error.message);
 }
 

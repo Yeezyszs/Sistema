@@ -43,6 +43,7 @@ export function Layout() {
           <NavItem to="/ordens" icon={<IconClipboard />} label="Ordens de produção" />
           <NavItem to="/lotes" icon={<IconLotes />} label="Lotes" />
           <NavItem to="/recebimentos" icon={<IconRecebimento />} label="Recebimentos" />
+          <NavItem to="/fornecedores" icon={<IconRecebimento />} label="Fornecedores & QA" />
           <NavItem to="/qualidade" icon={<IconShield />} label="Qualidade" />
           <NavItem to="/pcc-fisico" icon={<IconBox />} label="PCC Físico" />
           <NavItem to="/ppho" icon={<IconCheck />} label="PPHO & Higiene" />

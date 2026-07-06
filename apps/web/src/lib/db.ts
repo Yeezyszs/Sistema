@@ -292,6 +292,16 @@ export async function criarRecebimento(payload: NovoRecebimento): Promise<Recebi
   return res.data as Recebimento;
 }
 
+export async function atualizarRecebimento(id: string, patch: Partial<NovoRecebimento>): Promise<void> {
+  const res = await producao().from('recebimentos').update(patch).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function excluirRecebimento(id: string): Promise<void> {
+  const res = await producao().from('recebimentos').delete().eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
 export async function listEquipamentos(): Promise<{ id: string; nome: string }[]> {
   return unwrap<{ id: string; nome: string }[]>(
     await core().from('equipamentos').select('id,nome').order('nome'),

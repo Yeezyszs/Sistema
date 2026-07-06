@@ -36,10 +36,14 @@ export function RecebimentosPage() {
     if (filtroTurno !== 'todos' && r.turno !== filtroTurno) return false;
     if (!busca.trim()) return true;
     const q = busca.toLowerCase();
-    const produtor = r.fornecedor_id ? data?.fornecedoresMap.get(r.fornecedor_id)?.razao_social ?? '' : '';
     const produto = data?.produtosMap.get(r.produto_id)?.nome ?? '';
-    return [produtor, produto, r.variedade ?? '', r.ticket ?? ''].some((v) => v.toLowerCase().includes(q));
+    return [nomeProdutor(r), produto, r.variedade ?? '', r.ticket ?? ''].some((v) => v.toLowerCase().includes(q));
   });
+
+  function nomeProdutor(r: { produtor: string | null; fornecedor_id: string | null }): string {
+    if (r.produtor) return r.produtor;
+    return r.fornecedor_id ? data?.fornecedoresMap.get(r.fornecedor_id)?.razao_social ?? '—' : '—';
+  }
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -59,9 +63,15 @@ export function RecebimentosPage() {
 
     setSalvando(true);
     try {
+      const produtor = txt('produtor');
+      // vincula ao fornecedor cadastrado se o nome bater (rastreabilidade)
+      const forn = data?.fornecedores.find(
+        (f) => f.razao_social.toLowerCase() === (produtor ?? '').toLowerCase(),
+      );
       await criarRecebimento({
         produto_id,
-        fornecedor_id: String(form.get('fornecedor_id') ?? '') || null,
+        produtor,
+        fornecedor_id: forn?.id ?? null,
         variedade: txt('variedade'),
         turno: (txt('turno') as Turno | null),
         ticket: txt('ticket'),
@@ -107,10 +117,10 @@ export function RecebimentosPage() {
               </Select>
             </Field>
             <Field label="Produtor">
-              <Select name="fornecedor_id" defaultValue="">
-                <option value="">— não informado —</option>
-                {data?.fornecedores.map((f) => <option key={f.id} value={f.id}>{f.razao_social}</option>)}
-              </Select>
+              <TextInput name="produtor" list="produtores" placeholder="Nome do produtor" />
+              <datalist id="produtores">
+                {data?.fornecedores.map((f) => <option key={f.id} value={f.razao_social} />)}
+              </datalist>
             </Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Variedade">
@@ -204,9 +214,7 @@ export function RecebimentosPage() {
                       </td>
                       <td className="px-3 py-2.5 text-slate-500">{formatarData(r.recebido_em)}</td>
                       <td className="px-3 py-2.5 text-slate-500">{r.ticket ?? '—'}</td>
-                      <td className="px-3 py-2.5 text-slate-700">
-                        {r.fornecedor_id ? data.fornecedoresMap.get(r.fornecedor_id)?.razao_social ?? '—' : '—'}
-                      </td>
+                      <td className="px-3 py-2.5 text-slate-700">{nomeProdutor(r)}</td>
                       <td className="hidden px-3 py-2.5 text-slate-500 lg:table-cell">{r.variedade ?? '—'}</td>
                       <td className="px-3 py-2.5 text-right text-slate-600">{formatarQuantidade(r.quantidade)}</td>
                       <td className="px-3 py-2.5 text-right text-slate-600">{r.renda ?? '—'}</td>

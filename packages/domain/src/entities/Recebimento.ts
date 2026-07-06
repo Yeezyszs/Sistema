@@ -12,7 +12,8 @@ export interface Recebimento {
   id: string;
   org_id: string;
   numero: number | null; // nº da carga (sequencial por org)
-  fornecedor_id: string | null; // produtor
+  fornecedor_id: string | null; // vínculo opcional com core.fornecedores
+  produtor: string | null; // produtor (texto livre, como no Controle de Cargas)
   produto_id: string;
   lote_mp: string | null;
   variedade: string | null;
@@ -29,6 +30,7 @@ export interface Recebimento {
 // Payload para registrar um recebimento (sem colunas gerenciadas pelo banco).
 export interface NovoRecebimento {
   fornecedor_id: string | null;
+  produtor: string | null;
   produto_id: string;
   variedade: string | null;
   quantidade: number | null;

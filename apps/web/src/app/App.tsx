@@ -1,7 +1,9 @@
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import type { ReactNode } from 'react';
 import { AuthProvider, useAuth } from '../lib/auth';
 import { FullScreen, Spinner } from '../components/ui';
 import { ToastProvider } from '../components/Toast';
+import type { Modulo } from '@sistema/domain';
 import { Layout } from './Layout';
 import { LoginPage } from './LoginPage';
 import { LotesPage } from '../features/lotes/LotesPage';
@@ -34,6 +36,15 @@ function Protected({ children }: { children: JSX.Element }) {
   return children;
 }
 
+// Bloqueia acesso a um módulo cujo perfil do usuário não cobre.
+// Complementa (não substitui) o RLS do banco, que é a defesa real.
+function ModuloGuard({ modulo, children }: { modulo: Modulo; children: ReactNode }) {
+  const { podeAcessarModulo, loading } = useAuth();
+  if (loading) return null;
+  if (!podeAcessarModulo(modulo)) return <Navigate to="/lotes" replace />;
+  return children;
+}
+
 export default function App() {
   return (
     <AuthProvider>
@@ -58,22 +69,22 @@ export default function App() {
             }
           >
             <Route path="/" element={<Navigate to="/lotes" replace />} />
-            <Route path="/ordens" element={<OrdensPage />} />
-            <Route path="/ordens/:id" element={<OrdemPage />} />
-            <Route path="/lotes" element={<LotesPage />} />
-            <Route path="/lotes/:id" element={<LotePage />} />
-            <Route path="/recebimentos" element={<RecebimentosPage />} />
-            <Route path="/qualidade" element={<QualidadePage />} />
-            <Route path="/nao-conformidades" element={<NaoConformidadesPage />} />
-            <Route path="/especificacoes" element={<EspecificacoesPage />} />
-            <Route path="/pcc-fisico" element={<PccFisicoPage />} />
-            <Route path="/ppho" element={<PphoPage />} />
-            <Route path="/calibracao" element={<CalibracaoPage />} />
-            <Route path="/manutencao" element={<ManutencaoPage />} />
-            <Route path="/analise-risco" element={<AnaliseRiscoPage />} />
-            <Route path="/auditoria" element={<AuditoriaPage />} />
-            <Route path="/ambiental" element={<AmbientalPage />} />
-            <Route path="/fornecedores" element={<FornecedoresPage />} />
+            <Route path="/ordens" element={<ModuloGuard modulo="ordens"><OrdensPage /></ModuloGuard>} />
+            <Route path="/ordens/:id" element={<ModuloGuard modulo="ordens"><OrdemPage /></ModuloGuard>} />
+            <Route path="/lotes" element={<ModuloGuard modulo="lotes"><LotesPage /></ModuloGuard>} />
+            <Route path="/lotes/:id" element={<ModuloGuard modulo="lotes"><LotePage /></ModuloGuard>} />
+            <Route path="/recebimentos" element={<ModuloGuard modulo="recebimentos"><RecebimentosPage /></ModuloGuard>} />
+            <Route path="/qualidade" element={<ModuloGuard modulo="qualidade"><QualidadePage /></ModuloGuard>} />
+            <Route path="/nao-conformidades" element={<ModuloGuard modulo="nao_conformidades"><NaoConformidadesPage /></ModuloGuard>} />
+            <Route path="/especificacoes" element={<ModuloGuard modulo="especificacoes"><EspecificacoesPage /></ModuloGuard>} />
+            <Route path="/pcc-fisico" element={<ModuloGuard modulo="pcc_fisico"><PccFisicoPage /></ModuloGuard>} />
+            <Route path="/ppho" element={<ModuloGuard modulo="ppho"><PphoPage /></ModuloGuard>} />
+            <Route path="/calibracao" element={<ModuloGuard modulo="calibracao"><CalibracaoPage /></ModuloGuard>} />
+            <Route path="/manutencao" element={<ModuloGuard modulo="manutencao"><ManutencaoPage /></ModuloGuard>} />
+            <Route path="/analise-risco" element={<ModuloGuard modulo="analise_risco"><AnaliseRiscoPage /></ModuloGuard>} />
+            <Route path="/auditoria" element={<ModuloGuard modulo="auditoria"><AuditoriaPage /></ModuloGuard>} />
+            <Route path="/ambiental" element={<ModuloGuard modulo="ambiental"><AmbientalPage /></ModuloGuard>} />
+            <Route path="/fornecedores" element={<ModuloGuard modulo="fornecedores"><FornecedoresPage /></ModuloGuard>} />
           </Route>
           <Route path="*" element={<Navigate to="/lotes" replace />} />
         </Routes>

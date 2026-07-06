@@ -9,6 +9,7 @@
 // Value-objects
 export * from './value-objects/StatusLote';
 export * from './value-objects/TipoMovimento';
+export * from './value-objects/Perfil';
 
 // Entities + regras puras
 export * from './entities/Etapa';

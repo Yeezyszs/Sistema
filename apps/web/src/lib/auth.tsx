@@ -7,27 +7,43 @@ import {
 } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from './supabaseClient';
+import { podeAcessar, type Modulo, type Perfil } from '@sistema/domain';
 
 interface AuthState {
   session: Session | null;
   loading: boolean;
+  perfis: Perfil[];
+  podeAcessarModulo: (modulo: Modulo) => boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
 
+async function carregarPerfis(): Promise<Perfil[]> {
+  const { data, error } = await supabase.schema('core').rpc('meus_perfis');
+  if (error || !data) return [];
+  return data as Perfil[];
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
+  const [perfis, setPerfis] = useState<Perfil[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
       setSession(data.session);
+      if (data.session) setPerfis(await carregarPerfis());
       setLoading(false);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
+      if (s) {
+        void carregarPerfis().then(setPerfis);
+      } else {
+        setPerfis([]);
+      }
     });
     return () => sub.subscription.unsubscribe();
   }, []);
@@ -41,8 +57,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   }
 
+  function podeAcessarModulo(modulo: Modulo): boolean {
+    return podeAcessar(perfis, modulo);
+  }
+
   return (
-    <AuthContext.Provider value={{ session, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ session, loading, perfis, podeAcessarModulo, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );

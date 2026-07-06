@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useState, type ReactNode } from 'react';
 import { useAuth } from '../lib/auth';
+import type { Modulo } from '@sistema/domain';
 import {
   IconLotes, IconRecebimento, IconLogout, IconLeaf, IconShield, IconClipboard, IconDoc,
   IconFlask, IconBox, IconCheck, IconClock, IconChevronRight,
@@ -28,12 +29,15 @@ interface SubItem {
   to: string;
   icon: ReactNode;
   label: string;
+  modulo: Modulo;
 }
 
 function NavGroup({ icon, label, items }: { icon: ReactNode; label: string; items: SubItem[] }) {
   const location = useLocation();
   const algumAtivo = items.some((i) => location.pathname.startsWith(i.to));
   const [aberto, setAberto] = useState(algumAtivo);
+
+  if (items.length === 0) return null;
 
   return (
     <div>
@@ -64,22 +68,32 @@ function NavGroup({ icon, label, items }: { icon: ReactNode; label: string; item
   );
 }
 
+const ITENS_TOPO: SubItem[] = [
+  { to: '/ordens', icon: <IconClipboard />, label: 'Ordens de produção', modulo: 'ordens' },
+  { to: '/lotes', icon: <IconLotes />, label: 'Lotes', modulo: 'lotes' },
+  { to: '/recebimentos', icon: <IconRecebimento />, label: 'Recebimentos', modulo: 'recebimentos' },
+  { to: '/fornecedores', icon: <IconRecebimento />, label: 'Fornecedores & QA', modulo: 'fornecedores' },
+];
+
 const ITENS_QUALIDADE: SubItem[] = [
-  { to: '/qualidade', icon: <IconShield width={18} height={18} />, label: 'Qualidade' },
-  { to: '/pcc-fisico', icon: <IconBox width={18} height={18} />, label: 'PCC Físico' },
-  { to: '/ppho', icon: <IconCheck width={18} height={18} />, label: 'PPHO & Higiene' },
-  { to: '/especificacoes', icon: <IconFlask width={18} height={18} />, label: 'Especificações' },
-  { to: '/calibracao', icon: <IconClock width={18} height={18} />, label: 'Calibração' },
-  { to: '/analise-risco', icon: <IconShield width={18} height={18} />, label: 'Análise de risco' },
-  { to: '/auditoria', icon: <IconCheck width={18} height={18} />, label: 'Auditoria & PPR' },
-  { to: '/ambiental', icon: <IconLeaf width={18} height={18} />, label: 'Ambiental & Pragas' },
-  { to: '/nao-conformidades', icon: <IconDoc width={18} height={18} />, label: 'Não conformidades' },
-  { to: '/manutencao', icon: <IconClipboard width={18} height={18} />, label: 'Manutenção' },
+  { to: '/qualidade', icon: <IconShield width={18} height={18} />, label: 'Qualidade', modulo: 'qualidade' },
+  { to: '/pcc-fisico', icon: <IconBox width={18} height={18} />, label: 'PCC Físico', modulo: 'pcc_fisico' },
+  { to: '/ppho', icon: <IconCheck width={18} height={18} />, label: 'PPHO & Higiene', modulo: 'ppho' },
+  { to: '/especificacoes', icon: <IconFlask width={18} height={18} />, label: 'Especificações', modulo: 'especificacoes' },
+  { to: '/calibracao', icon: <IconClock width={18} height={18} />, label: 'Calibração', modulo: 'calibracao' },
+  { to: '/analise-risco', icon: <IconShield width={18} height={18} />, label: 'Análise de risco', modulo: 'analise_risco' },
+  { to: '/auditoria', icon: <IconCheck width={18} height={18} />, label: 'Auditoria & PPR', modulo: 'auditoria' },
+  { to: '/ambiental', icon: <IconLeaf width={18} height={18} />, label: 'Ambiental & Pragas', modulo: 'ambiental' },
+  { to: '/nao-conformidades', icon: <IconDoc width={18} height={18} />, label: 'Não conformidades', modulo: 'nao_conformidades' },
+  { to: '/manutencao', icon: <IconClipboard width={18} height={18} />, label: 'Manutenção', modulo: 'manutencao' },
 ];
 
 export function Layout() {
-  const { session, signOut } = useAuth();
+  const { session, signOut, podeAcessarModulo, perfis } = useAuth();
   const email = session?.user.email ?? '';
+
+  const itensTopo = ITENS_TOPO.filter((i) => podeAcessarModulo(i.modulo));
+  const itensQualidade = ITENS_QUALIDADE.filter((i) => podeAcessarModulo(i.modulo));
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -96,17 +110,19 @@ export function Layout() {
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-2">
-          <NavItem to="/ordens" icon={<IconClipboard />} label="Ordens de produção" />
-          <NavItem to="/lotes" icon={<IconLotes />} label="Lotes" />
-          <NavItem to="/recebimentos" icon={<IconRecebimento />} label="Recebimentos" />
-          <NavItem to="/fornecedores" icon={<IconRecebimento />} label="Fornecedores & QA" />
-          <NavGroup icon={<IconShield />} label="Qualidade" items={ITENS_QUALIDADE} />
+          {itensTopo.map((item) => (
+            <NavItem key={item.to} to={item.to} icon={item.icon} label={item.label} />
+          ))}
+          <NavGroup icon={<IconShield />} label="Qualidade" items={itensQualidade} />
         </nav>
 
         <div className="border-t border-slate-200 p-3">
           <div className="px-3 py-2">
             <p className="truncate text-xs text-slate-400">Conectado como</p>
             <p className="truncate text-sm font-medium text-slate-700">{email}</p>
+            {perfis.length > 0 && (
+              <p className="truncate text-xs text-emerald-600">{perfis.join(', ')}</p>
+            )}
           </div>
           <button
             onClick={() => void signOut()}

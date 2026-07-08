@@ -21,6 +21,12 @@ export interface Produto {
   nome: string;
   tipo: TipoProduto;
   unidade: string;
+  // Parâmetros de PCP (planejamento) — opcionais
+  variacao_acabamento: string | null;
+  kg_por_lote: number | null;
+  tempo_por_lote_min: number | null;
+  rendimento: number | null; // raiz→produto (~0,27)
+  peso_unitario: number | null; // kg por bag/saca
   created_at: string;
   created_by: string | null;
 }

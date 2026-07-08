@@ -77,6 +77,9 @@ import type {
   InspecaoRecebimento,
   Homologacao,
   NovaHomologacao,
+  Linha,
+  Programacao,
+  NovaProgramacao,
 } from '@sistema/domain';
 
 const producao = () => supabase.schema('producao');
@@ -794,6 +797,41 @@ export async function listHomologacoes(): Promise<Homologacao[]> {
 
 export async function criarHomologacao(payload: NovaHomologacao): Promise<void> {
   const res = await qualidade().from('homologacoes').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// ── PCP: linhas de produção ────────────────────────────────────
+export async function listLinhas(): Promise<Linha[]> {
+  return unwrap<Linha[]>(
+    await producao().from('linhas').select('*').eq('ativo', true).order('codigo'),
+  );
+}
+
+// ── PCP: programação de produção ───────────────────────────────
+export async function listProgramacao(de: string, ate: string): Promise<Programacao[]> {
+  return unwrap<Programacao[]>(
+    await producao()
+      .from('programacao')
+      .select('*')
+      .gte('data', de)
+      .lte('data', ate)
+      .order('data')
+      .order('turno'),
+  );
+}
+
+export async function criarProgramacao(payload: NovaProgramacao): Promise<void> {
+  const res = await producao().from('programacao').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function atualizarProgramacao(id: string, patch: Partial<NovaProgramacao>): Promise<void> {
+  const res = await producao().from('programacao').update(patch).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function excluirProgramacao(id: string): Promise<void> {
+  const res = await producao().from('programacao').delete().eq('id', id);
   if (res.error) throw new Error(res.error.message);
 }
 

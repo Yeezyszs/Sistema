@@ -36,3 +36,4 @@ export * from './entities/AnaliseRisco';
 export * from './entities/Auditoria';
 export * from './entities/Ambiental';
 export * from './entities/Recebimentoqa';
+export * from './entities/Programacao';

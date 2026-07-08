@@ -69,6 +69,7 @@ function NavGroup({ icon, label, items }: { icon: ReactNode; label: string; item
 }
 
 const ITENS_TOPO: SubItem[] = [
+  { to: '/programacao', icon: <IconClipboard />, label: 'Programação (PCP)', modulo: 'pcp' },
   { to: '/ordens', icon: <IconClipboard />, label: 'Ordens de produção', modulo: 'ordens' },
   { to: '/lotes', icon: <IconLotes />, label: 'Lotes', modulo: 'lotes' },
   { to: '/recebimentos', icon: <IconRecebimento />, label: 'Recebimentos', modulo: 'recebimentos' },

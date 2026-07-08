@@ -11,7 +11,7 @@ export const PERFIL_LABEL: Record<Perfil, string> = {
 
 // Códigos de módulo — usados nas rotas/menu para decidir visibilidade.
 export const MODULO = [
-  'ordens', 'lotes', 'recebimentos', 'fornecedores',
+  'pcp', 'ordens', 'lotes', 'recebimentos', 'fornecedores',
   'qualidade', 'pcc_fisico', 'ppho', 'especificacoes', 'calibracao',
   'analise_risco', 'auditoria', 'ambiental', 'nao_conformidades',
   'manutencao', 'usuarios',
@@ -21,7 +21,7 @@ export type Modulo = (typeof MODULO)[number];
 // Quais módulos cada perfil acessa. 'gestao' sempre vê tudo (checado à parte).
 export const MODULOS_POR_PERFIL: Record<Perfil, Modulo[]> = {
   gestao: [...MODULO],
-  operador: ['ordens', 'lotes', 'recebimentos'],
+  operador: ['pcp', 'ordens', 'lotes', 'recebimentos'],
   qualidade: [
     'lotes', 'recebimentos', 'fornecedores', 'qualidade', 'pcc_fisico', 'ppho',
     'especificacoes', 'calibracao', 'analise_risco', 'auditoria', 'ambiental',

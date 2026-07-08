@@ -85,6 +85,10 @@ import type {
   LocalEstoque,
   PosicaoEstoque,
   NovaPosicao,
+  Pedido,
+  NovoPedido,
+  StatusPedido,
+  SituacaoPedido,
 } from '@sistema/domain';
 
 const producao = () => supabase.schema('producao');
@@ -883,6 +887,37 @@ export async function alocarPosicao(payload: NovaPosicao): Promise<void> {
 
 export async function liberarPosicao(id: string): Promise<void> {
   const res = await producao().from('posicoes_estoque').delete().eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// ── ERP: Pedidos (Clientes) ────────────────────────────────────
+export async function listPedidos(): Promise<Pedido[]> {
+  return unwrap<Pedido[]>(
+    await producao().from('pedidos').select('*').order('numero', { ascending: false }),
+  );
+}
+
+export async function criarPedido(payload: NovoPedido): Promise<void> {
+  const res = await producao().from('pedidos').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function atualizarPedido(id: string, patch: Partial<NovoPedido>): Promise<void> {
+  const res = await producao().from('pedidos').update(patch).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function definirStatusPedido(
+  id: string,
+  campo: 'status' | 'situacao',
+  valor: StatusPedido | SituacaoPedido,
+): Promise<void> {
+  const res = await producao().from('pedidos').update({ [campo]: valor }).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function excluirPedido(id: string): Promise<void> {
+  const res = await producao().from('pedidos').delete().eq('id', id);
   if (res.error) throw new Error(res.error.message);
 }
 

@@ -39,3 +39,4 @@ export * from './entities/Recebimentoqa';
 export * from './entities/Programacao';
 export * from './entities/Apontamento';
 export * from './entities/Estoque';
+export * from './entities/Pedido';

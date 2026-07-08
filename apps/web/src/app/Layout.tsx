@@ -74,6 +74,7 @@ const ITENS_TOPO: SubItem[] = [
   { to: '/ordens', icon: <IconClipboard />, label: 'Ordens de produção', modulo: 'ordens' },
   { to: '/lotes', icon: <IconLotes />, label: 'Lotes', modulo: 'lotes' },
   { to: '/estoque', icon: <IconBox />, label: 'Estoque', modulo: 'estoque' },
+  { to: '/pedidos', icon: <IconDoc />, label: 'Pedidos', modulo: 'pedidos' },
   { to: '/recebimentos', icon: <IconRecebimento />, label: 'Recebimentos', modulo: 'recebimentos' },
   { to: '/fornecedores', icon: <IconRecebimento />, label: 'Fornecedores & QA', modulo: 'fornecedores' },
 ];

@@ -82,6 +82,9 @@ import type {
   NovaProgramacao,
   Apontamento,
   NovoApontamento,
+  LocalEstoque,
+  PosicaoEstoque,
+  NovaPosicao,
 } from '@sistema/domain';
 
 const producao = () => supabase.schema('producao');
@@ -857,6 +860,29 @@ export async function criarApontamento(payload: NovoApontamento): Promise<void> 
 
 export async function excluirApontamento(id: string): Promise<void> {
   const res = await producao().from('apontamentos').delete().eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// ── ERP: Estoque & Inventário ──────────────────────────────────
+export async function listLocaisEstoque(): Promise<LocalEstoque[]> {
+  return unwrap<LocalEstoque[]>(
+    await producao().from('locais_estoque').select('*').eq('ativo', true).order('barracao').order('rua'),
+  );
+}
+
+export async function listPosicoesEstoque(): Promise<PosicaoEstoque[]> {
+  return unwrap<PosicaoEstoque[]>(
+    await producao().from('posicoes_estoque').select('*').order('alocado_em', { ascending: false }),
+  );
+}
+
+export async function alocarPosicao(payload: NovaPosicao): Promise<void> {
+  const res = await producao().from('posicoes_estoque').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function liberarPosicao(id: string): Promise<void> {
+  const res = await producao().from('posicoes_estoque').delete().eq('id', id);
   if (res.error) throw new Error(res.error.message);
 }
 

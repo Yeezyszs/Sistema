@@ -80,6 +80,8 @@ import type {
   Linha,
   Programacao,
   NovaProgramacao,
+  Apontamento,
+  NovoApontamento,
 } from '@sistema/domain';
 
 const producao = () => supabase.schema('producao');
@@ -832,6 +834,29 @@ export async function atualizarProgramacao(id: string, patch: Partial<NovaProgra
 
 export async function excluirProgramacao(id: string): Promise<void> {
   const res = await producao().from('programacao').delete().eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// ── PCP: apontamento & rendimento ──────────────────────────────
+export async function listApontamentos(de: string, ate: string): Promise<Apontamento[]> {
+  return unwrap<Apontamento[]>(
+    await producao()
+      .from('apontamentos')
+      .select('*')
+      .gte('data', de)
+      .lte('data', ate)
+      .order('data', { ascending: false })
+      .order('apontado_em', { ascending: false }),
+  );
+}
+
+export async function criarApontamento(payload: NovoApontamento): Promise<void> {
+  const res = await producao().from('apontamentos').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function excluirApontamento(id: string): Promise<void> {
+  const res = await producao().from('apontamentos').delete().eq('id', id);
   if (res.error) throw new Error(res.error.message);
 }
 

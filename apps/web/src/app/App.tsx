@@ -24,6 +24,7 @@ import { LaudoPrint } from '../features/lotes/LaudoPrint';
 import { OrdensPage } from '../features/ordens/OrdensPage';
 import { OrdemPage } from '../features/ordens/OrdemPage';
 import { ProgramacaoPage } from '../features/pcp/ProgramacaoPage';
+import { ApontamentoPage } from '../features/pcp/ApontamentoPage';
 
 function Protected({ children }: { children: JSX.Element }) {
   const { session, loading } = useAuth();
@@ -71,6 +72,7 @@ export default function App() {
           >
             <Route path="/" element={<Navigate to="/lotes" replace />} />
             <Route path="/programacao" element={<ModuloGuard modulo="pcp"><ProgramacaoPage /></ModuloGuard>} />
+            <Route path="/apontamento" element={<ModuloGuard modulo="pcp"><ApontamentoPage /></ModuloGuard>} />
             <Route path="/ordens" element={<ModuloGuard modulo="ordens"><OrdensPage /></ModuloGuard>} />
             <Route path="/ordens/:id" element={<ModuloGuard modulo="ordens"><OrdemPage /></ModuloGuard>} />
             <Route path="/lotes" element={<ModuloGuard modulo="lotes"><LotesPage /></ModuloGuard>} />

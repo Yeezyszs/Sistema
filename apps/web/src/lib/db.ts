@@ -91,6 +91,15 @@ import type {
   SituacaoPedido,
   Carregamento,
   NovoCarregamento,
+  Embalagem,
+  NovaEmbalagem,
+  MovimentoEmbalagem,
+  NovoMovimentoEmbalagem,
+  Pallet,
+  MovimentoPallet,
+  NovoMovimentoPallet,
+  Reprocesso,
+  NovoReprocesso,
 } from '@sistema/domain';
 
 const producao = () => supabase.schema('producao');
@@ -943,6 +952,75 @@ export async function cancelarCarregamento(id: string): Promise<void> {
 
 export async function excluirCarregamento(id: string): Promise<void> {
   const res = await producao().from('carregamentos').delete().eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// ── ERP: Embalagens ────────────────────────────────────────────
+export async function listEmbalagens(): Promise<Embalagem[]> {
+  return unwrap<Embalagem[]>(
+    await producao().from('embalagens').select('*').order('nome'),
+  );
+}
+
+export async function criarEmbalagem(payload: NovaEmbalagem): Promise<void> {
+  const res = await producao().from('embalagens').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function atualizarEmbalagem(id: string, patch: Partial<NovaEmbalagem & { ativo: boolean }>): Promise<void> {
+  const res = await producao().from('embalagens').update(patch).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function listMovimentosEmbalagem(embalagemId: string): Promise<MovimentoEmbalagem[]> {
+  return unwrap<MovimentoEmbalagem[]>(
+    await producao().from('movimentos_embalagem').select('*').eq('embalagem_id', embalagemId)
+      .order('data', { ascending: false }).order('created_at', { ascending: false }),
+  );
+}
+
+// Movimento manual → trigger ajusta o saldo.
+export async function lancarMovimentoEmbalagem(payload: NovoMovimentoEmbalagem): Promise<void> {
+  const res = await producao().from('movimentos_embalagem').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// ── ERP: Pallets (CHEP + próprios) ─────────────────────────────
+export async function listPallets(): Promise<Pallet[]> {
+  return unwrap<Pallet[]>(await producao().from('pallets').select('*').order('tipo'));
+}
+
+export async function listMovimentosPallet(): Promise<MovimentoPallet[]> {
+  return unwrap<MovimentoPallet[]>(
+    await producao().from('movimentos_pallet').select('*')
+      .order('data', { ascending: false }).order('created_at', { ascending: false }),
+  );
+}
+
+export async function lancarMovimentoPallet(payload: NovoMovimentoPallet): Promise<void> {
+  const res = await producao().from('movimentos_pallet').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// ── ERP/Qualidade: Reprocesso ──────────────────────────────────
+export async function listReprocessos(): Promise<Reprocesso[]> {
+  return unwrap<Reprocesso[]>(
+    await producao().from('reprocessos').select('*').order('numero', { ascending: false }),
+  );
+}
+
+export async function criarReprocesso(payload: NovoReprocesso): Promise<void> {
+  const res = await producao().from('reprocessos').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function atualizarReprocesso(id: string, patch: Partial<Reprocesso>): Promise<void> {
+  const res = await producao().from('reprocessos').update(patch).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function excluirReprocesso(id: string): Promise<void> {
+  const res = await producao().from('reprocessos').delete().eq('id', id);
   if (res.error) throw new Error(res.error.message);
 }
 

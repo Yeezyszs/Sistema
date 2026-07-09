@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   listLocaisEstoque, listPosicoesEstoque, listLotes, listProdutos, listClientes,
-  alocarPosicao, liberarPosicao, mapBy,
+  listEmbalagens, alocarPosicao, liberarPosicao, mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { formatarQuantidade } from '../../lib/format';
@@ -18,11 +18,11 @@ export function EstoquePage() {
   const { sucesso, erro } = useToast();
 
   const { data, loading } = useAsync(async () => {
-    const [locais, posicoes, lotes, produtos, clientes] = await Promise.all([
-      listLocaisEstoque(), listPosicoesEstoque(), listLotes(), listProdutos(), listClientes(),
+    const [locais, posicoes, lotes, produtos, clientes, embalagens] = await Promise.all([
+      listLocaisEstoque(), listPosicoesEstoque(), listLotes(), listProdutos(), listClientes(), listEmbalagens(),
     ]);
     return {
-      locais, posicoes, lotes, produtos, clientes,
+      locais, posicoes, lotes, produtos, clientes, embalagens,
       lotesMap: mapBy(lotes, 'id'),
       produtosMap: mapBy(produtos, 'id'),
       clientesMap: mapBy(clientes, 'id'),
@@ -158,6 +158,7 @@ export function EstoquePage() {
           local={alocando}
           lotes={data?.lotes ?? []}
           produtosMap={data?.produtosMap ?? new Map()}
+          embalagens={data?.embalagens ?? []}
           onClose={() => setAlocando(null)}
           onSaved={rec}
         />
@@ -167,16 +168,18 @@ export function EstoquePage() {
 }
 
 function ModalAlocar({
-  local, lotes, produtosMap, onClose, onSaved,
+  local, lotes, produtosMap, embalagens, onClose, onSaved,
 }: {
   local: LocalEstoque;
   lotes: { id: string; codigo: string; produto_id: string; cliente_id: string | null }[];
   produtosMap: Map<string, { nome: string }>;
+  embalagens: { id: string; nome: string; unidade: string; saldo: number }[];
   onClose: () => void;
   onSaved: () => void;
 }) {
   const [loteId, setLoteId] = useState('');
   const [qtd, setQtd] = useState('');
+  const [embalagemId, setEmbalagemId] = useState('');
   const [status, setStatus] = useState<StatusPosicao>('ocupado');
   const [salvando, setSalvando] = useState(false);
   const { sucesso, erro } = useToast();
@@ -190,6 +193,7 @@ function ModalAlocar({
         lote_id: loteId || null,
         produto_id: lote?.produto_id ?? null,
         cliente_id: lote?.cliente_id ?? null,
+        embalagem_id: embalagemId || null,
         qtd_bags: qtd ? Number(qtd) : null,
         status,
       });
@@ -217,6 +221,13 @@ function ModalAlocar({
             </Select>
           </Field>
         </div>
+        <Field label="Embalagem (baixa automática)">
+          <Select value={embalagemId} onChange={(e) => setEmbalagemId(e.target.value)}>
+            <option value="">— não consumir</option>
+            {embalagens.map((e) => <option key={e.id} value={e.id}>{e.nome} · saldo {e.saldo} {e.unidade}</option>)}
+          </Select>
+        </Field>
+        <p className="text-xs text-slate-400">Selecionar a embalagem consome a qtd. de bags do saldo automaticamente.</p>
         <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
           <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
           <Button type="button" loading={salvando} onClick={() => void salvar()}>Alocar</Button>

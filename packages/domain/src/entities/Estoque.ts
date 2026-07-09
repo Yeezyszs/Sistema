@@ -18,6 +18,7 @@ export interface PosicaoEstoque {
   lote_id: string | null;
   produto_id: string | null;
   cliente_id: string | null;
+  embalagem_id: string | null;
   qtd_bags: number | null;
   status: StatusPosicao;
   alocado_em: string;
@@ -30,6 +31,7 @@ export interface NovaPosicao {
   lote_id?: string | null;
   produto_id?: string | null;
   cliente_id?: string | null;
+  embalagem_id?: string | null;
   qtd_bags?: number | null;
   status?: StatusPosicao;
 }

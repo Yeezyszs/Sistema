@@ -76,6 +76,9 @@ const ITENS_TOPO: SubItem[] = [
   { to: '/estoque', icon: <IconBox />, label: 'Estoque', modulo: 'estoque' },
   { to: '/pedidos', icon: <IconDoc />, label: 'Pedidos', modulo: 'pedidos' },
   { to: '/expedicao', icon: <IconTruck />, label: 'Expedição', modulo: 'expedicao' },
+  { to: '/embalagens', icon: <IconBox />, label: 'Embalagens', modulo: 'embalagens' },
+  { to: '/pallets', icon: <IconBox />, label: 'Pallets', modulo: 'pallets' },
+  { to: '/reprocesso', icon: <IconClock />, label: 'Reprocesso', modulo: 'reprocesso' },
   { to: '/recebimentos', icon: <IconRecebimento />, label: 'Recebimentos', modulo: 'recebimentos' },
   { to: '/fornecedores', icon: <IconRecebimento />, label: 'Fornecedores & QA', modulo: 'fornecedores' },
 ];

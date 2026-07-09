@@ -27,6 +27,7 @@ import { ProgramacaoPage } from '../features/pcp/ProgramacaoPage';
 import { ApontamentoPage } from '../features/pcp/ApontamentoPage';
 import { EstoquePage } from '../features/estoque/EstoquePage';
 import { PedidosPage } from '../features/pedidos/PedidosPage';
+import { ExpedicaoPage } from '../features/expedicao/ExpedicaoPage';
 
 function Protected({ children }: { children: JSX.Element }) {
   const { session, loading } = useAuth();
@@ -77,6 +78,7 @@ export default function App() {
             <Route path="/apontamento" element={<ModuloGuard modulo="pcp"><ApontamentoPage /></ModuloGuard>} />
             <Route path="/estoque" element={<ModuloGuard modulo="estoque"><EstoquePage /></ModuloGuard>} />
             <Route path="/pedidos" element={<ModuloGuard modulo="pedidos"><PedidosPage /></ModuloGuard>} />
+            <Route path="/expedicao" element={<ModuloGuard modulo="expedicao"><ExpedicaoPage /></ModuloGuard>} />
             <Route path="/ordens" element={<ModuloGuard modulo="ordens"><OrdensPage /></ModuloGuard>} />
             <Route path="/ordens/:id" element={<ModuloGuard modulo="ordens"><OrdemPage /></ModuloGuard>} />
             <Route path="/lotes" element={<ModuloGuard modulo="lotes"><LotesPage /></ModuloGuard>} />

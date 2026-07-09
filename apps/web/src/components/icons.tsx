@@ -82,6 +82,16 @@ export const IconBox = (p: IconProps) => (
   </svg>
 );
 
+export const IconTruck = (p: IconProps) => (
+  <svg {...base} {...p}>
+    <path d="M14 18V6a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h1" />
+    <path d="M14 9h4l3 3v5a1 1 0 0 1-1 1h-1" />
+    <path d="M9 18h6" />
+    <circle cx="6.5" cy="18" r="1.5" />
+    <circle cx="17.5" cy="18" r="1.5" />
+  </svg>
+);
+
 export const IconPlus = (p: IconProps) => (
   <svg {...base} {...p}>
     <path d="M12 5v14M5 12h14" />

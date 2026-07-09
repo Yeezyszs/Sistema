@@ -40,3 +40,4 @@ export * from './entities/Programacao';
 export * from './entities/Apontamento';
 export * from './entities/Estoque';
 export * from './entities/Pedido';
+export * from './entities/Carregamento';

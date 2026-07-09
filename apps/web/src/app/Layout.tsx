@@ -4,7 +4,7 @@ import { useAuth } from '../lib/auth';
 import type { Modulo } from '@sistema/domain';
 import {
   IconLotes, IconRecebimento, IconLogout, IconLeaf, IconShield, IconClipboard, IconDoc,
-  IconFlask, IconBox, IconCheck, IconClock, IconChevronRight,
+  IconFlask, IconBox, IconCheck, IconClock, IconChevronRight, IconTruck,
 } from '../components/icons';
 
 function NavItem({ to, icon, label }: { to: string; icon: ReactNode; label: string }) {
@@ -75,6 +75,7 @@ const ITENS_TOPO: SubItem[] = [
   { to: '/lotes', icon: <IconLotes />, label: 'Lotes', modulo: 'lotes' },
   { to: '/estoque', icon: <IconBox />, label: 'Estoque', modulo: 'estoque' },
   { to: '/pedidos', icon: <IconDoc />, label: 'Pedidos', modulo: 'pedidos' },
+  { to: '/expedicao', icon: <IconTruck />, label: 'Expedição', modulo: 'expedicao' },
   { to: '/recebimentos', icon: <IconRecebimento />, label: 'Recebimentos', modulo: 'recebimentos' },
   { to: '/fornecedores', icon: <IconRecebimento />, label: 'Fornecedores & QA', modulo: 'fornecedores' },
 ];

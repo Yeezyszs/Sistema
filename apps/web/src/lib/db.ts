@@ -89,6 +89,8 @@ import type {
   NovoPedido,
   StatusPedido,
   SituacaoPedido,
+  Carregamento,
+  NovoCarregamento,
 } from '@sistema/domain';
 
 const producao = () => supabase.schema('producao');
@@ -918,6 +920,29 @@ export async function definirStatusPedido(
 
 export async function excluirPedido(id: string): Promise<void> {
   const res = await producao().from('pedidos').delete().eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// ── ERP: Expedição & Carregamentos ─────────────────────────────
+export async function listCarregamentos(): Promise<Carregamento[]> {
+  return unwrap<Carregamento[]>(
+    await producao().from('carregamentos').select('*').order('numero', { ascending: false }),
+  );
+}
+
+// Registra a carga → trigger dá baixa no estoque e marca o pedido carregado.
+export async function criarCarregamento(payload: NovoCarregamento): Promise<void> {
+  const res = await producao().from('carregamentos').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function cancelarCarregamento(id: string): Promise<void> {
+  const res = await producao().from('carregamentos').update({ status: 'cancelado' }).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function excluirCarregamento(id: string): Promise<void> {
+  const res = await producao().from('carregamentos').delete().eq('id', id);
   if (res.error) throw new Error(res.error.message);
 }
 

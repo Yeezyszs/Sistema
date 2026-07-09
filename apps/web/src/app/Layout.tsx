@@ -69,18 +69,21 @@ function NavGroup({ icon, label, items }: { icon: ReactNode; label: string; item
 }
 
 const ITENS_TOPO: SubItem[] = [
-  { to: '/programacao', icon: <IconClipboard />, label: 'Programação (PCP)', modulo: 'pcp' },
-  { to: '/apontamento', icon: <IconCheck />, label: 'Apontamento', modulo: 'pcp' },
-  { to: '/ordens', icon: <IconClipboard />, label: 'Ordens de produção', modulo: 'ordens' },
   { to: '/lotes', icon: <IconLotes />, label: 'Lotes', modulo: 'lotes' },
-  { to: '/estoque', icon: <IconBox />, label: 'Estoque', modulo: 'estoque' },
-  { to: '/pedidos', icon: <IconDoc />, label: 'Pedidos', modulo: 'pedidos' },
-  { to: '/expedicao', icon: <IconTruck />, label: 'Expedição', modulo: 'expedicao' },
-  { to: '/embalagens', icon: <IconBox />, label: 'Embalagens', modulo: 'embalagens' },
-  { to: '/pallets', icon: <IconBox />, label: 'Pallets', modulo: 'pallets' },
-  { to: '/reprocesso', icon: <IconClock />, label: 'Reprocesso', modulo: 'reprocesso' },
   { to: '/recebimentos', icon: <IconRecebimento />, label: 'Recebimentos', modulo: 'recebimentos' },
   { to: '/fornecedores', icon: <IconRecebimento />, label: 'Fornecedores & QA', modulo: 'fornecedores' },
+];
+
+const ITENS_PCP: SubItem[] = [
+  { to: '/programacao', icon: <IconClipboard width={18} height={18} />, label: 'Programação', modulo: 'pcp' },
+  { to: '/apontamento', icon: <IconCheck width={18} height={18} />, label: 'Apontamento', modulo: 'pcp' },
+  { to: '/ordens', icon: <IconClipboard width={18} height={18} />, label: 'Ordens de produção', modulo: 'ordens' },
+  { to: '/estoque', icon: <IconBox width={18} height={18} />, label: 'Estoque', modulo: 'estoque' },
+  { to: '/pedidos', icon: <IconDoc width={18} height={18} />, label: 'Pedidos', modulo: 'pedidos' },
+  { to: '/expedicao', icon: <IconTruck width={18} height={18} />, label: 'Expedição', modulo: 'expedicao' },
+  { to: '/embalagens', icon: <IconBox width={18} height={18} />, label: 'Embalagens', modulo: 'embalagens' },
+  { to: '/pallets', icon: <IconBox width={18} height={18} />, label: 'Pallets', modulo: 'pallets' },
+  { to: '/reprocesso', icon: <IconClock width={18} height={18} />, label: 'Reprocesso', modulo: 'reprocesso' },
 ];
 
 const ITENS_QUALIDADE: SubItem[] = [
@@ -101,6 +104,7 @@ export function Layout() {
   const email = session?.user.email ?? '';
 
   const itensTopo = ITENS_TOPO.filter((i) => podeAcessarModulo(i.modulo));
+  const itensPcp = ITENS_PCP.filter((i) => podeAcessarModulo(i.modulo));
   const itensQualidade = ITENS_QUALIDADE.filter((i) => podeAcessarModulo(i.modulo));
 
   return (
@@ -121,6 +125,7 @@ export function Layout() {
           {itensTopo.map((item) => (
             <NavItem key={item.to} to={item.to} icon={item.icon} label={item.label} />
           ))}
+          <NavGroup icon={<IconClipboard />} label="PCP" items={itensPcp} />
           <NavGroup icon={<IconShield />} label="Qualidade" items={itensQualidade} />
         </nav>
 

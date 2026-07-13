@@ -100,6 +100,10 @@ import type {
   NovoMovimentoPallet,
   Reprocesso,
   NovoReprocesso,
+  AnaliseProcesso,
+  AnaliseProcessoValor,
+  NovaAnaliseProcesso,
+  NovoAnaliseValor,
 } from '@sistema/domain';
 
 const producao = () => supabase.schema('producao');
@@ -409,6 +413,40 @@ export async function getEspecificacaoAplicavel(
   if (!escolhida) return null;
   const parametros = await getParametrosDaEspecificacao(escolhida.id);
   return { especificacao: escolhida, parametros };
+}
+
+// ── Acompanhamento de Processo (análise por bag) ───────────────
+export async function listAnalisesProcesso(): Promise<AnaliseProcesso[]> {
+  return unwrap<AnaliseProcesso[]>(
+    await qualidade().from('analises_processo').select('*')
+      .order('data', { ascending: false }).order('numero', { ascending: false }),
+  );
+}
+
+export async function getValoresDaAnalise(analiseId: string): Promise<AnaliseProcessoValor[]> {
+  return unwrap<AnaliseProcessoValor[]>(
+    await qualidade().from('analise_processo_valores').select('*').eq('analise_id', analiseId).order('ordem'),
+  );
+}
+
+// Cria a análise + valores por ensaio numa tacada.
+export async function criarAnaliseProcesso(
+  cabecalho: NovaAnaliseProcesso,
+  valores: NovoAnaliseValor[],
+): Promise<void> {
+  const res = await qualidade().from('analises_processo').insert(cabecalho).select('id').single();
+  if (res.error) throw new Error(res.error.message);
+  const analiseId = (res.data as { id: string }).id;
+  if (valores.length > 0) {
+    const linhas = valores.map((v, i) => ({ ...v, analise_id: analiseId, ordem: v.ordem ?? i }));
+    const resv = await qualidade().from('analise_processo_valores').insert(linhas);
+    if (resv.error) throw new Error(resv.error.message);
+  }
+}
+
+export async function excluirAnaliseProcesso(id: string): Promise<void> {
+  const res = await qualidade().from('analises_processo').delete().eq('id', id);
+  if (res.error) throw new Error(res.error.message);
 }
 
 // ── Laudos internos ────────────────────────────────────────────

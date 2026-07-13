@@ -10,6 +10,7 @@ import { LotesPage } from '../features/lotes/LotesPage';
 import { LotePage } from '../features/lotes/LotePage';
 import { RecebimentosPage } from '../features/recebimentos/RecebimentosPage';
 import { QualidadePage } from '../features/qualidade/QualidadePage';
+import { AcompanhamentoPage } from '../features/acompanhamento/AcompanhamentoPage';
 import { NaoConformidadesPage } from '../features/qualidade/NaoConformidadesPage';
 import { EspecificacoesPage } from '../features/qualidade/EspecificacoesPage';
 import { PccFisicoPage } from '../features/qualidade/PccFisicoPage';
@@ -91,6 +92,7 @@ export default function App() {
             <Route path="/lotes/:id" element={<ModuloGuard modulo="lotes"><LotePage /></ModuloGuard>} />
             <Route path="/recebimentos" element={<ModuloGuard modulo="recebimentos"><RecebimentosPage /></ModuloGuard>} />
             <Route path="/qualidade" element={<ModuloGuard modulo="qualidade"><QualidadePage /></ModuloGuard>} />
+            <Route path="/acompanhamento" element={<ModuloGuard modulo="acompanhamento"><AcompanhamentoPage /></ModuloGuard>} />
             <Route path="/nao-conformidades" element={<ModuloGuard modulo="nao_conformidades"><NaoConformidadesPage /></ModuloGuard>} />
             <Route path="/especificacoes" element={<ModuloGuard modulo="especificacoes"><EspecificacoesPage /></ModuloGuard>} />
             <Route path="/pcc-fisico" element={<ModuloGuard modulo="pcc_fisico"><PccFisicoPage /></ModuloGuard>} />

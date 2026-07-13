@@ -44,3 +44,4 @@ export * from './entities/Carregamento';
 export * from './entities/Embalagem';
 export * from './entities/Pallet';
 export * from './entities/Reprocesso';
+export * from './entities/AnaliseProcesso';

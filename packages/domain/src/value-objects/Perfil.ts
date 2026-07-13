@@ -13,7 +13,7 @@ export const PERFIL_LABEL: Record<Perfil, string> = {
 export const MODULO = [
   'pcp', 'pedidos', 'expedicao', 'estoque', 'embalagens', 'pallets', 'reprocesso',
   'ordens', 'lotes', 'recebimentos', 'fornecedores',
-  'qualidade', 'acompanhamento', 'monitoramento_agua', 'insumos_lab', 'pcc_fisico', 'ppho', 'especificacoes', 'calibracao',
+  'qualidade', 'acompanhamento', 'monitoramento_agua', 'insumos_lab', 'contraprovas', 'pcc_fisico', 'ppho', 'especificacoes', 'calibracao',
   'analise_risco', 'auditoria', 'ambiental', 'nao_conformidades',
   'manutencao', 'usuarios',
 ] as const;
@@ -27,7 +27,7 @@ export const MODULOS_POR_PERFIL: Record<Perfil, Modulo[]> = {
     'ordens', 'lotes', 'recebimentos',
   ],
   qualidade: [
-    'lotes', 'recebimentos', 'fornecedores', 'qualidade', 'acompanhamento', 'monitoramento_agua', 'insumos_lab', 'pcc_fisico', 'ppho',
+    'lotes', 'recebimentos', 'fornecedores', 'qualidade', 'acompanhamento', 'monitoramento_agua', 'insumos_lab', 'contraprovas', 'pcc_fisico', 'ppho',
     'especificacoes', 'calibracao', 'analise_risco', 'auditoria', 'ambiental',
     'nao_conformidades', 'reprocesso',
   ],

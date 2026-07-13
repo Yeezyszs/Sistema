@@ -112,6 +112,10 @@ import type {
   NovaCalibracaoPhmetro,
   InsumoLaboratorio,
   NovoInsumoLaboratorio,
+  Contraprova,
+  NovaContraprova,
+  ContraprovaRetencao,
+  NovaRetencao,
 } from '@sistema/domain';
 
 const producao = () => supabase.schema('producao');
@@ -454,6 +458,52 @@ export async function criarAnaliseProcesso(
 
 export async function excluirAnaliseProcesso(id: string): Promise<void> {
   const res = await qualidade().from('analises_processo').delete().eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// ── Contraprovas ───────────────────────────────────────────────
+export async function listContraprovas(): Promise<Contraprova[]> {
+  return unwrap<Contraprova[]>(
+    await qualidade().from('contraprovas').select('*').order('numero_caixa', { ascending: false }),
+  );
+}
+
+export async function listRetencoes(): Promise<ContraprovaRetencao[]> {
+  return unwrap<ContraprovaRetencao[]>(
+    await qualidade().from('contraprova_retencao').select('*').eq('ativo', true).order('rotulo'),
+  );
+}
+
+export async function criarContraprova(payload: NovaContraprova): Promise<void> {
+  const res = await qualidade().from('contraprovas').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function atualizarContraprova(
+  id: string,
+  patch: Partial<NovaContraprova & { em_estoque: boolean; descartado_em: string | null }>,
+): Promise<void> {
+  const res = await qualidade().from('contraprovas').update(patch).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function excluirContraprova(id: string): Promise<void> {
+  const res = await qualidade().from('contraprovas').delete().eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function criarRetencao(payload: NovaRetencao): Promise<void> {
+  const res = await qualidade().from('contraprova_retencao').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function atualizarRetencao(id: string, patch: Partial<NovaRetencao & { ativo: boolean }>): Promise<void> {
+  const res = await qualidade().from('contraprova_retencao').update(patch).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function excluirRetencao(id: string): Promise<void> {
+  const res = await qualidade().from('contraprova_retencao').delete().eq('id', id);
   if (res.error) throw new Error(res.error.message);
 }
 

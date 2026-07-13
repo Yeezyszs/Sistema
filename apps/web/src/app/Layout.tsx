@@ -96,6 +96,7 @@ const ITENS_QUALIDADE: SubItem[] = [
   { to: '/calibracao', icon: <IconClock width={18} height={18} />, label: 'Calibração', modulo: 'calibracao' },
   { to: '/calibracao-phmetro', icon: <IconFlask width={18} height={18} />, label: 'Calibração pHmetro', modulo: 'calibracao' },
   { to: '/insumos-lab', icon: <IconBox width={18} height={18} />, label: 'Insumos do Lab', modulo: 'insumos_lab' },
+  { to: '/contraprovas', icon: <IconBox width={18} height={18} />, label: 'Contraprovas', modulo: 'contraprovas' },
   { to: '/analise-risco', icon: <IconShield width={18} height={18} />, label: 'Análise de risco', modulo: 'analise_risco' },
   { to: '/auditoria', icon: <IconCheck width={18} height={18} />, label: 'Auditoria & PPR', modulo: 'auditoria' },
   { to: '/ambiental', icon: <IconLeaf width={18} height={18} />, label: 'Ambiental & Pragas', modulo: 'ambiental' },

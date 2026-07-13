@@ -89,6 +89,7 @@ const ITENS_PCP: SubItem[] = [
 const ITENS_QUALIDADE: SubItem[] = [
   { to: '/qualidade', icon: <IconShield width={18} height={18} />, label: 'Qualidade', modulo: 'qualidade' },
   { to: '/acompanhamento', icon: <IconFlask width={18} height={18} />, label: 'Acomp. de Processo', modulo: 'acompanhamento' },
+  { to: '/monitoramento-agua', icon: <IconFlask width={18} height={18} />, label: 'Cloro & pH (água)', modulo: 'monitoramento_agua' },
   { to: '/pcc-fisico', icon: <IconBox width={18} height={18} />, label: 'PCC Físico', modulo: 'pcc_fisico' },
   { to: '/ppho', icon: <IconCheck width={18} height={18} />, label: 'PPHO & Higiene', modulo: 'ppho' },
   { to: '/especificacoes', icon: <IconFlask width={18} height={18} />, label: 'Especificações', modulo: 'especificacoes' },

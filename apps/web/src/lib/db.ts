@@ -104,6 +104,8 @@ import type {
   AnaliseProcessoValor,
   NovaAnaliseProcesso,
   NovoAnaliseValor,
+  MonitoramentoAgua,
+  NovoMonitoramentoAgua,
 } from '@sistema/domain';
 
 const producao = () => supabase.schema('producao');
@@ -446,6 +448,24 @@ export async function criarAnaliseProcesso(
 
 export async function excluirAnaliseProcesso(id: string): Promise<void> {
   const res = await qualidade().from('analises_processo').delete().eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// ── Monitoramento de Cloro/pH da água ──────────────────────────
+export async function listMonitoramentosAgua(): Promise<MonitoramentoAgua[]> {
+  return unwrap<MonitoramentoAgua[]>(
+    await qualidade().from('monitoramentos_agua').select('*')
+      .order('data', { ascending: false }).order('hora', { ascending: false }),
+  );
+}
+
+export async function criarMonitoramentoAgua(payload: NovoMonitoramentoAgua): Promise<void> {
+  const res = await qualidade().from('monitoramentos_agua').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function excluirMonitoramentoAgua(id: string): Promise<void> {
+  const res = await qualidade().from('monitoramentos_agua').delete().eq('id', id);
   if (res.error) throw new Error(res.error.message);
 }
 

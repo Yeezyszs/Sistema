@@ -77,3 +77,41 @@ export const SITUACAO_CALIBRACAO_LABEL: Record<SituacaoCalibracao, string> = {
   vencida: 'Vencida',
   sem_registro: 'Sem calibração',
 };
+
+// ── Calibração diária do pHmetro (FOR-PQSA20) ──────────────────
+export const PHMETRO_PH4_MIN = 3.8;
+export const PHMETRO_PH4_MAX = 4.0;
+export const PHMETRO_PH7_MIN = 6.8;
+export const PHMETRO_PH7_MAX = 7.0;
+
+export interface CalibracaoPhmetro {
+  id: string;
+  org_id: string;
+  data: string;
+  hora: string | null;
+  tampao_ph4: number | null;
+  tampao_ph7: number | null;
+  conforme: boolean;
+  responsavel: string | null;
+  validado_por: string | null;
+  observacao: string | null;
+  created_at: string;
+  created_by: string | null;
+}
+
+export interface NovaCalibracaoPhmetro {
+  data: string;
+  hora?: string | null;
+  tampao_ph4?: number | null;
+  tampao_ph7?: number | null;
+  responsavel?: string | null;
+  validado_por?: string | null;
+  observacao?: string | null;
+}
+
+// Mesma regra do trigger, para pré-avaliação no formulário.
+export function phmetroConforme(ph4: number | null, ph7: number | null): boolean {
+  const ph4Ok = ph4 == null || (ph4 >= PHMETRO_PH4_MIN && ph4 <= PHMETRO_PH4_MAX);
+  const ph7Ok = ph7 == null || (ph7 >= PHMETRO_PH7_MIN && ph7 <= PHMETRO_PH7_MAX);
+  return ph4Ok && ph7Ok;
+}

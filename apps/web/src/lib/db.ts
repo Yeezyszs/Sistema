@@ -106,6 +106,8 @@ import type {
   NovoAnaliseValor,
   MonitoramentoAgua,
   NovoMonitoramentoAgua,
+  CalibracaoPhmetro,
+  NovaCalibracaoPhmetro,
 } from '@sistema/domain';
 
 const producao = () => supabase.schema('producao');
@@ -448,6 +450,24 @@ export async function criarAnaliseProcesso(
 
 export async function excluirAnaliseProcesso(id: string): Promise<void> {
   const res = await qualidade().from('analises_processo').delete().eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// ── Calibração diária do pHmetro ───────────────────────────────
+export async function listCalibracoesPhmetro(): Promise<CalibracaoPhmetro[]> {
+  return unwrap<CalibracaoPhmetro[]>(
+    await qualidade().from('calibracoes_phmetro').select('*')
+      .order('data', { ascending: false }).order('hora', { ascending: false }),
+  );
+}
+
+export async function criarCalibracaoPhmetro(payload: NovaCalibracaoPhmetro): Promise<void> {
+  const res = await qualidade().from('calibracoes_phmetro').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function excluirCalibracaoPhmetro(id: string): Promise<void> {
+  const res = await qualidade().from('calibracoes_phmetro').delete().eq('id', id);
   if (res.error) throw new Error(res.error.message);
 }
 

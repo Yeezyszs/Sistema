@@ -33,7 +33,7 @@ import { PedidosPage } from '../features/pedidos/PedidosPage';
 import { ExpedicaoPage } from '../features/expedicao/ExpedicaoPage';
 import { EmbalagensPage } from '../features/embalagens/EmbalagensPage';
 import { PalletsPage } from '../features/pallets/PalletsPage';
-import { ReprocessoPage } from '../features/reprocesso/ReprocessoPage';
+import { RetidosPage } from '../features/retidos/RetidosPage';
 
 function Protected({ children }: { children: JSX.Element }) {
   const { session, loading } = useAuth();
@@ -87,7 +87,7 @@ export default function App() {
             <Route path="/expedicao" element={<ModuloGuard modulo="expedicao"><ExpedicaoPage /></ModuloGuard>} />
             <Route path="/embalagens" element={<ModuloGuard modulo="embalagens"><EmbalagensPage /></ModuloGuard>} />
             <Route path="/pallets" element={<ModuloGuard modulo="pallets"><PalletsPage /></ModuloGuard>} />
-            <Route path="/reprocesso" element={<ModuloGuard modulo="reprocesso"><ReprocessoPage /></ModuloGuard>} />
+            <Route path="/reprocesso" element={<ModuloGuard modulo="reprocesso"><RetidosPage /></ModuloGuard>} />
             <Route path="/ordens" element={<ModuloGuard modulo="ordens"><OrdensPage /></ModuloGuard>} />
             <Route path="/ordens/:id" element={<ModuloGuard modulo="ordens"><OrdemPage /></ModuloGuard>} />
             <Route path="/lotes" element={<ModuloGuard modulo="lotes"><LotesPage /></ModuloGuard>} />

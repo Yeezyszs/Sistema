@@ -83,7 +83,7 @@ const ITENS_PCP: SubItem[] = [
   { to: '/expedicao', icon: <IconTruck width={18} height={18} />, label: 'Expedição', modulo: 'expedicao' },
   { to: '/embalagens', icon: <IconBox width={18} height={18} />, label: 'Embalagens', modulo: 'embalagens' },
   { to: '/pallets', icon: <IconBox width={18} height={18} />, label: 'Pallets', modulo: 'pallets' },
-  { to: '/reprocesso', icon: <IconClock width={18} height={18} />, label: 'Reprocesso', modulo: 'reprocesso' },
+  { to: '/reprocesso', icon: <IconClock width={18} height={18} />, label: 'Retidos', modulo: 'reprocesso' },
 ];
 
 const ITENS_QUALIDADE: SubItem[] = [

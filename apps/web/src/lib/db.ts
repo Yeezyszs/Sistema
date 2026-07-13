@@ -100,6 +100,8 @@ import type {
   NovoMovimentoPallet,
   Reprocesso,
   NovoReprocesso,
+  Desvio,
+  NovoDesvio,
   AnaliseProcesso,
   AnaliseProcessoValor,
   NovaAnaliseProcesso,
@@ -1099,6 +1101,28 @@ export async function atualizarReprocesso(id: string, patch: Partial<Reprocesso>
 
 export async function excluirReprocesso(id: string): Promise<void> {
   const res = await producao().from('reprocessos').delete().eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// ── Catálogo de Desvios (Legenda) ──────────────────────────────
+export async function listDesvios(): Promise<Desvio[]> {
+  return unwrap<Desvio[]>(
+    await producao().from('desvios').select('*').order('codigo'),
+  );
+}
+
+export async function criarDesvio(payload: NovoDesvio): Promise<void> {
+  const res = await producao().from('desvios').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function atualizarDesvio(id: string, patch: Partial<NovoDesvio & { ativo: boolean }>): Promise<void> {
+  const res = await producao().from('desvios').update(patch).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function excluirDesvio(id: string): Promise<void> {
+  const res = await producao().from('desvios').delete().eq('id', id);
   if (res.error) throw new Error(res.error.message);
 }
 

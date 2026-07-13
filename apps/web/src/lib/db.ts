@@ -110,6 +110,8 @@ import type {
   NovoMonitoramentoAgua,
   CalibracaoPhmetro,
   NovaCalibracaoPhmetro,
+  InsumoLaboratorio,
+  NovoInsumoLaboratorio,
 } from '@sistema/domain';
 
 const producao = () => supabase.schema('producao');
@@ -452,6 +454,31 @@ export async function criarAnaliseProcesso(
 
 export async function excluirAnaliseProcesso(id: string): Promise<void> {
   const res = await qualidade().from('analises_processo').delete().eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// ── Insumos do Laboratório ─────────────────────────────────────
+export async function listInsumosLaboratorio(): Promise<InsumoLaboratorio[]> {
+  return unwrap<InsumoLaboratorio[]>(
+    await qualidade().from('insumos_laboratorio').select('*').eq('ativo', true).order('nome'),
+  );
+}
+
+export async function criarInsumoLaboratorio(payload: NovoInsumoLaboratorio): Promise<void> {
+  const res = await qualidade().from('insumos_laboratorio').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function atualizarInsumoLaboratorio(
+  id: string,
+  patch: Partial<NovoInsumoLaboratorio & { solicitado: boolean; ativo: boolean }>,
+): Promise<void> {
+  const res = await qualidade().from('insumos_laboratorio').update(patch).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function excluirInsumoLaboratorio(id: string): Promise<void> {
+  const res = await qualidade().from('insumos_laboratorio').delete().eq('id', id);
   if (res.error) throw new Error(res.error.message);
 }
 

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import {
   getApontamentosDoLote, listLinhas, listRecebimentosPeriodo, criarApontamento, mapBy,
 } from '../../lib/db';
@@ -13,11 +13,19 @@ import { useToast } from '../../components/Toast';
 // Apontamento direto pelo lote (retorno do PCP): registra o kg produzido do
 // lote no dia/turno e mostra a eficiência da extração por dia (produzido do
 // lote ÷ raiz descarregada no dia).
-export function ApontamentosLoteCard({ loteId, produtoId }: { loteId: string; produtoId: string }) {
+export function ApontamentosLoteCard({ loteId, produtoId, sinalAbrir = 0 }: {
+  loteId: string;
+  produtoId: string;
+  sinalAbrir?: number; // incrementado por um botão externo para abrir o modal
+}) {
   const [recarregar, setRecarregar] = useState(0);
   const [modal, setModal] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const { sucesso, erro } = useToast();
+
+  useEffect(() => {
+    if (sinalAbrir > 0) setModal(true);
+  }, [sinalAbrir]);
 
   const { data, loading } = useAsync(async () => {
     const [apontamentos, linhas] = await Promise.all([getApontamentosDoLote(loteId), listLinhas()]);

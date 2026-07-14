@@ -14,8 +14,9 @@ import { formatarData, formatarQuantidade } from '../../lib/format';
 import { STATUS_OP_LABEL } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Modal } from '../../components/ui';
 import { StatusChip } from '../../components/StatusChip';
-import { IconArrowLeft, IconPlus, IconChevronRight } from '../../components/icons';
+import { IconArrowLeft, IconPlus, IconChevronRight, IconClipboard } from '../../components/icons';
 import { useToast } from '../../components/Toast';
+import { ApontamentosLoteCard } from '../lotes/ApontamentosLoteCard';
 
 export function OrdemPage() {
   const { id = '' } = useParams();
@@ -23,6 +24,8 @@ export function OrdemPage() {
   const [modalAberto, setModalAberto] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [mudandoStatus, setMudandoStatus] = useState(false);
+  // Sinal para o card de apontamentos abrir o modal a partir do botão do topo.
+  const [sinalApontar, setSinalApontar] = useState(0);
   const { sucesso, erro } = useToast();
 
   const { data, loading, error } = useAsync(async () => {
@@ -106,6 +109,8 @@ export function OrdemPage() {
   const { op, lotes } = data;
   const produto = data.produtos.get(op.produto_id)?.nome ?? '—';
   const cliente = op.cliente_id ? data.clientes.get(op.cliente_id)?.nome ?? '—' : '—';
+  // OP ↔ lote é 1=1: o lote da ordem é o primeiro (e único).
+  const loteDaOrdem = lotes[0] ?? null;
 
   return (
     <>
@@ -115,12 +120,19 @@ export function OrdemPage() {
         title={`Ordem #${op.numero}`}
         subtitle={cliente}
         action={
-          op.status !== 'concluida' ? (
+          loteDaOrdem ? (
+            op.status !== 'concluida' ? (
+              <Button onClick={() => setSinalApontar((n) => n + 1)}>
+                <IconClipboard width={16} height={16} />
+                Apontar produção
+              </Button>
+            ) : undefined
+          ) : (
             <Button onClick={() => setModalAberto(true)}>
               <IconPlus width={16} height={16} />
               Gerar lote
             </Button>
-          ) : undefined
+          )
         }
       />
 
@@ -154,12 +166,13 @@ export function OrdemPage() {
           )}
         </Card>
 
-        <div className="lg:col-span-3">
+        <div className="space-y-6 lg:col-span-3">
+          <div>
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">
-            Lotes produzidos ({lotes.length})
+            Lote da ordem
           </h2>
           {lotes.length === 0 ? (
-            <EmptyState title="Nenhum lote ainda" description="Gere o primeiro lote desta ordem." />
+            <EmptyState title="Nenhum lote ainda" description='Gere o lote desta ordem em "Gerar lote" — cada ordem tem um lote (1=1).' />
           ) : (
             <Card className="overflow-hidden">
               <table className="w-full text-sm">
@@ -199,6 +212,16 @@ export function OrdemPage() {
                 </tbody>
               </table>
             </Card>
+          )}
+          </div>
+
+          {/* Apontamento de produção direto pela ordem (OP ↔ lote 1=1) */}
+          {loteDaOrdem && (
+            <ApontamentosLoteCard
+              loteId={loteDaOrdem.id}
+              produtoId={loteDaOrdem.produto_id}
+              sinalAbrir={sinalApontar}
+            />
           )}
         </div>
       </div>

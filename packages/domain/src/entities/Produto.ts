@@ -28,6 +28,19 @@ export interface Produto {
   tempo_por_lote_min: number | null;
   rendimento: number | null; // raiz→produto (~0,27)
   peso_unitario: number | null; // kg por bag/saca
+  ativo: boolean;
+  cliente_rotulo: string | null; // cliente da planilha de códigos
+  umidade_faixa: string | null; // ex.: "10% A 11,5%"
   created_at: string;
   created_by: string | null;
+}
+
+// Localiza um produto pelo código digitado (comparação exata, sem espaços).
+export function produtoPorCodigo<T extends Pick<Produto, 'codigo'>>(
+  produtos: T[],
+  codigo: string,
+): T | null {
+  const c = codigo.trim();
+  if (!c) return null;
+  return produtos.find((p) => p.codigo != null && p.codigo.trim() === c) ?? null;
 }

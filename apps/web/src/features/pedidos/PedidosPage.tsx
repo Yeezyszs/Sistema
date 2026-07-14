@@ -13,6 +13,7 @@ import type { StatusPedido, SituacaoPedido } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
 import { IconPlus, IconSearch } from '../../components/icons';
 import { useToast } from '../../components/Toast';
+import { ProdutoPicker } from '../../components/ProdutoPicker';
 
 const TOM_CLASS: Record<string, string> = {
   alerta: 'bg-amber-100 text-amber-700', sucesso: 'bg-emerald-100 text-emerald-700', erro: 'bg-red-100 text-red-700',
@@ -29,6 +30,7 @@ export function PedidosPage() {
   const [salvando, setSalvando] = useState(false);
   const [busca, setBusca] = useState('');
   const [filtroCliente, setFiltroCliente] = useState('');
+  const [produtoId, setProdutoId] = useState('');
   const { sucesso, erro } = useToast();
 
   const { data, loading } = useAsync(async () => {
@@ -67,7 +69,7 @@ export function PedidosPage() {
       await criarPedido({
         data: String(f.get('data') ?? new Date().toISOString().slice(0, 10)),
         cliente_id: String(f.get('cliente_id') ?? '') || null,
-        produto_id: String(f.get('produto_id') ?? '') || null,
+        produto_id: produtoId || null,
         lote_id: String(f.get('lote_id') ?? '') || null,
         status: String(f.get('status') ?? 'pendente') as StatusPedido,
         situacao: String(f.get('situacao') ?? 'pendente') as SituacaoPedido,
@@ -101,7 +103,7 @@ export function PedidosPage() {
       <PageHeader
         title="Pedidos"
         subtitle="Carteira de pedidos por cliente (ERP)"
-        action={<Button onClick={() => { setValorRs(''); setPesoKg(''); setModal(true); }}><IconPlus width={16} height={16} />Novo pedido</Button>}
+        action={<Button onClick={() => { setValorRs(''); setPesoKg(''); setProdutoId(''); setModal(true); }}><IconPlus width={16} height={16} />Novo pedido</Button>}
       />
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -192,12 +194,11 @@ export function PedidosPage() {
             <Field label="Destino"><TextInput name="destino" placeholder="Local de entrega" /></Field>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Produto">
-              <Select name="produto_id" defaultValue="">
-                <option value="">—</option>
-                {(data?.produtos ?? []).filter((p) => p.tipo === 'produto_acabado').map((p) => <option key={p.id} value={p.id}>{p.nome}</option>)}
-              </Select>
-            </Field>
+            <ProdutoPicker
+              produtos={(data?.produtos ?? []).filter((p) => p.tipo === 'produto_acabado')}
+              value={produtoId}
+              onChange={setProdutoId}
+            />
             <Field label="Lote alocado">
               <Select name="lote_id" defaultValue="">
                 <option value="">—</option>

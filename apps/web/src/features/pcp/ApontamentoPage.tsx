@@ -10,6 +10,7 @@ import type { TurnoProd } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select } from '../../components/ui';
 import { IconArrowLeft, IconChevronRight, IconClipboard } from '../../components/icons';
 import { useToast } from '../../components/Toast';
+import { ProdutoPicker } from '../../components/ProdutoPicker';
 
 function semanaDe(base: Date): { de: string; ate: string } {
   const d = new Date(base);
@@ -23,6 +24,7 @@ export function ApontamentoPage() {
   const [refBase, setRefBase] = useState(new Date());
   const [recarregar, setRecarregar] = useState(0);
   const [salvando, setSalvando] = useState(false);
+  const [produtoId, setProdutoId] = useState('');
   const { de, ate } = semanaDe(refBase);
   const { sucesso, erro } = useToast();
 
@@ -75,13 +77,14 @@ export function ApontamentoPage() {
         data: String(f.get('data') ?? de),
         turno: String(f.get('turno') ?? '1t') as TurnoProd,
         linha_id: String(f.get('linha_id') ?? '') || null,
-        produto_id: String(f.get('produto_id') ?? '') || null,
+        produto_id: produtoId || null,
         lote_id: String(f.get('lote_id') ?? '') || null,
         operador_id: String(f.get('operador_id') ?? '') || null,
         quantidade_kg: qtd ? Number(qtd) : null,
         observacao: String(f.get('observacao') ?? '').trim() || null,
       });
       (e.target as HTMLFormElement).reset();
+      setProdutoId('');
       sucesso('Apontamento registrado. O real da programação foi atualizado.');
       setRecarregar((n) => n + 1);
     } catch (err) { erro(err instanceof Error ? err.message : 'Falha.'); }
@@ -107,12 +110,7 @@ export function ApontamentoPage() {
               <Field label="Turno"><Select name="turno" defaultValue="1t">{TURNO_PROD.map((t) => <option key={t} value={t}>{TURNO_PROD_LABEL[t]}</option>)}</Select></Field>
               <Field label="Linha"><Select name="linha_id" defaultValue=""><option value="">—</option>{(data?.linhas ?? []).map((l) => <option key={l.id} value={l.id}>{l.codigo}</option>)}</Select></Field>
             </div>
-            <Field label="Produto">
-              <Select name="produto_id" defaultValue="">
-                <option value="">—</option>
-                {produtosAcabados.map((p) => <option key={p.id} value={p.id}>{p.codigo ? `${p.codigo} · ` : ''}{p.nome}</option>)}
-              </Select>
-            </Field>
+            <ProdutoPicker produtos={produtosAcabados} value={produtoId} onChange={setProdutoId} />
             <div className="grid grid-cols-2 gap-3">
               <Field label="Lote"><Select name="lote_id" defaultValue=""><option value="">—</option>{(data?.lotes ?? []).map((l) => <option key={l.id} value={l.id}>{l.codigo}</option>)}</Select></Field>
               <Field label="Operador"><Select name="operador_id" defaultValue=""><option value="">—</option>{(data?.funcionarios ?? []).map((f) => <option key={f.id} value={f.id}>{f.nome}</option>)}</Select></Field>

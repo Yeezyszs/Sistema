@@ -15,6 +15,7 @@ import type { StatusOP } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
 import { IconClipboard, IconChevronRight, IconPlus, IconSearch } from '../../components/icons';
 import { useToast } from '../../components/Toast';
+import { ProdutoPicker } from '../../components/ProdutoPicker';
 
 const TOM_CLASS: Record<string, string> = {
   info: 'bg-sky-100 text-sky-700',
@@ -35,6 +36,7 @@ export function OrdensPage() {
   const [modalAberto, setModalAberto] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [busca, setBusca] = useState('');
+  const [produtoId, setProdutoId] = useState('');
   const { sucesso, erro } = useToast();
 
   const { data, loading, error } = useAsync(async () => {
@@ -68,9 +70,10 @@ export function OrdensPage() {
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
-    const produto_id = String(form.get('produto_id') ?? '');
+    const produto_id = produtoId;
     const data_op = String(form.get('data') ?? '').trim();
-    if (!produto_id || !data_op) return;
+    if (!produto_id) { erro('Selecione o produto (pelo código ou pela lista).'); return; }
+    if (!data_op) return;
 
     const num = (k: string) => {
       const v = String(form.get(k) ?? '').trim();
@@ -135,7 +138,7 @@ export function OrdensPage() {
         title="Ordens de produção"
         subtitle="Programação de produção (planilha de acompanhamento)"
         action={
-          <Button onClick={() => setModalAberto(true)}>
+          <Button onClick={() => { setProdutoId(''); setModalAberto(true); }}>
             <IconPlus width={16} height={16} />
             Nova ordem
           </Button>
@@ -241,16 +244,13 @@ export function OrdensPage() {
               <TextInput name="data" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} />
             </Field>
 
-            {/* Produto ocupa a linha inteira */}
+            {/* Produto ocupa a linha inteira — digite o código para puxar direto */}
             <div className="col-span-2 sm:col-span-3">
-              <Field label="Produto">
-                <Select name="produto_id" defaultValue="" required>
-                  <option value="" disabled>Selecione…</option>
-                  {(data?.produtosList ?? []).map((p) => (
-                    <option key={p.id} value={p.id}>{p.nome}</option>
-                  ))}
-                </Select>
-              </Field>
+              <ProdutoPicker
+                produtos={data?.produtosList ?? []}
+                value={produtoId}
+                onChange={setProdutoId}
+              />
             </div>
 
             <Field label="Lote">

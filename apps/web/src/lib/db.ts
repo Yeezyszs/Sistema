@@ -135,7 +135,8 @@ export async function listEtapas(): Promise<Etapa[]> {
 }
 
 export async function listProdutos(): Promise<Produto[]> {
-  return unwrap<Produto[]>(await core().from('produtos').select('*').order('nome'));
+  // Só o catálogo oficial (ativos) — os antigos ficam apenas no histórico.
+  return unwrap<Produto[]>(await core().from('produtos').select('*').eq('ativo', true).order('nome'));
 }
 
 export async function listFornecedores(): Promise<Fornecedor[]> {

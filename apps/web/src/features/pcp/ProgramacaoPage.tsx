@@ -10,6 +10,7 @@ import type { TurnoProd, Linha, Produto, Programacao } from '@sistema/domain';
 import { PageHeader, Card, Spinner, Button, Field, TextInput, Select, Modal } from '../../components/ui';
 import { IconArrowLeft, IconChevronRight } from '../../components/icons';
 import { useToast } from '../../components/Toast';
+import { ProdutoPicker } from '../../components/ProdutoPicker';
 
 // Semana (segunda a sábado) que contém a data.
 function semanaDe(base: Date): { dias: string[]; de: string; ate: string } {
@@ -232,12 +233,7 @@ function ModalProgramacao({
             </Select>
           </Field>
         </div>
-        <Field label="Produto">
-          <Select value={produtoId} onChange={(e) => setProdutoId(e.target.value)}>
-            <option value="">— ou informe atividade abaixo —</option>
-            {produtos.map((p) => <option key={p.id} value={p.id}>{p.codigo ? `${p.codigo} · ` : ''}{p.nome}</option>)}
-          </Select>
-        </Field>
+        <ProdutoPicker produtos={produtos} value={produtoId} onChange={setProdutoId} />
         <Field label="Atividade (se não for produção)">
           <TextInput name="atividade" defaultValue={editando?.atividade ?? ''} placeholder="Ex.: Limpeza, Manutenção" />
         </Field>

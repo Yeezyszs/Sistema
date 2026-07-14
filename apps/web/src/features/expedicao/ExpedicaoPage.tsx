@@ -1,11 +1,13 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import {
   listCarregamentos, listPedidos, listClientes, listProdutos, listLotes,
-  listPosicoesEstoque, criarCarregamento, cancelarCarregamento, excluirCarregamento, mapBy,
+  listPosicoesEstoque, listLocaisEstoque,
+  criarCarregamento, atualizarCarregamento, cancelarCarregamento, excluirCarregamento, mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { formatarData, formatarQuantidade } from '../../lib/format';
-import { STATUS_CARGA_LABEL, STATUS_CARGA_TOM } from '@sistema/domain';
+import { STATUS_CARGA_LABEL, STATUS_CARGA_TOM, posicaoLabel } from '@sistema/domain';
+import type { Carregamento } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
 import { IconPlus, IconSearch } from '../../components/icons';
 import { useToast } from '../../components/Toast';
@@ -17,20 +19,24 @@ const TOM_CLASS: Record<string, string> = {
 export function ExpedicaoPage() {
   const [recarregar, setRecarregar] = useState(0);
   const [modal, setModal] = useState(false);
+  const [editando, setEditando] = useState<Carregamento | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [busca, setBusca] = useState('');
   const [pedidoId, setPedidoId] = useState('');
+  const [posicaoId, setPosicaoId] = useState('');
   const { sucesso, erro } = useToast();
 
   const { data, loading } = useAsync(async () => {
-    const [cargas, pedidos, clientes, produtos, lotes, posicoes] = await Promise.all([
-      listCarregamentos(), listPedidos(), listClientes(), listProdutos(), listLotes(), listPosicoesEstoque(),
+    const [cargas, pedidos, clientes, produtos, lotes, posicoes, locais] = await Promise.all([
+      listCarregamentos(), listPedidos(), listClientes(), listProdutos(), listLotes(),
+      listPosicoesEstoque(), listLocaisEstoque(),
     ]);
     return {
-      cargas, pedidos, clientes, produtos, lotes, posicoes,
+      cargas, pedidos, clientes, produtos, lotes, posicoes, locais,
       clientesMap: mapBy(clientes, 'id'),
       produtosMap: mapBy(produtos, 'id'),
       lotesMap: mapBy(lotes, 'id'),
+      locaisMap: mapBy(locais, 'id'),
     };
   }, [recarregar]);
 
@@ -45,6 +51,26 @@ export function ExpedicaoPage() {
     () => pedidosCarregaveis.find((p) => p.id === pedidoId) ?? null,
     [pedidosCarregaveis, pedidoId],
   );
+
+  // Posições que casam com o lote do pedido selecionado (baixa no estoque).
+  const posicoesDoLote = useMemo(() => {
+    const posics = data?.posicoes ?? [];
+    if (!pedidoSel?.lote_id) return posics;
+    return posics.filter((p) => p.lote_id === pedidoSel.lote_id);
+  }, [data?.posicoes, pedidoSel?.lote_id]);
+
+  // Retorno do PCP: ao escolher o pedido, a posição do lote vem sozinha.
+  useEffect(() => {
+    if (!pedidoSel) { setPosicaoId(''); return; }
+    setPosicaoId(posicoesDoLote[0]?.id ?? '');
+  }, [pedidoSel, posicoesDoLote]);
+
+  const posicaoSel = posicoesDoLote.find((p) => p.id === posicaoId) ?? null;
+
+  function rotuloPosicao(localId: string): string {
+    const local = data?.locaisMap.get(localId);
+    return local ? posicaoLabel(local) : 'posição';
+  }
 
   const linhas = (data?.cargas ?? []).filter((c) => {
     if (!busca.trim()) return true;
@@ -69,7 +95,7 @@ export function ExpedicaoPage() {
         cliente_id: pedidoSel.cliente_id,
         produto_id: pedidoSel.produto_id,
         lote_id: pedidoSel.lote_id,
-        posicao_id: String(f.get('posicao_id') ?? '') || null,
+        posicao_id: posicaoId || null,
         qtd_bags: num('qtd_bags'),
         peso_kg: num('peso_kg'),
         placa: txt('placa'),
@@ -84,6 +110,25 @@ export function ExpedicaoPage() {
     finally { setSalvando(false); }
   }
 
+  async function onEditar(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!editando) return;
+    const f = new FormData(e.currentTarget);
+    const txt = (k: string) => String(f.get(k) ?? '').trim() || null;
+    setSalvando(true);
+    try {
+      await atualizarCarregamento(editando.id, {
+        placa: txt('placa'),
+        motorista: txt('motorista'),
+        transportadora: txt('transportadora'),
+        nota_fiscal: txt('nota_fiscal'),
+        observacoes: txt('observacoes'),
+      });
+      sucesso('Carga atualizada.'); setEditando(null); rec();
+    } catch (err) { erro(err instanceof Error ? err.message : 'Falha.'); }
+    finally { setSalvando(false); }
+  }
+
   async function cancelar(id: string) {
     try { await cancelarCarregamento(id); sucesso('Carga cancelada.'); rec(); }
     catch (err) { erro(err instanceof Error ? err.message : 'Falha.'); }
@@ -93,20 +138,13 @@ export function ExpedicaoPage() {
     catch (err) { erro(err instanceof Error ? err.message : 'Falha.'); }
   }
 
-  // Posições que casam com o lote do pedido selecionado (baixa no estoque).
-  const posicoesDoLote = useMemo(() => {
-    const posics = data?.posicoes ?? [];
-    if (!pedidoSel?.lote_id) return posics;
-    return posics.filter((p) => p.lote_id === pedidoSel.lote_id);
-  }, [data?.posicoes, pedidoSel?.lote_id]);
-
-  function abrir() { setPedidoId(''); setModal(true); }
+  function abrir() { setPedidoId(''); setPosicaoId(''); setModal(true); }
 
   return (
     <>
       <PageHeader
         title="Expedição"
-        subtitle="Carregamentos — baixa no estoque e fecha o pedido"
+        subtitle="Carregamentos — baixa automática no estoque e fecha o pedido"
         action={<Button onClick={abrir}><IconPlus width={16} height={16} />Novo carregamento</Button>}
       />
 
@@ -159,6 +197,7 @@ export function ExpedicaoPage() {
                     </span>
                   </td>
                   <td className="px-3 py-2.5 text-right whitespace-nowrap">
+                    <button onClick={() => setEditando(c)} className="mr-3 text-xs font-medium text-slate-500 hover:text-emerald-600">Editar</button>
                     {c.status === 'carregado' && (
                       <button onClick={() => void cancelar(c.id)} className="mr-3 text-xs font-medium text-slate-400 hover:text-amber-600">Cancelar</button>
                     )}
@@ -171,6 +210,7 @@ export function ExpedicaoPage() {
         </Card>
       )}
 
+      {/* Novo carregamento */}
       <Modal open={modal} onClose={() => setModal(false)} title="Novo carregamento" size="xl">
         <form onSubmit={onCriar} className="space-y-4">
           <Field label="Pedido (aprovado)">
@@ -186,27 +226,38 @@ export function ExpedicaoPage() {
 
           {pedidoSel && (
             <div className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">
-              <span className="font-medium text-slate-700">Puxado do pedido:</span>{' '}
-              {pedidoSel.produto_id ? data?.produtosMap.get(pedidoSel.produto_id)?.nome ?? '—' : '—'}
-              {pedidoSel.lote_id && <> · lote {data?.lotesMap.get(pedidoSel.lote_id)?.codigo ?? '—'}</>}
-              {pedidoSel.peso_carga_kg != null && <> · {formatarQuantidade(pedidoSel.peso_carga_kg)} kg previstos</>}
+              <p>
+                <span className="font-medium text-slate-700">Puxado do pedido:</span>{' '}
+                {pedidoSel.produto_id ? data?.produtosMap.get(pedidoSel.produto_id)?.nome ?? '—' : '—'}
+                {pedidoSel.lote_id && <> · lote {data?.lotesMap.get(pedidoSel.lote_id)?.codigo ?? '—'}</>}
+                {pedidoSel.peso_carga_kg != null && <> · {formatarQuantidade(pedidoSel.peso_carga_kg)} kg previstos</>}
+              </p>
+              {posicaoSel ? (
+                <p className="mt-1">
+                  <span className="font-medium text-slate-700">Posição no estoque:</span>{' '}
+                  {rotuloPosicao(posicaoSel.local_id)} · {formatarQuantidade(posicaoSel.qtd_bags)} bags
+                  <span className="text-slate-400"> — baixa automática ao registrar</span>
+                </p>
+              ) : (
+                <p className="mt-1 text-amber-600">Este lote não tem posição no estoque — a carga não dará baixa.</p>
+              )}
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Field label="Data"><TextInput name="data" type="date" defaultValue={new Date().toISOString().slice(0, 10)} required /></Field>
-            <Field label="Bags"><TextInput name="qtd_bags" type="number" step="any" min="0" placeholder="0" /></Field>
-            <Field label="Peso (kg)"><TextInput name="peso_kg" type="number" step="any" min="0" defaultValue={pedidoSel?.peso_carga_kg ?? ''} key={pedidoSel?.id ?? 'v'} placeholder="0" /></Field>
+            <Field label="Bags"><TextInput name="qtd_bags" type="number" step="any" min="0" defaultValue={posicaoSel?.qtd_bags ?? ''} key={`b-${posicaoSel?.id ?? 'v'}`} placeholder="0" /></Field>
+            <Field label="Peso (kg)"><TextInput name="peso_kg" type="number" step="any" min="0" defaultValue={pedidoSel?.peso_carga_kg ?? ''} key={`p-${pedidoSel?.id ?? 'v'}`} placeholder="0" /></Field>
             <Field label="Placa"><TextInput name="placa" placeholder="ABC-1D23" /></Field>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <Field label="Posição no estoque (baixa)">
-              <Select name="posicao_id" defaultValue="">
+              <Select value={posicaoId} onChange={(e) => setPosicaoId(e.target.value)}>
                 <option value="">— não baixar estoque</option>
                 {posicoesDoLote.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.lote_id ? data?.lotesMap.get(p.lote_id)?.codigo ?? 'lote' : 'lote'} · {formatarQuantidade(p.qtd_bags)} bags
+                    {rotuloPosicao(p.local_id)} · {p.lote_id ? data?.lotesMap.get(p.lote_id)?.codigo ?? 'lote' : 'lote'} · {formatarQuantidade(p.qtd_bags)} bags
                   </option>
                 ))}
               </Select>
@@ -226,6 +277,27 @@ export function ExpedicaoPage() {
             <Button type="submit" loading={salvando}>Registrar carga</Button>
           </div>
         </form>
+      </Modal>
+
+      {/* Edição de carreta/motorista/NF */}
+      <Modal open={!!editando} onClose={() => setEditando(null)} title={editando ? `Editar carga #${editando.numero}` : ''} size="lg">
+        {editando && (
+          <form onSubmit={onEditar} className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Placa"><TextInput name="placa" defaultValue={editando.placa ?? ''} placeholder="ABC-1D23" /></Field>
+              <Field label="Motorista"><TextInput name="motorista" defaultValue={editando.motorista ?? ''} placeholder="—" /></Field>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Transportadora"><TextInput name="transportadora" defaultValue={editando.transportadora ?? ''} placeholder="—" /></Field>
+              <Field label="Nota fiscal"><TextInput name="nota_fiscal" defaultValue={editando.nota_fiscal ?? ''} placeholder="—" /></Field>
+            </div>
+            <Field label="Observações"><TextInput name="observacoes" defaultValue={editando.observacoes ?? ''} placeholder="—" /></Field>
+            <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
+              <Button type="button" variant="outline" onClick={() => setEditando(null)}>Cancelar</Button>
+              <Button type="submit" loading={salvando}>Salvar</Button>
+            </div>
+          </form>
+        )}
       </Modal>
     </>
   );

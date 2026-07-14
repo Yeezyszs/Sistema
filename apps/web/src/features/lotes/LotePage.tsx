@@ -37,6 +37,7 @@ import type { EtapaLote } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Modal, Field, TextInput, Select } from '../../components/ui';
 import { StatusChip } from '../../components/StatusChip';
 import { EtapaCard, EtapaSecao, type EtapaEstado } from './EtapaCard';
+import { ApontamentosLoteCard } from './ApontamentosLoteCard';
 import { LaudoModal } from './LaudoModal';
 import { IconArrowLeft, IconDoc, IconFlask } from '../../components/icons';
 import { useToast } from '../../components/Toast';
@@ -423,6 +424,9 @@ export function LotePage() {
               )}
             </div>
           </Card>
+
+          {/* Apontamento direto pelo lote (retorno do PCP) */}
+          <ApontamentosLoteCard loteId={lote.id} produtoId={lote.produto_id} />
 
           {/* Laudos físico-químicos */}
           <Card className="p-6">

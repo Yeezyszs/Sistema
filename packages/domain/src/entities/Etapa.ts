@@ -14,4 +14,5 @@ export interface Etapa {
   codigo: string;
   nome: string;
   ordem: number;
+  ativo: boolean;
 }

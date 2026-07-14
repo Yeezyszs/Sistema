@@ -19,6 +19,7 @@ export interface Produto {
   id: string;
   org_id: string;
   nome: string;
+  codigo: string | null; // código curto de PCP (P.10, P.16...)
   tipo: TipoProduto;
   unidade: string;
   // Parâmetros de PCP (planejamento) — opcionais

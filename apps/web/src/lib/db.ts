@@ -130,7 +130,8 @@ function unwrap<T>(res: { data: T | null; error: { message: string } | null }): 
 
 // ── Catálogos / dados-mestre ───────────────────────────────────
 export async function listEtapas(): Promise<Etapa[]> {
-  return unwrap<Etapa[]>(await producao().from('etapas').select('*').order('ordem'));
+  // Só etapas ativas — descarga/extração/secagem foram desativadas (retorno PCP).
+  return unwrap<Etapa[]>(await producao().from('etapas').select('*').eq('ativo', true).order('ordem'));
 }
 
 export async function listProdutos(): Promise<Produto[]> {
@@ -322,6 +323,18 @@ export async function listRecebimentos(): Promise<Recebimento[]> {
       .from('recebimentos')
       .select('*')
       .order('recebido_em', { ascending: false }),
+  );
+}
+
+// Cargas recebidas num intervalo de datas — fonte da raiz p/ rendimento diário.
+export async function listRecebimentosPeriodo(de: string, ate: string): Promise<Recebimento[]> {
+  return unwrap<Recebimento[]>(
+    await producao()
+      .from('recebimentos')
+      .select('*')
+      .gte('recebido_em', `${de}T00:00:00`)
+      .lte('recebido_em', `${ate}T23:59:59`)
+      .order('recebido_em'),
   );
 }
 
@@ -1013,6 +1026,18 @@ export async function excluirProgramacao(id: string): Promise<void> {
 }
 
 // ── PCP: apontamento & rendimento ──────────────────────────────
+// Apontamentos de um lote — usado no apontamento direto pela página do lote.
+export async function getApontamentosDoLote(loteId: string): Promise<Apontamento[]> {
+  return unwrap<Apontamento[]>(
+    await producao()
+      .from('apontamentos')
+      .select('*')
+      .eq('lote_id', loteId)
+      .order('data', { ascending: false })
+      .order('apontado_em', { ascending: false }),
+  );
+}
+
 export async function listApontamentos(de: string, ate: string): Promise<Apontamento[]> {
   return unwrap<Apontamento[]>(
     await producao()
@@ -1099,6 +1124,11 @@ export async function listCarregamentos(): Promise<Carregamento[]> {
 // Registra a carga → trigger dá baixa no estoque e marca o pedido carregado.
 export async function criarCarregamento(payload: NovoCarregamento): Promise<void> {
   const res = await producao().from('carregamentos').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function atualizarCarregamento(id: string, patch: Partial<NovoCarregamento>): Promise<void> {
+  const res = await producao().from('carregamentos').update(patch).eq('id', id);
   if (res.error) throw new Error(res.error.message);
 }
 

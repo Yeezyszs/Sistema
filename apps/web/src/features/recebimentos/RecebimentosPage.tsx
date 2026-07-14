@@ -32,6 +32,8 @@ function montarPayload(form: FormData, fornecedores: Fornecedor[]): NovoRecebime
     cancha: txt('cancha'),
     quantidade: num('quantidade'),
     renda: num('renda'),
+    hora_inicio: txt('hora_inicio'),
+    hora_fim: txt('hora_fim'),
     recebido_em,
   };
 }
@@ -75,6 +77,14 @@ function CamposCarga({ materiasPrimas, fornecedores, carga }: {
         </Field>
         <Field label="Ticket">
           <TextInput name="ticket" defaultValue={carga?.ticket ?? ''} placeholder="19474" />
+        </Field>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Início da descarga">
+          <TextInput name="hora_inicio" type="time" defaultValue={carga?.hora_inicio?.slice(0, 5) ?? ''} />
+        </Field>
+        <Field label="Fim da descarga">
+          <TextInput name="hora_fim" type="time" defaultValue={carga?.hora_fim?.slice(0, 5) ?? ''} />
         </Field>
       </div>
       <div className="grid grid-cols-3 gap-3">
@@ -234,6 +244,7 @@ export function RecebimentosPage() {
                     <th className="px-3 py-3 font-medium">Ticket</th>
                     <th className="px-3 py-3 font-medium">Produtor</th>
                     <th className="hidden px-3 py-3 font-medium lg:table-cell">Variedade</th>
+                    <th className="hidden px-3 py-3 font-medium md:table-cell">Descarga</th>
                     <th className="px-3 py-3 font-medium text-right">Peso</th>
                     <th className="px-3 py-3 font-medium text-right">Renda</th>
                     <th className="px-3 py-3 font-medium text-center">Cancha</th>
@@ -255,6 +266,11 @@ export function RecebimentosPage() {
                       <td className="px-3 py-2.5 text-slate-500">{r.ticket ?? '—'}</td>
                       <td className="px-3 py-2.5 text-slate-700">{nomeProdutor(r)}</td>
                       <td className="hidden px-3 py-2.5 text-slate-500 lg:table-cell">{r.variedade ?? '—'}</td>
+                      <td className="hidden px-3 py-2.5 text-slate-500 md:table-cell">
+                        {r.hora_inicio || r.hora_fim
+                          ? `${r.hora_inicio?.slice(0, 5) ?? '—'} → ${r.hora_fim?.slice(0, 5) ?? '—'}`
+                          : '—'}
+                      </td>
                       <td className="px-3 py-2.5 text-right text-slate-600">{formatarQuantidade(r.quantidade)}</td>
                       <td className="px-3 py-2.5 text-right text-slate-600">{r.renda ?? '—'}</td>
                       <td className="px-3 py-2.5 text-center text-slate-500">{r.cancha ?? '—'}</td>

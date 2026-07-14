@@ -22,6 +22,8 @@ export interface Recebimento {
   cancha: string | null; // local de descarga (1/2)
   turno: Turno | null;
   ticket: string | null;
+  hora_inicio: string | null; // início da descarga (HH:MM)
+  hora_fim: string | null; // fim da descarga (HH:MM)
   recebido_em: string; // ISO timestamp
   created_at: string;
   created_by: string | null;
@@ -38,5 +40,7 @@ export interface NovoRecebimento {
   cancha: string | null;
   turno: Turno | null;
   ticket: string | null;
+  hora_inicio?: string | null;
+  hora_fim?: string | null;
   recebido_em: string;
 }

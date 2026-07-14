@@ -159,6 +159,7 @@ export function EstoquePage() {
           lotes={data?.lotes ?? []}
           produtosMap={data?.produtosMap ?? new Map()}
           embalagens={data?.embalagens ?? []}
+          clientes={data?.clientes ?? []}
           onClose={() => setAlocando(null)}
           onSaved={rec}
         />
@@ -168,18 +169,20 @@ export function EstoquePage() {
 }
 
 function ModalAlocar({
-  local, lotes, produtosMap, embalagens, onClose, onSaved,
+  local, lotes, produtosMap, embalagens, clientes, onClose, onSaved,
 }: {
   local: LocalEstoque;
   lotes: { id: string; codigo: string; produto_id: string; cliente_id: string | null }[];
   produtosMap: Map<string, { nome: string }>;
   embalagens: { id: string; nome: string; unidade: string; saldo: number }[];
+  clientes: { id: string; nome: string }[];
   onClose: () => void;
   onSaved: () => void;
 }) {
   const [loteId, setLoteId] = useState('');
   const [qtd, setQtd] = useState('');
   const [embalagemId, setEmbalagemId] = useState('');
+  const [clienteId, setClienteId] = useState('');
   const [status, setStatus] = useState<StatusPosicao>('ocupado');
   const [salvando, setSalvando] = useState(false);
   const { sucesso, erro } = useToast();
@@ -192,7 +195,7 @@ function ModalAlocar({
         local_id: local.id,
         lote_id: loteId || null,
         produto_id: lote?.produto_id ?? null,
-        cliente_id: lote?.cliente_id ?? null,
+        cliente_id: clienteId || lote?.cliente_id || null,
         embalagem_id: embalagemId || null,
         qtd_bags: qtd ? Number(qtd) : null,
         status,
@@ -221,6 +224,12 @@ function ModalAlocar({
             </Select>
           </Field>
         </div>
+        <Field label="Cliente (rastreabilidade)">
+          <Select value={clienteId} onChange={(e) => setClienteId(e.target.value)}>
+            <option value="">{lote?.cliente_id ? 'Herdar do lote' : '—'}</option>
+            {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+          </Select>
+        </Field>
         <Field label="Embalagem (baixa automática)">
           <Select value={embalagemId} onChange={(e) => setEmbalagemId(e.target.value)}>
             <option value="">— não consumir</option>

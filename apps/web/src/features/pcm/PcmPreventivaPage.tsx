@@ -14,6 +14,7 @@ import { useToast } from '../../components/Toast';
 export function PcmPreventivaPage() {
   const [recarregar, setRecarregar] = useState(0);
   const [modal, setModal] = useState(false);
+  const [editando, setEditando] = useState<PreventivaPcm | null>(null);
   const [realizando, setRealizando] = useState<PreventivaPcm | null>(null);
   const [busca, setBusca] = useState('');
   const [filtroTri, setFiltroTri] = useState<'todos' | TrimestrePcm>('todos');
@@ -106,6 +107,7 @@ export function PcmPreventivaPage() {
                     </td>
                     <td className="hidden px-3 py-2.5 text-slate-500 md:table-cell">{p.exec ?? '—'}</td>
                     <td className="px-3 py-2.5 text-right whitespace-nowrap">
+                      <button onClick={() => setEditando(p)} className="mr-3 text-xs font-medium text-slate-500 hover:text-emerald-600">Editar</button>
                       {!p.realizada && (
                         <button onClick={() => setRealizando(p)} className="mr-3 text-xs font-medium text-emerald-600 hover:text-emerald-700">Realizar</button>
                       )}
@@ -119,10 +121,12 @@ export function PcmPreventivaPage() {
         </Card>
       )}
 
-      {modal && (
+      {(modal || editando) && (
         <ModalNovaPreventiva
           equipamentos={[...new Set((data?.equipamentos ?? []).map((e) => e.nome))]}
-          onClose={() => setModal(false)} onSaved={() => { setModal(false); rec(); }} sucesso={sucesso} erro={erro}
+          editando={editando}
+          onClose={() => { setModal(false); setEditando(null); }}
+          onSaved={() => { setModal(false); setEditando(null); rec(); }} sucesso={sucesso} erro={erro}
         />
       )}
       {realizando && (
@@ -135,8 +139,9 @@ export function PcmPreventivaPage() {
 
 type ToastFn = (m: string) => void;
 
-function ModalNovaPreventiva({ equipamentos, onClose, onSaved, sucesso, erro }: {
-  equipamentos: string[]; onClose: () => void; onSaved: () => void; sucesso: ToastFn; erro: ToastFn;
+function ModalNovaPreventiva({ equipamentos, editando, onClose, onSaved, sucesso, erro }: {
+  equipamentos: string[]; editando?: PreventivaPcm | null;
+  onClose: () => void; onSaved: () => void; sucesso: ToastFn; erro: ToastFn;
 }) {
   const [salvando, setSalvando] = useState(false);
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -144,36 +149,38 @@ function ModalNovaPreventiva({ equipamentos, onClose, onSaved, sucesso, erro }: 
     const f = new FormData(e.currentTarget);
     setSalvando(true);
     try {
-      await criarPreventivaPcm({
+      const payload = {
         equip: String(f.get('equip') ?? '').trim(),
         comp: String(f.get('comp') ?? '').trim(),
         trimestre: (String(f.get('trimestre') ?? '') || null) as never,
         planejada: String(f.get('planejada') ?? '') || null,
-      });
-      sucesso('Preventiva cadastrada.'); onSaved();
+      };
+      if (editando) await atualizarPreventivaPcm(editando.id, payload);
+      else await criarPreventivaPcm(payload);
+      sucesso(editando ? 'Preventiva atualizada.' : 'Preventiva cadastrada.'); onSaved();
     } catch (err) { erro(err instanceof Error ? err.message : 'Falha.'); }
     finally { setSalvando(false); }
   }
   return (
-    <Modal open onClose={onClose} title="Nova preventiva" size="lg">
+    <Modal open onClose={onClose} title={editando ? "Editar preventiva" : "Nova preventiva"} size="lg">
       <form onSubmit={onSubmit} className="space-y-4">
         <Field label="Equipamento">
-          <TextInput name="equip" list="equips-pcm" required placeholder="Nome do equipamento" />
+          <TextInput name="equip" list="equips-pcm" defaultValue={editando?.equip ?? ''} required placeholder="Nome do equipamento" />
           <datalist id="equips-pcm">{equipamentos.map((e) => <option key={e} value={e} />)}</datalist>
         </Field>
-        <Field label="Componente"><TextInput name="comp" required placeholder="Ex.: 02 - MANCAIS F 215" /></Field>
+        <Field label="Componente"><TextInput name="comp" defaultValue={editando?.comp ?? ''} required placeholder="Ex.: 02 - MANCAIS F 215" /></Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Trimestre">
-            <Select name="trimestre" defaultValue="">
+            <Select name="trimestre" defaultValue={editando?.trimestre ?? ""}>
               <option value="">—</option>
               {TRIMESTRE_PCM.map((t) => <option key={t} value={t}>{t}</option>)}
             </Select>
           </Field>
-          <Field label="Data planejada"><TextInput name="planejada" type="date" /></Field>
+          <Field label="Data planejada"><TextInput name="planejada" type="date" defaultValue={editando?.planejada ?? ''} /></Field>
         </div>
         <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
           <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button type="submit" loading={salvando}>Cadastrar</Button>
+          <Button type="submit" loading={salvando}>{editando ? "Salvar" : "Cadastrar"}</Button>
         </div>
       </form>
     </Modal>

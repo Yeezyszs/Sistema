@@ -1329,6 +1329,24 @@ export async function salvarExecucoesDaOs(osId: string, linhas: NovaOsExecucao[]
   }
 }
 
+// CRUD genérico dos cadastros do PCM (tabelas do schema manutencao).
+type TabelaPcm = 'equipamentos' | 'equipamento_componentes' | 'planos' | 'lubrificacao' | 'ferramentas' | 'colaboradores';
+
+export async function criarRegistroPcm(tabela: TabelaPcm, payload: Record<string, unknown>): Promise<void> {
+  const res = await manutencao().from(tabela).insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function atualizarRegistroPcm(tabela: TabelaPcm, id: string, patch: Record<string, unknown>): Promise<void> {
+  const res = await manutencao().from(tabela).update(patch).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function excluirRegistroPcm(tabela: TabelaPcm, id: string): Promise<void> {
+  const res = await manutencao().from(tabela).delete().eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
 // ── PCM: Preventiva + Lubrificação (F3) ────────────────────────
 export async function listPreventivaPcm(): Promise<PreventivaPcm[]> {
   return unwrap<PreventivaPcm[]>(

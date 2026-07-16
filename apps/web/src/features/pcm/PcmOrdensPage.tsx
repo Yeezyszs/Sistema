@@ -15,6 +15,7 @@ import { useToast } from '../../components/Toast';
 export function PcmOrdensPage() {
   const [recarregar, setRecarregar] = useState(0);
   const [modal, setModal] = useState(false);
+  const [editando, setEditando] = useState<OrdemPcm | null>(null);
   const [concluindo, setConcluindo] = useState<OrdemPcm | null>(null);
   const [busca, setBusca] = useState('');
   const [filtroStatus, setFiltroStatus] = useState<'todas' | 'Em Aberto' | 'Concluído'>('Em Aberto');
@@ -109,6 +110,7 @@ export function PcmOrdensPage() {
                     <Link to={`/pcm-os/${o.id}/imprimir`} className="mr-3 inline-flex align-middle text-slate-400 hover:text-slate-700" title="Imprimir O.S.">
                       <IconDoc width={15} height={15} />
                     </Link>
+                    <button onClick={() => setEditando(o)} className="mr-3 text-xs font-medium text-slate-500 hover:text-emerald-600">Editar</button>
                     {o.status === 'Em Aberto' && (
                       <button onClick={() => setConcluindo(o)} className="mr-3 text-xs font-medium text-emerald-600 hover:text-emerald-700">Concluir</button>
                     )}
@@ -121,9 +123,10 @@ export function PcmOrdensPage() {
         </Card>
       )}
 
-      {modal && (
-        <ModalNovaOs setores={data?.setores ?? []} onClose={() => setModal(false)}
-          onSaved={() => { setModal(false); rec(); }} sucesso={sucesso} erro={erro} />
+      {(modal || editando) && (
+        <ModalNovaOs setores={data?.setores ?? []} editando={editando}
+          onClose={() => { setModal(false); setEditando(null); }}
+          onSaved={() => { setModal(false); setEditando(null); rec(); }} sucesso={sucesso} erro={erro} />
       )}
       {concluindo && (
         <ModalConcluirOs os={concluindo} colaboradores={data?.colaboradores ?? []}
@@ -136,12 +139,13 @@ export function PcmOrdensPage() {
 type ToastFn = (m: string) => void;
 
 // ── Nova O.S. (com paradas de equipamento/produção) ────────────
-function ModalNovaOs({ setores, onClose, onSaved, sucesso, erro }: {
-  setores: string[]; onClose: () => void; onSaved: () => void; sucesso: ToastFn; erro: ToastFn;
+function ModalNovaOs({ setores, editando, onClose, onSaved, sucesso, erro }: {
+  setores: string[]; editando?: OrdemPcm | null;
+  onClose: () => void; onSaved: () => void; sucesso: ToastFn; erro: ToastFn;
 }) {
   const [salvando, setSalvando] = useState(false);
-  const [paradaEquip, setParadaEquip] = useState(false);
-  const [paradaProd, setParadaProd] = useState(false);
+  const [paradaEquip, setParadaEquip] = useState(editando?.parada_equip ?? false);
+  const [paradaProd, setParadaProd] = useState(editando?.parada_prod ?? false);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -149,7 +153,7 @@ function ModalNovaOs({ setores, onClose, onSaved, sucesso, erro }: {
     const txt = (k: string) => String(f.get(k) ?? '').trim() || null;
     setSalvando(true);
     try {
-      await criarOrdemPcm({
+      const payload = {
         data: String(f.get('data') ?? new Date().toISOString().slice(0, 10)),
         hora: txt('hora'),
         req: txt('req'),
@@ -169,21 +173,23 @@ function ModalNovaOs({ setores, onClose, onSaved, sucesso, erro }: {
         parada_prod_ini_h: paradaProd ? txt('pp_ini_h') : null,
         parada_prod_ret: paradaProd ? txt('pp_ret') : null,
         parada_prod_ret_h: paradaProd ? txt('pp_ret_h') : null,
-      });
-      sucesso('O.S. aberta.'); onSaved();
+      };
+      if (editando) await atualizarOrdemPcm(editando.id, payload);
+      else await criarOrdemPcm(payload);
+      sucesso(editando ? 'O.S. atualizada.' : 'O.S. aberta.'); onSaved();
     } catch (err) { erro(err instanceof Error ? err.message : 'Falha.'); }
     finally { setSalvando(false); }
   }
 
   return (
-    <Modal open onClose={onClose} title="Nova Ordem de Serviço" size="xl">
+    <Modal open onClose={onClose} title={editando ? `Editar O.S. #${editando.numero}` : "Nova Ordem de Serviço"} size="xl">
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Field label="Data"><TextInput name="data" type="date" defaultValue={new Date().toISOString().slice(0, 10)} required /></Field>
-          <Field label="Hora"><TextInput name="hora" type="time" /></Field>
-          <Field label="Requisitante"><TextInput name="req" placeholder="—" /></Field>
+          <Field label="Data"><TextInput name="data" type="date" defaultValue={editando?.data ?? new Date().toISOString().slice(0, 10)} required /></Field>
+          <Field label="Hora"><TextInput name="hora" type="time" defaultValue={editando?.hora ?? ''} /></Field>
+          <Field label="Requisitante"><TextInput name="req" defaultValue={editando?.req ?? ''} placeholder="—" /></Field>
           <Field label="Setor">
-            <Select name="setor" defaultValue="">
+            <Select name="setor" defaultValue={editando?.setor ?? ""}>
               <option value="">—</option>
               {setores.map((s) => <option key={s} value={s}>{s}</option>)}
             </Select>
@@ -191,17 +197,17 @@ function ModalNovaOs({ setores, onClose, onSaved, sucesso, erro }: {
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Field label="Tipo">
-            <Select name="tipo" defaultValue="Corretiva">{TIPO_OS_PCM.map((t) => <option key={t} value={t}>{t}</option>)}</Select>
+            <Select name="tipo" defaultValue={editando?.tipo ?? "Corretiva"}>{TIPO_OS_PCM.map((t) => <option key={t} value={t}>{t}</option>)}</Select>
           </Field>
           <Field label="Demanda">
-            <Select name="natureza" defaultValue="Mecânica">{NATUREZA_OS.map((n) => <option key={n} value={n}>{n}</option>)}</Select>
+            <Select name="natureza" defaultValue={editando?.natureza ?? "Mecânica"}>{NATUREZA_OS.map((n) => <option key={n} value={n}>{n}</option>)}</Select>
           </Field>
           <Field label="Prioridade">
-            <Select name="prioridade" defaultValue="Normal">{PRIORIDADE_OS_PCM.map((p) => <option key={p} value={p}>{p}</option>)}</Select>
+            <Select name="prioridade" defaultValue={editando?.prioridade ?? "Normal"}>{PRIORIDADE_OS_PCM.map((p) => <option key={p} value={p}>{p}</option>)}</Select>
           </Field>
-          <Field label="Data programada"><TextInput name="data_prog" type="date" /></Field>
+          <Field label="Data programada"><TextInput name="data_prog" type="date" defaultValue={editando?.data_prog ?? ''} /></Field>
         </div>
-        <Field label="Descrição do serviço"><TextInput name="descricao" required placeholder="O que precisa ser feito" /></Field>
+        <Field label="Descrição do serviço"><TextInput name="descricao" defaultValue={editando?.descricao ?? ''} required placeholder="O que precisa ser feito" /></Field>
 
         {/* Paradas */}
         <div className="grid gap-3 sm:grid-cols-2">
@@ -212,10 +218,10 @@ function ModalNovaOs({ setores, onClose, onSaved, sucesso, erro }: {
             </label>
             {paradaEquip && (
               <div className="mt-3 grid grid-cols-2 gap-2">
-                <Field label="Início"><TextInput name="pe_ini" type="date" /></Field>
-                <Field label="Hora"><TextInput name="pe_ini_h" type="time" /></Field>
-                <Field label="Retorno"><TextInput name="pe_ret" type="date" /></Field>
-                <Field label="Hora"><TextInput name="pe_ret_h" type="time" /></Field>
+                <Field label="Início"><TextInput name="pe_ini" type="date" defaultValue={editando?.parada_equip_ini ?? ''} /></Field>
+                <Field label="Hora"><TextInput name="pe_ini_h" type="time" defaultValue={editando?.parada_equip_ini_h ?? ''} /></Field>
+                <Field label="Retorno"><TextInput name="pe_ret" type="date" defaultValue={editando?.parada_equip_ret ?? ''} /></Field>
+                <Field label="Hora"><TextInput name="pe_ret_h" type="time" defaultValue={editando?.parada_equip_ret_h ?? ''} /></Field>
               </div>
             )}
           </div>
@@ -226,10 +232,10 @@ function ModalNovaOs({ setores, onClose, onSaved, sucesso, erro }: {
             </label>
             {paradaProd && (
               <div className="mt-3 grid grid-cols-2 gap-2">
-                <Field label="Início"><TextInput name="pp_ini" type="date" /></Field>
-                <Field label="Hora"><TextInput name="pp_ini_h" type="time" /></Field>
-                <Field label="Retorno"><TextInput name="pp_ret" type="date" /></Field>
-                <Field label="Hora"><TextInput name="pp_ret_h" type="time" /></Field>
+                <Field label="Início"><TextInput name="pp_ini" type="date" defaultValue={editando?.parada_prod_ini ?? ''} /></Field>
+                <Field label="Hora"><TextInput name="pp_ini_h" type="time" defaultValue={editando?.parada_prod_ini_h ?? ''} /></Field>
+                <Field label="Retorno"><TextInput name="pp_ret" type="date" defaultValue={editando?.parada_prod_ret ?? ''} /></Field>
+                <Field label="Hora"><TextInput name="pp_ret_h" type="time" defaultValue={editando?.parada_prod_ret_h ?? ''} /></Field>
               </div>
             )}
           </div>
@@ -237,7 +243,7 @@ function ModalNovaOs({ setores, onClose, onSaved, sucesso, erro }: {
 
         <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
           <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button type="submit" loading={salvando}>Abrir O.S.</Button>
+          <Button type="submit" loading={salvando}>{editando ? "Salvar" : "Abrir O.S."}</Button>
         </div>
       </form>
     </Modal>

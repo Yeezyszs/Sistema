@@ -101,8 +101,14 @@ const ITENS_QUALIDADE: SubItem[] = [
   { to: '/auditoria', icon: <IconCheck width={18} height={18} />, label: 'Auditoria & PPR', modulo: 'auditoria' },
   { to: '/ambiental', icon: <IconLeaf width={18} height={18} />, label: 'Ambiental & Pragas', modulo: 'ambiental' },
   { to: '/nao-conformidades', icon: <IconDoc width={18} height={18} />, label: 'Não conformidades', modulo: 'nao_conformidades' },
-  { to: '/manutencao', icon: <IconClipboard width={18} height={18} />, label: 'Manutenção — O.S.', modulo: 'manutencao' },
-  { to: '/pcm-cadastros', icon: <IconBox width={18} height={18} />, label: 'PCM — Cadastros', modulo: 'manutencao' },
+];
+
+// Tudo de manutenção vive aqui (PCM portado).
+const ITENS_MANUTENCAO: SubItem[] = [
+  { to: '/manutencao', icon: <IconClipboard width={18} height={18} />, label: 'Ordens de Serviço', modulo: 'manutencao' },
+  { to: '/preventiva', icon: <IconCheck width={18} height={18} />, label: 'Preventiva', modulo: 'manutencao' },
+  { to: '/lubrificacao', icon: <IconClock width={18} height={18} />, label: 'Lubrificação', modulo: 'manutencao' },
+  { to: '/pcm-cadastros', icon: <IconBox width={18} height={18} />, label: 'Cadastros (PCM)', modulo: 'manutencao' },
 ];
 
 export function Layout() {
@@ -112,6 +118,7 @@ export function Layout() {
   const itensTopo = ITENS_TOPO.filter((i) => podeAcessarModulo(i.modulo));
   const itensPcp = ITENS_PCP.filter((i) => podeAcessarModulo(i.modulo));
   const itensQualidade = ITENS_QUALIDADE.filter((i) => podeAcessarModulo(i.modulo));
+  const itensManutencao = ITENS_MANUTENCAO.filter((i) => podeAcessarModulo(i.modulo));
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -133,6 +140,7 @@ export function Layout() {
           ))}
           <NavGroup icon={<IconClipboard />} label="PCP" items={itensPcp} />
           <NavGroup icon={<IconShield />} label="Qualidade" items={itensQualidade} />
+          <NavGroup icon={<IconBox />} label="Manutenção" items={itensManutencao} />
         </nav>
 
         <div className="border-t border-slate-200 p-3">

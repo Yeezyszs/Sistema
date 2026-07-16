@@ -22,6 +22,8 @@ import { PccFisicoPage } from '../features/qualidade/PccFisicoPage';
 import { PphoPage } from '../features/qualidade/PphoPage';
 import { CalibracaoPage } from '../features/qualidade/CalibracaoPage';
 import { PcmOrdensPage } from '../features/pcm/PcmOrdensPage';
+import { PcmPreventivaPage } from '../features/pcm/PcmPreventivaPage';
+import { PcmLubrificacaoPage } from '../features/pcm/PcmLubrificacaoPage';
 import { PcmOsPrint } from '../features/pcm/PcmOsPrint';
 import { AnaliseRiscoPage } from '../features/qualidade/AnaliseRiscoPage';
 import { AuditoriaPage } from '../features/qualidade/AuditoriaPage';
@@ -119,6 +121,8 @@ export default function App() {
             <Route path="/contraprovas" element={<ModuloGuard modulo="contraprovas"><ContraprovasPage /></ModuloGuard>} />
             <Route path="/manutencao" element={<ModuloGuard modulo="manutencao"><PcmOrdensPage /></ModuloGuard>} />
             <Route path="/pcm-cadastros" element={<ModuloGuard modulo="manutencao"><PcmCadastrosPage /></ModuloGuard>} />
+            <Route path="/preventiva" element={<ModuloGuard modulo="manutencao"><PcmPreventivaPage /></ModuloGuard>} />
+            <Route path="/lubrificacao" element={<ModuloGuard modulo="manutencao"><PcmLubrificacaoPage /></ModuloGuard>} />
             <Route path="/analise-risco" element={<ModuloGuard modulo="analise_risco"><AnaliseRiscoPage /></ModuloGuard>} />
             <Route path="/auditoria" element={<ModuloGuard modulo="auditoria"><AuditoriaPage /></ModuloGuard>} />
             <Route path="/ambiental" element={<ModuloGuard modulo="ambiental"><AmbientalPage /></ModuloGuard>} />

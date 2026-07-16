@@ -126,6 +126,10 @@ import type {
   NovaOrdemPcm,
   OsExecucao,
   NovaOsExecucao,
+  PreventivaPcm,
+  NovaPreventivaPcm,
+  LuExecucao,
+  NovaLuExecucao,
 } from '@sistema/domain';
 
 const producao = () => supabase.schema('producao');
@@ -1323,6 +1327,40 @@ export async function salvarExecucoesDaOs(osId: string, linhas: NovaOsExecucao[]
     const ins = await manutencao().from('os_execucoes').insert(linhas.map((l) => ({ ...l, os_id: osId })));
     if (ins.error) throw new Error(ins.error.message);
   }
+}
+
+// ── PCM: Preventiva + Lubrificação (F3) ────────────────────────
+export async function listPreventivaPcm(): Promise<PreventivaPcm[]> {
+  return unwrap<PreventivaPcm[]>(
+    await manutencao().from('preventiva').select('*')
+      .order('trimestre').order('equip').order('comp'),
+  );
+}
+
+export async function criarPreventivaPcm(payload: NovaPreventivaPcm): Promise<void> {
+  const res = await manutencao().from('preventiva').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function atualizarPreventivaPcm(id: string, patch: Partial<NovaPreventivaPcm>): Promise<void> {
+  const res = await manutencao().from('preventiva').update(patch).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function excluirPreventivaPcm(id: string): Promise<void> {
+  const res = await manutencao().from('preventiva').delete().eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function listLuExecucoes(): Promise<LuExecucao[]> {
+  return unwrap<LuExecucao[]>(
+    await manutencao().from('lu_execucoes').select('*').order('data', { ascending: false }),
+  );
+}
+
+export async function criarLuExecucao(payload: NovaLuExecucao): Promise<void> {
+  const res = await manutencao().from('lu_execucoes').insert(payload);
+  if (res.error) throw new Error(res.error.message);
 }
 
 // ── Helpers de lookup ──────────────────────────────────────────

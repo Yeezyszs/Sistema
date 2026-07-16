@@ -133,6 +133,50 @@ export interface OsExecucao {
 
 export type NovaOsExecucao = Partial<Omit<OsExecucao, 'id' | 'org_id' | 'os_id' | 'created_at'>>;
 
+// ── F3: Preventiva + execuções de lubrificação ─────────────────
+export const TRIMESTRE_PCM = ['1º', '2º', '3º', '4º'] as const;
+export type TrimestrePcm = (typeof TRIMESTRE_PCM)[number];
+
+export interface PreventivaPcm {
+  id: string;
+  org_id: string;
+  equip: string;
+  comp: string;
+  trimestre: TrimestrePcm | null;
+  planejada: string | null;
+  realizada: string | null;
+  exec: string | null;
+  created_at: string;
+  created_by: string | null;
+}
+
+export type NovaPreventivaPcm = Partial<Omit<PreventivaPcm, 'id' | 'org_id' | 'created_at' | 'created_by'>> & {
+  equip: string;
+  comp: string;
+};
+
+export interface LuExecucao {
+  id: string;
+  org_id: string;
+  setor: string | null;
+  equip: string | null;
+  item: string | null;
+  data: string;
+  exec: string | null;
+  obs: string | null;
+  created_at: string;
+  created_by: string | null;
+}
+
+export interface NovaLuExecucao {
+  setor?: string | null;
+  equip?: string | null;
+  item?: string | null;
+  data: string;
+  exec?: string | null;
+  obs?: string | null;
+}
+
 export interface FerramentaPcm {
   id: string;
   org_id: string;

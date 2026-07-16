@@ -48,3 +48,4 @@ export * from './entities/AnaliseProcesso';
 export * from './entities/MonitoramentoAgua';
 export * from './entities/InsumoLaboratorio';
 export * from './entities/Contraprova';
+export * from './entities/Pcm';

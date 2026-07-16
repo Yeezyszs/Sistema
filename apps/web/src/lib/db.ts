@@ -116,6 +116,12 @@ import type {
   NovaContraprova,
   ContraprovaRetencao,
   NovaRetencao,
+  ColaboradorPcm,
+  EquipamentoPcm,
+  ComponenteEquipamento,
+  PlanoPcm,
+  LubrificacaoPcm,
+  FerramentaPcm,
 } from '@sistema/domain';
 
 const producao = () => supabase.schema('producao');
@@ -1232,6 +1238,43 @@ export async function atualizarDesvio(id: string, patch: Partial<NovoDesvio & { 
 export async function excluirDesvio(id: string): Promise<void> {
   const res = await producao().from('desvios').delete().eq('id', id);
   if (res.error) throw new Error(res.error.message);
+}
+
+// ── PCM: cadastros (F1) ────────────────────────────────────────
+export async function listColaboradoresPcm(): Promise<ColaboradorPcm[]> {
+  return unwrap<ColaboradorPcm[]>(
+    await manutencao().from('colaboradores').select('*').eq('ativo', true).order('nome'),
+  );
+}
+
+export async function listEquipamentosPcm(): Promise<EquipamentoPcm[]> {
+  return unwrap<EquipamentoPcm[]>(
+    await manutencao().from('equipamentos').select('*').eq('ativo', true).order('setor').order('nome'),
+  );
+}
+
+export async function listComponentesPcm(): Promise<ComponenteEquipamento[]> {
+  return unwrap<ComponenteEquipamento[]>(
+    await manutencao().from('equipamento_componentes').select('*').order('nome'),
+  );
+}
+
+export async function listPlanosPcm(): Promise<PlanoPcm[]> {
+  return unwrap<PlanoPcm[]>(
+    await manutencao().from('planos').select('*').order('setor').order('equip'),
+  );
+}
+
+export async function listLubrificacaoPcm(): Promise<LubrificacaoPcm[]> {
+  return unwrap<LubrificacaoPcm[]>(
+    await manutencao().from('lubrificacao').select('*').order('setor').order('equip'),
+  );
+}
+
+export async function listFerramentasPcm(): Promise<FerramentaPcm[]> {
+  return unwrap<FerramentaPcm[]>(
+    await manutencao().from('ferramentas').select('*').order('tipo').order('caixa').order('nome'),
+  );
 }
 
 // ── Helpers de lookup ──────────────────────────────────────────

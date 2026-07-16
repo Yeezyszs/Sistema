@@ -102,6 +102,7 @@ const ITENS_QUALIDADE: SubItem[] = [
   { to: '/ambiental', icon: <IconLeaf width={18} height={18} />, label: 'Ambiental & Pragas', modulo: 'ambiental' },
   { to: '/nao-conformidades', icon: <IconDoc width={18} height={18} />, label: 'Não conformidades', modulo: 'nao_conformidades' },
   { to: '/manutencao', icon: <IconClipboard width={18} height={18} />, label: 'Manutenção', modulo: 'manutencao' },
+  { to: '/pcm-cadastros', icon: <IconBox width={18} height={18} />, label: 'PCM — Cadastros', modulo: 'manutencao' },
 ];
 
 export function Layout() {

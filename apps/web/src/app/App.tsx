@@ -15,6 +15,7 @@ import { MonitoramentoAguaPage } from '../features/qualidade/MonitoramentoAguaPa
 import { CalibracaoPhmetroPage } from '../features/qualidade/CalibracaoPhmetroPage';
 import { InsumosLaboratorioPage } from '../features/qualidade/InsumosLaboratorioPage';
 import { ContraprovasPage } from '../features/qualidade/ContraprovasPage';
+import { PcmCadastrosPage } from '../features/pcm/PcmCadastrosPage';
 import { NaoConformidadesPage } from '../features/qualidade/NaoConformidadesPage';
 import { EspecificacoesPage } from '../features/qualidade/EspecificacoesPage';
 import { PccFisicoPage } from '../features/qualidade/PccFisicoPage';
@@ -107,6 +108,7 @@ export default function App() {
             <Route path="/insumos-lab" element={<ModuloGuard modulo="insumos_lab"><InsumosLaboratorioPage /></ModuloGuard>} />
             <Route path="/contraprovas" element={<ModuloGuard modulo="contraprovas"><ContraprovasPage /></ModuloGuard>} />
             <Route path="/manutencao" element={<ModuloGuard modulo="manutencao"><ManutencaoPage /></ModuloGuard>} />
+            <Route path="/pcm-cadastros" element={<ModuloGuard modulo="manutencao"><PcmCadastrosPage /></ModuloGuard>} />
             <Route path="/analise-risco" element={<ModuloGuard modulo="analise_risco"><AnaliseRiscoPage /></ModuloGuard>} />
             <Route path="/auditoria" element={<ModuloGuard modulo="auditoria"><AuditoriaPage /></ModuloGuard>} />
             <Route path="/ambiental" element={<ModuloGuard modulo="ambiental"><AmbientalPage /></ModuloGuard>} />

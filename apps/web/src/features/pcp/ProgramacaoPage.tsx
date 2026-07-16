@@ -8,7 +8,7 @@ import { formatarData, formatarQuantidade } from '../../lib/format';
 import { TURNO_PROD, TURNO_PROD_LABEL, calcularMeta } from '@sistema/domain';
 import type { TurnoProd, Linha, Produto, Programacao } from '@sistema/domain';
 import { PageHeader, Card, Spinner, Button, Field, TextInput, Select, Modal } from '../../components/ui';
-import { IconArrowLeft, IconChevronRight } from '../../components/icons';
+import { IconArrowLeft, IconChevronRight, IconX } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 import { ProdutoPicker } from '../../components/ProdutoPicker';
 
@@ -174,6 +174,9 @@ export function ProgramacaoPage() {
   );
 }
 
+// Uma linha de produto no modo criação (vários produtos de uma vez).
+interface ItemProduto { produtoId: string; atividade: string; meta: string }
+
 function ModalProgramacao({
   criando, editando, linhas, produtos, onClose, onSaved, onExcluir,
 }: {
@@ -182,35 +185,61 @@ function ModalProgramacao({
   linhas: Linha[]; produtos: Produto[];
   onClose: () => void; onSaved: () => void; onExcluir?: () => void;
 }) {
+  const [data, setData] = useState(editando?.data ?? criando?.data ?? '');
+  const [turno, setTurno] = useState<TurnoProd>(editando?.turno ?? criando?.turno ?? '1t');
   const [linhaId, setLinhaId] = useState(editando?.linha_id ?? criando?.linhaId ?? '');
-  const [produtoId, setProdutoId] = useState(editando?.produto_id ?? '');
   const [salvando, setSalvando] = useState(false);
   const { sucesso, erro } = useToast();
 
   const linha = linhas.find((l) => l.id === linhaId);
-  const produto = produtos.find((p) => p.id === produtoId);
-  const metaSugerida = linha && produto
-    ? calcularMeta(linha.horas_disponiveis, produto.tempo_por_lote_min, produto.kg_por_lote)
-    : null;
+
+  // Modo edição: campos únicos. Modo criação: lista de produtos.
+  const [prodEdit, setProdEdit] = useState(editando?.produto_id ?? '');
+  const [atividadeEdit, setAtividadeEdit] = useState(editando?.atividade ?? '');
+  const [metaEdit, setMetaEdit] = useState(editando?.meta_kg != null ? String(editando.meta_kg) : '');
+
+  const [itens, setItens] = useState<ItemProduto[]>([{ produtoId: '', atividade: '', meta: '' }]);
+  const [observacao, setObservacao] = useState(editando?.observacao ?? '');
+
+  function metaSugerida(produtoId: string): number | null {
+    const p = produtos.find((x) => x.id === produtoId);
+    if (!linha || !p) return null;
+    return calcularMeta(linha.horas_disponiveis, p.tempo_por_lote_min, p.kg_por_lote);
+  }
+
+  function mudarItem(i: number, campo: keyof ItemProduto, v: string) {
+    setItens((arr) => arr.map((it, x) => (x === i ? { ...it, [campo]: v } : it)));
+  }
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const f = new FormData(e.currentTarget);
-    const num = (k: string) => { const v = String(f.get(k) ?? '').trim(); return v ? Number(v) : null; };
-    const payload = {
-      data: String(f.get('data') ?? ''),
-      turno: String(f.get('turno') ?? '1t') as TurnoProd,
-      linha_id: linhaId || null,
-      produto_id: produtoId || null,
-      atividade: String(f.get('atividade') ?? '').trim() || null,
-      meta_kg: num('meta_kg') ?? metaSugerida,
-      observacao: String(f.get('observacao') ?? '').trim() || null,
-    };
+    if (!data) { erro('Informe a data.'); return; }
     setSalvando(true);
     try {
-      if (editando) await atualizarProgramacao(editando.id, payload);
-      else await criarProgramacao(payload);
-      sucesso(editando ? 'Programação atualizada.' : 'Programação adicionada.');
+      if (editando) {
+        await atualizarProgramacao(editando.id, {
+          data, turno, linha_id: linhaId || null,
+          produto_id: prodEdit || null,
+          atividade: atividadeEdit.trim() || null,
+          meta_kg: metaEdit ? Number(metaEdit) : metaSugerida(prodEdit),
+          observacao: observacao.trim() || null,
+        });
+        sucesso('Programação atualizada.');
+      } else {
+        // Cada item vira uma programação; ignora linhas totalmente vazias.
+        const validos = itens.filter((it) => it.produtoId || it.atividade.trim() || it.meta);
+        if (validos.length === 0) { erro('Adicione ao menos um produto ou atividade.'); setSalvando(false); return; }
+        for (const it of validos) {
+          await criarProgramacao({
+            data, turno, linha_id: linhaId || null,
+            produto_id: it.produtoId || null,
+            atividade: it.atividade.trim() || null,
+            meta_kg: it.meta ? Number(it.meta) : metaSugerida(it.produtoId),
+            observacao: observacao.trim() || null,
+          });
+        }
+        sucesso(validos.length > 1 ? `${validos.length} programações adicionadas.` : 'Programação adicionada.');
+      }
       onSaved();
     } catch (err) { erro(err instanceof Error ? err.message : 'Falha.'); }
     finally { setSalvando(false); }
@@ -220,9 +249,9 @@ function ModalProgramacao({
     <Modal open onClose={onClose} title={editando ? 'Editar programação' : 'Nova programação'} size="lg">
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="grid grid-cols-3 gap-3">
-          <Field label="Data"><TextInput name="data" type="date" defaultValue={editando?.data ?? criando?.data ?? ''} required /></Field>
+          <Field label="Data"><TextInput type="date" value={data} onChange={(e) => setData(e.target.value)} required /></Field>
           <Field label="Turno">
-            <Select name="turno" defaultValue={editando?.turno ?? criando?.turno ?? '1t'}>
+            <Select value={turno} onChange={(e) => setTurno(e.target.value as TurnoProd)}>
               {TURNO_PROD.map((t) => <option key={t} value={t}>{TURNO_PROD_LABEL[t]}</option>)}
             </Select>
           </Field>
@@ -233,20 +262,56 @@ function ModalProgramacao({
             </Select>
           </Field>
         </div>
-        <ProdutoPicker produtos={produtos} value={produtoId} onChange={setProdutoId} />
-        <Field label="Atividade (se não for produção)">
-          <TextInput name="atividade" defaultValue={editando?.atividade ?? ''} placeholder="Ex.: Limpeza, Manutenção" />
-        </Field>
-        <Field label="Meta (kg)">
-          <TextInput name="meta_kg" type="number" step="any" min="0" defaultValue={editando?.meta_kg ?? ''} placeholder={metaSugerida != null ? `sugerido: ${metaSugerida}` : '0'} />
-        </Field>
-        {metaSugerida != null && (
-          <p className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
-            Meta sugerida: <span className="font-semibold">{formatarQuantidade(metaSugerida, 'kg')}</span>
-            {' '}({linha?.horas_disponiveis}h · {produto?.kg_por_lote} kg/lote · eficiência 80%). Deixe vazio para usar a sugestão.
-          </p>
+
+        {editando ? (
+          <>
+            <ProdutoPicker produtos={produtos} value={prodEdit} onChange={setProdEdit} />
+            <Field label="Atividade (se não for produção)">
+              <TextInput value={atividadeEdit} onChange={(e) => setAtividadeEdit(e.target.value)} placeholder="Ex.: Limpeza, Manutenção" />
+            </Field>
+            <Field label="Meta (kg)">
+              <TextInput type="number" step="any" min="0" value={metaEdit} onChange={(e) => setMetaEdit(e.target.value)}
+                placeholder={metaSugerida(prodEdit) != null ? `sugerido: ${metaSugerida(prodEdit)}` : '0'} />
+            </Field>
+          </>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Produtos / atividades</p>
+            {itens.map((it, i) => {
+              const sug = metaSugerida(it.produtoId);
+              return (
+                <div key={i} className="rounded-lg border border-slate-200 p-3">
+                  <div className="flex items-start gap-2">
+                    <div className="flex-1 space-y-2">
+                      <ProdutoPicker produtos={produtos} value={it.produtoId} onChange={(v) => mudarItem(i, 'produtoId', v)} />
+                      <div className="grid grid-cols-2 gap-2">
+                        <Field label="Atividade (opcional)">
+                          <TextInput value={it.atividade} onChange={(e) => mudarItem(i, 'atividade', e.target.value)} placeholder="Limpeza…" />
+                        </Field>
+                        <Field label="Meta (kg)">
+                          <TextInput type="number" step="any" min="0" value={it.meta} onChange={(e) => mudarItem(i, 'meta', e.target.value)}
+                            placeholder={sug != null ? `sugerido: ${sug}` : '0'} />
+                        </Field>
+                      </div>
+                    </div>
+                    {itens.length > 1 && (
+                      <button type="button" onClick={() => setItens((arr) => arr.filter((_, x) => x !== i))}
+                        className="mt-6 shrink-0 text-slate-300 hover:text-red-600" aria-label="Remover produto">
+                        <IconX width={16} height={16} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+            <button type="button" onClick={() => setItens((arr) => [...arr, { produtoId: '', atividade: '', meta: '' }])}
+              className="text-xs font-medium text-emerald-600 hover:text-emerald-700">
+              + Adicionar produto
+            </button>
+          </div>
         )}
-        <Field label="Observação"><TextInput name="observacao" defaultValue={editando?.observacao ?? ''} placeholder="—" /></Field>
+
+        <Field label="Observação"><TextInput value={observacao} onChange={(e) => setObservacao(e.target.value)} placeholder="—" /></Field>
         <div className="flex items-center justify-between border-t border-slate-100 pt-4">
           {onExcluir ? (
             <button type="button" onClick={onExcluir} className="text-sm font-medium text-red-500 hover:text-red-600">Excluir</button>

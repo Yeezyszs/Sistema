@@ -7,12 +7,14 @@ import {
   listClientes,
   criarLote,
   atualizarStatusOP,
+  atualizarOrdemProducao,
   mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { formatarData, formatarQuantidade } from '../../lib/format';
 import { STATUS_OP_LABEL } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Modal } from '../../components/ui';
+import type { Cliente } from '@sistema/domain';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
 import { StatusChip } from '../../components/StatusChip';
 import { IconArrowLeft, IconPlus, IconChevronRight, IconClipboard } from '../../components/icons';
 import { useToast } from '../../components/Toast';
@@ -24,6 +26,7 @@ export function OrdemPage() {
   const [modalAberto, setModalAberto] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [mudandoStatus, setMudandoStatus] = useState(false);
+  const [editandoOp, setEditandoOp] = useState(false);
   // Sinal para o card de apontamentos abrir o modal a partir do botão do topo.
   const [sinalApontar, setSinalApontar] = useState(0);
   const { sucesso, erro } = useToast();
@@ -41,6 +44,7 @@ export function OrdemPage() {
       lotes,
       produtos: mapBy(produtos, 'id'),
       clientes: mapBy(clientes, 'id'),
+      clientesList: clientes,
     };
   }, [id, recarregar]);
 
@@ -138,9 +142,14 @@ export function OrdemPage() {
 
       <div className="grid gap-6 lg:grid-cols-5">
         <Card className="p-6 lg:col-span-2">
-          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-400">
-            Dados da ordem
-          </h2>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+              Dados da ordem
+            </h2>
+            <button onClick={() => setEditandoOp(true)} className="text-xs font-medium text-emerald-600 hover:text-emerald-700">
+              Editar
+            </button>
+          </div>
           <dl className="space-y-3 text-sm">
             <Linha termo="Status" valor={STATUS_OP_LABEL[op.status]} />
             <Linha termo="Cliente" valor={cliente} />
@@ -226,6 +235,15 @@ export function OrdemPage() {
         </div>
       </div>
 
+      {editandoOp && (
+        <ModalEditarOp
+          op={op}
+          clientes={data.clientesList}
+          onClose={() => setEditandoOp(false)}
+          onSaved={() => { setEditandoOp(false); setRecarregar((n) => n + 1); }}
+        />
+      )}
+
       <Modal open={modalAberto} onClose={() => setModalAberto(false)} title={`Gerar lote — OP #${op.numero}`}>
         <form onSubmit={onCriarLote} className="space-y-4">
           <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">
@@ -253,6 +271,78 @@ export function OrdemPage() {
         </form>
       </Modal>
     </>
+  );
+}
+
+function ModalEditarOp({ op, clientes, onClose, onSaved }: {
+  op: {
+    id: string; numero: number; cliente_id: string | null; pedido: string | null; data: string;
+    quantidade: number | null; embalagem: string | null; qtd_embalagem: number | null;
+    peso_min: number | null; peso_max: number | null; observacao: string | null; reprocessar: boolean;
+  };
+  clientes: Cliente[];
+  onClose: () => void; onSaved: () => void;
+}) {
+  const [salvando, setSalvando] = useState(false);
+  const { sucesso, erro } = useToast();
+
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    const num = (k: string) => { const v = String(f.get(k) ?? '').trim(); return v ? Number(v) : null; };
+    const txt = (k: string) => String(f.get(k) ?? '').trim() || null;
+    setSalvando(true);
+    try {
+      await atualizarOrdemProducao(op.id, {
+        cliente_id: String(f.get('cliente_id') ?? '') || null,
+        pedido: txt('pedido'),
+        data: String(f.get('data') ?? op.data),
+        quantidade: num('quantidade'),
+        embalagem: txt('embalagem'),
+        qtd_embalagem: num('qtd_embalagem'),
+        peso_min: num('peso_min'),
+        peso_max: num('peso_max'),
+        observacao: txt('observacao'),
+        reprocessar: f.get('reprocessar') === 'on',
+      });
+      sucesso(`OP #${op.numero} atualizada.`); onSaved();
+    } catch (err) { erro(err instanceof Error ? err.message : 'Falha.'); }
+    finally { setSalvando(false); }
+  }
+
+  return (
+    <Modal open onClose={onClose} title={`Editar OP #${op.numero}`} size="lg">
+      <form onSubmit={onSubmit} className="space-y-4">
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Cliente">
+            <Select name="cliente_id" defaultValue={op.cliente_id ?? ''}>
+              <option value="">— não informado —</option>
+              {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+            </Select>
+          </Field>
+          <Field label="Pedido"><TextInput name="pedido" defaultValue={op.pedido ?? ''} /></Field>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <Field label="Data"><TextInput name="data" type="date" defaultValue={op.data} required /></Field>
+          <Field label="Quantidade"><TextInput name="quantidade" type="number" step="any" min="0" defaultValue={op.quantidade ?? ''} /></Field>
+          <Field label="Qtd/embalagem"><TextInput name="qtd_embalagem" type="number" step="any" min="0" defaultValue={op.qtd_embalagem ?? ''} /></Field>
+        </div>
+        <Field label="Embalagem"><TextInput name="embalagem" defaultValue={op.embalagem ?? ''} /></Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Peso mín (kg)"><TextInput name="peso_min" type="number" step="any" min="0" defaultValue={op.peso_min ?? ''} /></Field>
+          <Field label="Peso máx (kg)"><TextInput name="peso_max" type="number" step="any" min="0" defaultValue={op.peso_max ?? ''} /></Field>
+        </div>
+        <Field label="Observação"><TextInput name="observacao" defaultValue={op.observacao ?? ''} /></Field>
+        <label className="flex items-center gap-2 text-sm text-slate-600">
+          <input type="checkbox" name="reprocessar" defaultChecked={op.reprocessar} className="accent-emerald-600" />
+          Reprocessar
+        </label>
+        <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
+          <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button type="submit" loading={salvando}>Salvar</Button>
+        </div>
+      </form>
+    </Modal>
   );
 }
 

@@ -1,13 +1,13 @@
 import { useState, type FormEvent } from 'react';
 import {
   listApontamentos, listLinhas, listProdutos, listLotes, listFuncionarios,
-  listRecebimentosPeriodo, criarApontamento, excluirApontamento, mapBy,
+  listRecebimentosPeriodo, criarApontamento, atualizarApontamento, excluirApontamento, mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { formatarData, formatarQuantidade } from '../../lib/format';
 import { TURNO_PROD, TURNO_PROD_LABEL, calcularRendimento } from '@sistema/domain';
-import type { TurnoProd } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select } from '../../components/ui';
+import type { TurnoProd, Apontamento, Linha, Produto, Lote } from '@sistema/domain';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
 import { IconArrowLeft, IconChevronRight, IconClipboard } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 import { ProdutoPicker } from '../../components/ProdutoPicker';
@@ -25,6 +25,7 @@ export function ApontamentoPage() {
   const [recarregar, setRecarregar] = useState(0);
   const [salvando, setSalvando] = useState(false);
   const [produtoId, setProdutoId] = useState('');
+  const [editando, setEditando] = useState<Apontamento | null>(null);
   const { de, ate } = semanaDe(refBase);
   const { sucesso, erro } = useToast();
 
@@ -198,7 +199,8 @@ export function ApontamentoPage() {
                       <td className="px-3 py-2.5 text-slate-700"><span className="line-clamp-1">{a.produto_id ? data.produtosMap.get(a.produto_id)?.nome ?? '—' : '—'}</span></td>
                       <td className="hidden px-3 py-2.5 text-slate-500 md:table-cell">{a.lote_id ? data.lotesMap.get(a.lote_id)?.codigo ?? '—' : '—'}</td>
                       <td className="px-3 py-2.5 text-right text-slate-600">{formatarQuantidade(a.quantidade_kg)}</td>
-                      <td className="px-3 py-2.5 text-right">
+                      <td className="px-3 py-2.5 text-right whitespace-nowrap">
+                        <button onClick={() => setEditando(a)} className="mr-3 text-xs font-medium text-slate-500 hover:text-emerald-600">Editar</button>
                         <button onClick={() => void excluir(a.id)} className="text-xs font-medium text-slate-400 hover:text-red-600">Excluir</button>
                       </td>
                     </tr>
@@ -209,6 +211,73 @@ export function ApontamentoPage() {
           )}
         </div>
       </div>
+
+      {editando && (
+        <ModalEditarApontamento
+          apontamento={editando}
+          linhas={data?.linhas ?? []}
+          produtos={produtosAcabados}
+          lotes={data?.lotes ?? []}
+          onClose={() => setEditando(null)}
+          onSaved={() => { setEditando(null); setRecarregar((n) => n + 1); }}
+        />
+      )}
     </>
+  );
+}
+
+function ModalEditarApontamento({ apontamento, linhas, produtos, lotes, onClose, onSaved }: {
+  apontamento: Apontamento;
+  linhas: Linha[]; produtos: Produto[]; lotes: Lote[];
+  onClose: () => void; onSaved: () => void;
+}) {
+  const [salvando, setSalvando] = useState(false);
+  const { sucesso, erro } = useToast();
+
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    const qtd = String(f.get('quantidade_kg') ?? '').trim();
+    setSalvando(true);
+    try {
+      await atualizarApontamento(apontamento.id, {
+        data: String(f.get('data') ?? apontamento.data),
+        turno: String(f.get('turno') ?? apontamento.turno) as TurnoProd,
+        linha_id: String(f.get('linha_id') ?? '') || null,
+        produto_id: String(f.get('produto_id') ?? '') || null,
+        lote_id: String(f.get('lote_id') ?? '') || null,
+        quantidade_kg: qtd ? Number(qtd) : null,
+        observacao: String(f.get('observacao') ?? '').trim() || null,
+      });
+      sucesso('Apontamento atualizado.'); onSaved();
+    } catch (err) { erro(err instanceof Error ? err.message : 'Falha.'); }
+    finally { setSalvando(false); }
+  }
+
+  return (
+    <Modal open onClose={onClose} title="Editar apontamento" size="lg">
+      <form onSubmit={onSubmit} className="space-y-4">
+        <div className="grid grid-cols-3 gap-3">
+          <Field label="Data"><TextInput name="data" type="date" defaultValue={apontamento.data} required /></Field>
+          <Field label="Turno"><Select name="turno" defaultValue={apontamento.turno}>{TURNO_PROD.map((t) => <option key={t} value={t}>{TURNO_PROD_LABEL[t]}</option>)}</Select></Field>
+          <Field label="Linha"><Select name="linha_id" defaultValue={apontamento.linha_id ?? ''}><option value="">—</option>{linhas.map((l) => <option key={l.id} value={l.id}>{l.codigo}</option>)}</Select></Field>
+        </div>
+        <Field label="Produto">
+          <Select name="produto_id" defaultValue={apontamento.produto_id ?? ''}>
+            <option value="">—</option>
+            {produtos.map((p) => <option key={p.id} value={p.id}>{p.codigo ? `${p.codigo} · ` : ''}{p.nome}</option>)}
+          </Select>
+        </Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Lote"><Select name="lote_id" defaultValue={apontamento.lote_id ?? ''}><option value="">—</option>{lotes.map((l) => <option key={l.id} value={l.id}>{l.codigo}</option>)}</Select></Field>
+          <Field label="Produzido (kg)"><TextInput name="quantidade_kg" type="number" step="any" min="0" defaultValue={apontamento.quantidade_kg ?? ''} /></Field>
+        </div>
+        <Field label="Observação"><TextInput name="observacao" defaultValue={apontamento.observacao ?? ''} placeholder="—" /></Field>
+        <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
+          <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button type="submit" loading={salvando}>Salvar</Button>
+        </div>
+      </form>
+    </Modal>
   );
 }

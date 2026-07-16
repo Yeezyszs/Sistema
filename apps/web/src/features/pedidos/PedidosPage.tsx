@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import {
   listPedidos, listClientes, listProdutos, listLotes,
-  criarPedido, definirStatusPedido, excluirPedido, mapBy,
+  criarPedido, atualizarPedido, definirStatusPedido, excluirPedido, mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { formatarData, formatarQuantidade } from '../../lib/format';
@@ -9,7 +9,7 @@ import {
   STATUS_PEDIDO, STATUS_PEDIDO_LABEL, STATUS_PEDIDO_TOM,
   SITUACAO_PEDIDO, SITUACAO_PEDIDO_LABEL, valorTotalPedido,
 } from '@sistema/domain';
-import type { StatusPedido, SituacaoPedido } from '@sistema/domain';
+import type { StatusPedido, SituacaoPedido, Pedido } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
 import { IconPlus, IconSearch } from '../../components/icons';
 import { useToast } from '../../components/Toast';
@@ -27,6 +27,7 @@ function reais(v: number | null): string {
 export function PedidosPage() {
   const [recarregar, setRecarregar] = useState(0);
   const [modal, setModal] = useState(false);
+  const [editando, setEditando] = useState<Pedido | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [busca, setBusca] = useState('');
   const [filtroCliente, setFiltroCliente] = useState('');
@@ -66,7 +67,7 @@ export function PedidosPage() {
     const txt = (k: string) => String(f.get(k) ?? '').trim() || null;
     setSalvando(true);
     try {
-      await criarPedido({
+      const payload = {
         data: String(f.get('data') ?? new Date().toISOString().slice(0, 10)),
         cliente_id: String(f.get('cliente_id') ?? '') || null,
         produto_id: produtoId || null,
@@ -77,8 +78,11 @@ export function PedidosPage() {
         observacoes: txt('observacoes'),
         valor_rs: num('valor_rs'),
         peso_carga_kg: num('peso_carga_kg'),
-      });
-      sucesso('Pedido registrado.'); setModal(false); rec();
+      };
+      if (editando) await atualizarPedido(editando.id, payload);
+      else await criarPedido(payload);
+      sucesso(editando ? 'Pedido atualizado.' : 'Pedido registrado.');
+      setModal(false); setEditando(null); rec();
     } catch (err) { erro(err instanceof Error ? err.message : 'Falha.'); }
     finally { setSalvando(false); }
   }
@@ -96,6 +100,13 @@ export function PedidosPage() {
   // meta de valor total no form (ao vivo)
   const [valorRs, setValorRs] = useState('');
   const [pesoKg, setPesoKg] = useState('');
+
+  function abrirEdicao(p: Pedido) {
+    setValorRs(p.valor_rs != null ? String(p.valor_rs) : '');
+    setPesoKg(p.peso_carga_kg != null ? String(p.peso_carga_kg) : '');
+    setProdutoId(p.produto_id ?? '');
+    setEditando(p); setModal(true);
+  }
   const totalPreview = valorTotalPedido(valorRs ? Number(valorRs) : null, pesoKg ? Number(pesoKg) : null);
 
   return (
@@ -169,7 +180,8 @@ export function PedidosPage() {
                       {SITUACAO_PEDIDO.map((s) => <option key={s} value={s}>{SITUACAO_PEDIDO_LABEL[s]}</option>)}
                     </select>
                   </td>
-                  <td className="px-3 py-2.5 text-right">
+                  <td className="px-3 py-2.5 text-right whitespace-nowrap">
+                    <button onClick={() => abrirEdicao(p)} className="mr-3 text-xs font-medium text-slate-500 hover:text-emerald-600">Editar</button>
                     <button onClick={() => void remover(p.id)} className="text-xs font-medium text-slate-400 hover:text-red-600">Excluir</button>
                   </td>
                 </tr>
@@ -179,19 +191,19 @@ export function PedidosPage() {
         </Card>
       )}
 
-      <Modal open={modal} onClose={() => setModal(false)} title="Novo pedido" size="xl">
+      <Modal open={modal} onClose={() => { setModal(false); setEditando(null); }} title={editando ? `Editar pedido #${editando.numero}` : "Novo pedido"} size="xl">
         <form onSubmit={onCriar} className="space-y-4">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div className="col-span-2">
               <Field label="Cliente">
-                <Select name="cliente_id" defaultValue="">
+                <Select name="cliente_id" defaultValue={editando?.cliente_id ?? ""}>
                   <option value="">—</option>
                   {(data?.clientes ?? []).map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
                 </Select>
               </Field>
             </div>
-            <Field label="Data"><TextInput name="data" type="date" defaultValue={new Date().toISOString().slice(0, 10)} required /></Field>
-            <Field label="Destino"><TextInput name="destino" placeholder="Local de entrega" /></Field>
+            <Field label="Data"><TextInput name="data" type="date" defaultValue={editando?.data ?? new Date().toISOString().slice(0, 10)} required /></Field>
+            <Field label="Destino"><TextInput name="destino" defaultValue={editando?.destino ?? ''} placeholder="Local de entrega" /></Field>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <ProdutoPicker
@@ -200,7 +212,7 @@ export function PedidosPage() {
               onChange={setProdutoId}
             />
             <Field label="Lote alocado">
-              <Select name="lote_id" defaultValue="">
+              <Select name="lote_id" defaultValue={editando?.lote_id ?? ""}>
                 <option value="">—</option>
                 {(data?.lotes ?? []).map((l) => <option key={l.id} value={l.id}>{l.codigo}</option>)}
               </Select>
@@ -212,13 +224,13 @@ export function PedidosPage() {
             <Field label="Valor total"><TextInput value={totalPreview != null ? reais(totalPreview) : ''} readOnly placeholder="—" /></Field>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Aprovação"><Select name="status" defaultValue="pendente">{STATUS_PEDIDO.map((s) => <option key={s} value={s}>{STATUS_PEDIDO_LABEL[s]}</option>)}</Select></Field>
-            <Field label="Atendimento"><Select name="situacao" defaultValue="pendente">{SITUACAO_PEDIDO.map((s) => <option key={s} value={s}>{SITUACAO_PEDIDO_LABEL[s]}</option>)}</Select></Field>
+            <Field label="Aprovação"><Select name="status" defaultValue={editando?.status ?? "pendente"}>{STATUS_PEDIDO.map((s) => <option key={s} value={s}>{STATUS_PEDIDO_LABEL[s]}</option>)}</Select></Field>
+            <Field label="Atendimento"><Select name="situacao" defaultValue={editando?.situacao ?? "pendente"}>{SITUACAO_PEDIDO.map((s) => <option key={s} value={s}>{SITUACAO_PEDIDO_LABEL[s]}</option>)}</Select></Field>
           </div>
-          <Field label="Observações"><TextInput name="observacoes" placeholder="—" /></Field>
+          <Field label="Observações"><TextInput name="observacoes" defaultValue={editando?.observacoes ?? ''} placeholder="—" /></Field>
           <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
-            <Button type="button" variant="outline" onClick={() => setModal(false)}>Cancelar</Button>
-            <Button type="submit" loading={salvando}>Registrar pedido</Button>
+            <Button type="button" variant="outline" onClick={() => { setModal(false); setEditando(null); }}>Cancelar</Button>
+            <Button type="submit" loading={salvando}>{editando ? "Salvar" : "Registrar pedido"}</Button>
           </div>
         </form>
       </Modal>

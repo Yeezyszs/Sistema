@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import {
-  listAnalisesProcesso, getValoresDaAnalise, criarAnaliseProcesso, excluirAnaliseProcesso,
-  listClientes, listProdutos, listLotes, getEspecificacaoAplicavel, mapBy,
+  listAnalisesProcesso, getValoresDaAnalise, criarAnaliseProcesso, atualizarAnaliseProcesso,
+  excluirAnaliseProcesso, listClientes, listProdutos, listLotes, getEspecificacaoAplicavel, mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { formatarData } from '../../lib/format';
@@ -18,6 +18,7 @@ import { useToast } from '../../components/Toast';
 export function AcompanhamentoPage() {
   const [recarregar, setRecarregar] = useState(0);
   const [modal, setModal] = useState(false);
+  const [editando, setEditando] = useState<AnaliseProcesso | null>(null);
   const [detalhe, setDetalhe] = useState<AnaliseProcesso | null>(null);
   const [busca, setBusca] = useState('');
   const [filtroCliente, setFiltroCliente] = useState('');
@@ -105,7 +106,8 @@ export function AcompanhamentoPage() {
                       {a.conforme ? 'Aprovado' : 'Reprovado'}
                     </span>
                   </td>
-                  <td className="px-3 py-2.5 text-right">
+                  <td className="px-3 py-2.5 text-right whitespace-nowrap">
+                    <button onClick={(e) => { e.stopPropagation(); setEditando(a); }} className="mr-3 text-xs font-medium text-slate-500 hover:text-emerald-600">Editar</button>
                     <button onClick={(e) => { e.stopPropagation(); void remover(a.id); }} className="text-xs font-medium text-slate-400 hover:text-red-600">Excluir</button>
                   </td>
                 </tr>
@@ -115,13 +117,14 @@ export function AcompanhamentoPage() {
         </Card>
       )}
 
-      {modal && (
+      {(modal || editando) && (
         <ModalNovaAnalise
           clientes={data?.clientes ?? []}
           produtos={data?.produtos ?? []}
           lotes={data?.lotes ?? []}
-          onClose={() => setModal(false)}
-          onSaved={() => { setModal(false); rec(); }}
+          editando={editando}
+          onClose={() => { setModal(false); setEditando(null); }}
+          onSaved={() => { setModal(false); setEditando(null); rec(); }}
         />
       )}
 
@@ -131,16 +134,17 @@ export function AcompanhamentoPage() {
 }
 
 function ModalNovaAnalise({
-  clientes, produtos, lotes, onClose, onSaved,
+  clientes, produtos, lotes, editando, onClose, onSaved,
 }: {
   clientes: { id: string; nome: string }[];
   produtos: { id: string; nome: string }[];
   lotes: { id: string; codigo: string }[];
+  editando?: AnaliseProcesso | null;
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [clienteId, setClienteId] = useState('');
-  const [produtoId, setProdutoId] = useState('');
+  const [clienteId, setClienteId] = useState(editando?.cliente_id ?? '');
+  const [produtoId, setProdutoId] = useState(editando?.produto_id ?? '');
   const [espId, setEspId] = useState<string | null>(null);
   const [parametros, setParametros] = useState<EspecificacaoParametro[]>([]);
   const [valores, setValores] = useState<Record<string, string>>({});
@@ -154,11 +158,24 @@ function ModalNovaAnalise({
     let cancelado = false;
     setCarregandoEsp(true);
     getEspecificacaoAplicavel(produtoId, clienteId || null)
-      .then((r) => {
+      .then(async (r) => {
         if (cancelado) return;
-        setParametros(r?.parametros ?? []);
+        const params = r?.parametros ?? [];
+        setParametros(params);
         setEspId(r?.especificacao.id ?? null);
-        setValores({});
+        // Em edição, pré-carrega os valores gravados casando pelo nome do ensaio.
+        if (editando) {
+          const vals = await getValoresDaAnalise(editando.id);
+          if (cancelado) return;
+          const mapa: Record<string, string> = {};
+          for (const p of params) {
+            const v = vals.find((x) => x.ensaio === p.ensaio);
+            if (v?.valor != null) mapa[p.id] = String(v.valor);
+          }
+          setValores(mapa);
+        } else {
+          setValores({});
+        }
       })
       .catch(() => { if (!cancelado) { setParametros([]); setEspId(null); } })
       .finally(() => { if (!cancelado) setCarregandoEsp(false); });
@@ -191,8 +208,7 @@ function ModalNovaAnalise({
         ordem: i,
       }));
       const conforme = !algumReprovado;
-      await criarAnaliseProcesso(
-        {
+      const cabecalho = {
           data: String(f.get('data') ?? new Date().toISOString().slice(0, 10)),
           horario: String(f.get('horario') ?? '') || null,
           turno: String(f.get('turno') ?? '') || null,
@@ -207,16 +223,16 @@ function ModalNovaAnalise({
           conforme,
           motivo: String(f.get('motivo') ?? '').trim() || null,
           observacao: String(f.get('observacao') ?? '').trim() || null,
-        },
-        linhas,
-      );
-      sucesso('Análise registrada.'); onSaved();
+        };
+      if (editando) await atualizarAnaliseProcesso(editando.id, cabecalho, linhas);
+      else await criarAnaliseProcesso(cabecalho, linhas);
+      sucesso(editando ? 'Análise atualizada.' : 'Análise registrada.'); onSaved();
     } catch (err) { erro(err instanceof Error ? err.message : 'Falha.'); }
     finally { setSalvando(false); }
   }
 
   return (
-    <Modal open onClose={onClose} title="Nova análise de processo" size="xl">
+    <Modal open onClose={onClose} title={editando ? `Editar análise #${editando.numero}` : "Nova análise de processo"} size="xl">
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Field label="Cliente">
@@ -232,18 +248,18 @@ function ModalNovaAnalise({
             </Select>
           </Field>
           <Field label="Lote">
-            <Select name="lote_id" defaultValue="">
+            <Select name="lote_id" defaultValue={editando?.lote_id ?? ""}>
               <option value="">—</option>
               {lotes.map((l) => <option key={l.id} value={l.id}>{l.codigo}</option>)}
             </Select>
           </Field>
-          <Field label="Nº do bag"><TextInput name="numero_bag" placeholder="ex.: 4" /></Field>
+          <Field label="Nº do bag"><TextInput name="numero_bag" defaultValue={editando?.numero_bag ?? ''} placeholder="ex.: 4" /></Field>
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Field label="Data"><TextInput name="data" type="date" defaultValue={new Date().toISOString().slice(0, 10)} required /></Field>
-          <Field label="Horário"><TextInput name="horario" type="time" /></Field>
+          <Field label="Data"><TextInput name="data" type="date" defaultValue={editando?.data ?? new Date().toISOString().slice(0, 10)} required /></Field>
+          <Field label="Horário"><TextInput name="horario" type="time" defaultValue={editando?.horario?.slice(0, 5) ?? ''} /></Field>
           <Field label="Turno">
-            <Select name="turno" defaultValue="">
+            <Select name="turno" defaultValue={editando?.turno ?? ""}>
               <option value="">—</option>
               {TURNO_ANALISE.map((t) => <option key={t} value={t}>{TURNO_ANALISE_LABEL[t]}</option>)}
             </Select>
@@ -287,14 +303,14 @@ function ModalNovaAnalise({
 
         {/* Sensorial */}
         <div className="grid grid-cols-3 gap-3">
-          <Field label="Cor"><TextInput name="cor" placeholder="Creme" /></Field>
-          <Field label="Odor"><TextInput name="odor" placeholder="Característico" /></Field>
-          <Field label="Aparência"><TextInput name="aparencia" placeholder="Fina" /></Field>
+          <Field label="Cor"><TextInput name="cor" defaultValue={editando?.cor ?? ''} placeholder="Creme" /></Field>
+          <Field label="Odor"><TextInput name="odor" defaultValue={editando?.odor ?? ''} placeholder="Característico" /></Field>
+          <Field label="Aparência"><TextInput name="aparencia" defaultValue={editando?.aparencia ?? ''} placeholder="Fina" /></Field>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Motivo (se reprovado)"><TextInput name="motivo" placeholder="—" /></Field>
-          <Field label="Observação"><TextInput name="observacao" placeholder="—" /></Field>
+          <Field label="Motivo (se reprovado)"><TextInput name="motivo" defaultValue={editando?.motivo ?? ''} placeholder="—" /></Field>
+          <Field label="Observação"><TextInput name="observacao" defaultValue={editando?.observacao ?? ''} placeholder="—" /></Field>
         </div>
 
         <div className={`rounded-lg px-3 py-2 text-sm font-medium ${algumReprovado ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}`}>
@@ -303,7 +319,7 @@ function ModalNovaAnalise({
 
         <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
           <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button type="submit" loading={salvando}>Registrar análise</Button>
+          <Button type="submit" loading={salvando}>{editando ? "Salvar" : "Registrar análise"}</Button>
         </div>
       </form>
     </Modal>

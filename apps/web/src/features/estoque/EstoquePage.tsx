@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import {
   listLocaisEstoque, listPosicoesEstoque, listLotes, listProdutos, listClientes,
-  listEmbalagens, alocarPosicao, liberarPosicao, mapBy,
+  listEmbalagens, alocarPosicao, atualizarPosicao, liberarPosicao, mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { formatarQuantidade } from '../../lib/format';
 import { posicaoLabel, pesoEstoque } from '@sistema/domain';
-import type { LocalEstoque, StatusPosicao } from '@sistema/domain';
+import type { LocalEstoque, StatusPosicao, PosicaoEstoque } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, Select, TextInput, Modal } from '../../components/ui';
 import { IconBox } from '../../components/icons';
 import { useToast } from '../../components/Toast';
@@ -15,6 +15,7 @@ export function EstoquePage() {
   const [aba, setAba] = useState<'mapa' | 'saldo'>('mapa');
   const [recarregar, setRecarregar] = useState(0);
   const [alocando, setAlocando] = useState<LocalEstoque | null>(null);
+  const [editandoPos, setEditandoPos] = useState<PosicaoEstoque | null>(null);
   const { sucesso, erro } = useToast();
 
   const { data, loading } = useAsync(async () => {
@@ -101,7 +102,10 @@ export function EstoquePage() {
                           <p className="mt-1 text-xs text-slate-400">
                             {pos.qtd_bags != null ? `${pos.qtd_bags} bags` : ''}{cliente ? ` · ${cliente.nome}` : ''}
                           </p>
-                          <button onClick={() => void liberar(pos.id)} className="mt-2 text-xs font-medium text-slate-400 hover:text-red-600">Liberar rua</button>
+                          <div className="mt-2 flex gap-3">
+                            <button onClick={() => setEditandoPos(pos)} className="text-xs font-medium text-slate-500 hover:text-emerald-600">Editar</button>
+                            <button onClick={() => void liberar(pos.id)} className="text-xs font-medium text-slate-400 hover:text-red-600">Liberar rua</button>
+                          </div>
                         </div>
                       ) : (
                         <button onClick={() => setAlocando(local)} className="mt-3 text-xs font-medium text-emerald-600 hover:text-emerald-700">+ Alocar lote</button>
@@ -151,6 +155,15 @@ export function EstoquePage() {
             </table>
           </Card>
         )
+      )}
+
+      {editandoPos && (
+        <ModalEditarPosicao
+          pos={editandoPos}
+          clientes={data?.clientes ?? []}
+          onClose={() => setEditandoPos(null)}
+          onSaved={() => { setEditandoPos(null); rec(); }}
+        />
       )}
 
       {alocando && (
@@ -240,6 +253,60 @@ function ModalAlocar({
         <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
           <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
           <Button type="button" loading={salvando} onClick={() => void salvar()}>Alocar</Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+
+// Edição de uma posição ocupada (qtd de bags, cliente, status).
+function ModalEditarPosicao({ pos, clientes, onClose, onSaved }: {
+  pos: PosicaoEstoque;
+  clientes: { id: string; nome: string }[];
+  onClose: () => void; onSaved: () => void;
+}) {
+  const [qtd, setQtd] = useState(pos.qtd_bags != null ? String(pos.qtd_bags) : '');
+  const [clienteId, setClienteId] = useState(pos.cliente_id ?? '');
+  const [status, setStatus] = useState<StatusPosicao>(pos.status);
+  const [salvando, setSalvando] = useState(false);
+  const { sucesso, erro } = useToast();
+
+  async function salvar() {
+    setSalvando(true);
+    try {
+      await atualizarPosicao(pos.id, {
+        qtd_bags: qtd ? Number(qtd) : null,
+        cliente_id: clienteId || null,
+        status,
+      });
+      sucesso('Posição atualizada.');
+      onSaved();
+    } catch (err) { erro(err instanceof Error ? err.message : 'Falha.'); }
+    finally { setSalvando(false); }
+  }
+
+  return (
+    <Modal open onClose={onClose} title="Editar posição">
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Qtd. de bags"><TextInput type="number" step="any" min="0" value={qtd} onChange={(e) => setQtd(e.target.value)} /></Field>
+          <Field label="Status">
+            <Select value={status} onChange={(e) => setStatus(e.target.value as StatusPosicao)}>
+              <option value="ocupado">Ocupado</option>
+              <option value="reprocesso">Reprocesso</option>
+            </Select>
+          </Field>
+        </div>
+        <Field label="Cliente (rastreabilidade)">
+          <Select value={clienteId} onChange={(e) => setClienteId(e.target.value)}>
+            <option value="">—</option>
+            {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+          </Select>
+        </Field>
+        <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
+          <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button type="button" loading={salvando} onClick={() => void salvar()}>Salvar</Button>
         </div>
       </div>
     </Modal>

@@ -74,6 +74,7 @@ type ToastFn = (m: string) => void;
 // ── Aba Retidos ────────────────────────────────────────────────
 function AbaRetidos({ data, rec, sucesso, erro }: { data: DataShape; rec: () => void; sucesso: ToastFn; erro: ToastFn }) {
   const [modal, setModal] = useState(false);
+  const [editandoRet, setEditandoRet] = useState<Reprocesso | null>(null);
   const [concluir, setConcluir] = useState<Reprocesso | null>(null);
   const [busca, setBusca] = useState('');
   const [filtro, setFiltro] = useState<'todos' | 'em_estoque' | 'concluido'>('todos');
@@ -151,6 +152,7 @@ function AbaRetidos({ data, rec, sucesso, erro }: { data: DataShape; rec: () => 
                       </span>
                     </td>
                     <td className="px-3 py-2.5 text-right whitespace-nowrap">
+                      <button onClick={() => setEditandoRet(r)} className="mr-3 text-xs font-medium text-slate-500 hover:text-emerald-600">Editar</button>
                       {r.status === 'em_estoque' && (
                         <button onClick={() => setConcluir(r)} className="mr-3 text-xs font-medium text-emerald-600 hover:text-emerald-700">Concluir</button>
                       )}
@@ -164,16 +166,21 @@ function AbaRetidos({ data, rec, sucesso, erro }: { data: DataShape; rec: () => 
         </Card>
       )}
 
-      {modal && <ModalNovoRetido data={data} onClose={() => setModal(false)} onSaved={() => { setModal(false); rec(); }} sucesso={sucesso} erro={erro} />}
+      {(modal || editandoRet) && (
+        <ModalNovoRetido data={data} editando={editandoRet}
+          onClose={() => { setModal(false); setEditandoRet(null); }}
+          onSaved={() => { setModal(false); setEditandoRet(null); rec(); }} sucesso={sucesso} erro={erro} />
+      )}
       {concluir && <ModalConcluir retido={concluir} onClose={() => setConcluir(null)} onSaved={() => { setConcluir(null); rec(); }} sucesso={sucesso} erro={erro} />}
     </>
   );
 }
 
-function ModalNovoRetido({ data, onClose, onSaved, sucesso, erro }: {
-  data: DataShape; onClose: () => void; onSaved: () => void; sucesso: ToastFn; erro: ToastFn;
+function ModalNovoRetido({ data, editando, onClose, onSaved, sucesso, erro }: {
+  data: DataShape; editando?: Reprocesso | null;
+  onClose: () => void; onSaved: () => void; sucesso: ToastFn; erro: ToastFn;
 }) {
-  const [desvioId, setDesvioId] = useState('');
+  const [desvioId, setDesvioId] = useState(editando?.desvio_id ?? '');
   const [salvando, setSalvando] = useState(false);
   const desvio = data.desvios.find((d) => d.id === desvioId);
 
@@ -184,7 +191,7 @@ function ModalNovoRetido({ data, onClose, onSaved, sucesso, erro }: {
     const motivo = String(f.get('motivo') ?? '').trim() || desvio?.descricao || 'Retido';
     setSalvando(true);
     try {
-      await criarReprocesso({
+      const payload = {
         data: String(f.get('data') ?? new Date().toISOString().slice(0, 10)),
         produto_id: String(f.get('produto_id') ?? '') || null,
         lote_id: String(f.get('lote_id') ?? '') || null,
@@ -199,34 +206,36 @@ function ModalNovoRetido({ data, onClose, onSaved, sucesso, erro }: {
         origem: String(f.get('origem') ?? '').trim() || null,
         nc_id: String(f.get('nc_id') ?? '') || null,
         observacao: String(f.get('observacao') ?? '').trim() || null,
-      });
-      sucesso('Retido registrado.'); onSaved();
+      };
+      if (editando) await atualizarReprocesso(editando.id, payload);
+      else await criarReprocesso(payload);
+      sucesso(editando ? 'Retido atualizado.' : 'Retido registrado.'); onSaved();
     } catch (err) { erro(err instanceof Error ? err.message : 'Falha.'); }
     finally { setSalvando(false); }
   }
 
   return (
-    <Modal open onClose={onClose} title="Novo retido" size="xl">
+    <Modal open onClose={onClose} title={editando ? `Editar retido #${editando.numero}` : "Novo retido"} size="xl">
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Field label="Data"><TextInput name="data" type="date" defaultValue={new Date().toISOString().slice(0, 10)} required /></Field>
+          <Field label="Data"><TextInput name="data" type="date" defaultValue={editando?.data ?? new Date().toISOString().slice(0, 10)} required /></Field>
           <Field label="Produto">
-            <Select name="produto_id" defaultValue="">
+            <Select name="produto_id" defaultValue={editando?.produto_id ?? ""}>
               <option value="">—</option>
               {data.produtos.map((p) => <option key={p.id} value={p.id}>{p.nome}</option>)}
             </Select>
           </Field>
           <Field label="Lote">
-            <Select name="lote_id" defaultValue="">
+            <Select name="lote_id" defaultValue={editando?.lote_id ?? ""}>
               <option value="">—</option>
               {data.lotes.map((l) => <option key={l.id} value={l.id}>{l.codigo}</option>)}
             </Select>
           </Field>
-          <Field label="Lacre"><TextInput name="lacre" placeholder="ex.: 16706" /></Field>
+          <Field label="Lacre"><TextInput name="lacre" defaultValue={editando?.lacre ?? ''} placeholder="ex.: 16706" /></Field>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Qtd (bags)"><TextInput name="qtd_bags" type="number" step="any" min="0" placeholder="—" /></Field>
-          <Field label="Quantidade total (kg)"><TextInput name="quantidade_kg" type="number" step="any" min="0" placeholder="0" /></Field>
+          <Field label="Qtd (bags)"><TextInput name="qtd_bags" type="number" step="any" min="0" defaultValue={editando?.qtd_bags ?? ''} placeholder="—" /></Field>
+          <Field label="Quantidade total (kg)"><TextInput name="quantidade_kg" type="number" step="any" min="0" defaultValue={editando?.quantidade_kg ?? ''} placeholder="0" /></Field>
         </div>
         <Field label="Desvio (legenda)">
           <Select value={desvioId} onChange={(e) => setDesvioId(e.target.value)}>
@@ -241,24 +250,24 @@ function ModalNovoRetido({ data, onClose, onSaved, sucesso, erro }: {
           </div>
         )}
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Onde pode ser reprocessado"><TextInput name="onde_reprocessar" defaultValue={desvio?.onde_reprocessar ?? ''} key={desvioId} placeholder="Farinha Crua ou Torrada" /></Field>
-          <Field label="Motivo (livre, se sem código)"><TextInput name="motivo" placeholder="—" /></Field>
+          <Field label="Onde pode ser reprocessado"><TextInput name="onde_reprocessar" defaultValue={editando?.onde_reprocessar ?? desvio?.onde_reprocessar ?? ''} key={desvioId} placeholder="Farinha Crua ou Torrada" /></Field>
+          <Field label="Motivo (livre, se sem código)"><TextInput name="motivo" defaultValue={editando?.motivo ?? ''} placeholder="—" /></Field>
         </div>
-        <Field label="Descrição da ocorrência"><TextInput name="descricao_ocorrencia" placeholder="Detalhe do que ocorreu" /></Field>
+        <Field label="Descrição da ocorrência"><TextInput name="descricao_ocorrencia" defaultValue={editando?.descricao_ocorrencia ?? ''} placeholder="Detalhe do que ocorreu" /></Field>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Origem"><TextInput name="origem" placeholder="Linha, estoque, cliente…" /></Field>
-          <Field label="Evidência (link)"><TextInput name="evidencia_url" placeholder="URL da foto (opcional)" /></Field>
+          <Field label="Origem"><TextInput name="origem" defaultValue={editando?.origem ?? ''} placeholder="Linha, estoque, cliente…" /></Field>
+          <Field label="Evidência (link)"><TextInput name="evidencia_url" defaultValue={editando?.evidencia_url ?? ''} placeholder="URL da foto (opcional)" /></Field>
         </div>
         <Field label="NC vinculada (opcional)">
-          <Select name="nc_id" defaultValue="">
+          <Select name="nc_id" defaultValue={editando?.nc_id ?? ""}>
             <option value="">— sem NC</option>
             {data.ncs.map((n) => <option key={n.id} value={n.id}>#{n.numero} · {n.descricao.slice(0, 40)}</option>)}
           </Select>
         </Field>
-        <Field label="Observação"><TextInput name="observacao" placeholder="—" /></Field>
+        <Field label="Observação"><TextInput name="observacao" defaultValue={editando?.observacao ?? ''} placeholder="—" /></Field>
         <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
           <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button type="submit" loading={salvando}>Registrar retido</Button>
+          <Button type="submit" loading={salvando}>{editando ? "Salvar" : "Registrar retido"}</Button>
         </div>
       </form>
     </Modal>

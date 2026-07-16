@@ -1381,6 +1381,49 @@ export async function criarLuExecucao(payload: NovaLuExecucao): Promise<void> {
   if (res.error) throw new Error(res.error.message);
 }
 
+// ── Updates da varredura de editabilidade ──────────────────────
+export async function atualizarApontamento(id: string, patch: Partial<NovoApontamento>): Promise<void> {
+  const res = await producao().from('apontamentos').update(patch).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function atualizarPosicao(id: string, patch: Partial<NovaPosicao>): Promise<void> {
+  const res = await producao().from('posicoes_estoque').update(patch).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function atualizarOrdemProducao(id: string, patch: Record<string, unknown>): Promise<void> {
+  const res = await producao().from('ordens_producao').update(patch).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function atualizarMonitoramentoAgua(id: string, patch: Partial<NovoMonitoramentoAgua>): Promise<void> {
+  const res = await qualidade().from('monitoramentos_agua').update(patch).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function atualizarCalibracaoPhmetro(id: string, patch: Partial<NovaCalibracaoPhmetro>): Promise<void> {
+  const res = await qualidade().from('calibracoes_phmetro').update(patch).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// Atualiza a análise + substitui os valores por ensaio (delete + re-insert).
+export async function atualizarAnaliseProcesso(
+  id: string,
+  cabecalho: Partial<NovaAnaliseProcesso>,
+  valores: NovoAnaliseValor[],
+): Promise<void> {
+  const res = await qualidade().from('analises_processo').update(cabecalho).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+  const del = await qualidade().from('analise_processo_valores').delete().eq('analise_id', id);
+  if (del.error) throw new Error(del.error.message);
+  if (valores.length > 0) {
+    const ins = await qualidade().from('analise_processo_valores')
+      .insert(valores.map((v, i) => ({ ...v, analise_id: id, ordem: v.ordem ?? i })));
+    if (ins.error) throw new Error(ins.error.message);
+  }
+}
+
 // ── Helpers de lookup ──────────────────────────────────────────
 export function mapBy<T, K extends keyof T>(rows: T[], key: K): Map<T[K], T> {
   return new Map(rows.map((r) => [r[key], r]));

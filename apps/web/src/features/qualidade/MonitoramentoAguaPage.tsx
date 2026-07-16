@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import {
-  listMonitoramentosAgua, criarMonitoramentoAgua, excluirMonitoramentoAgua,
+  listMonitoramentosAgua, criarMonitoramentoAgua, atualizarMonitoramentoAgua, excluirMonitoramentoAgua,
 } from '../../lib/db';
+import type { MonitoramentoAgua } from '@sistema/domain';
 import { useAsync } from '../../lib/useAsync';
 import { formatarData } from '../../lib/format';
 import {
@@ -14,6 +15,7 @@ import { useToast } from '../../components/Toast';
 export function MonitoramentoAguaPage() {
   const [recarregar, setRecarregar] = useState(0);
   const [modal, setModal] = useState(false);
+  const [editando, setEditando] = useState<MonitoramentoAgua | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [cloro, setCloro] = useState('');
   const [ph, setPh] = useState('');
@@ -29,7 +31,7 @@ export function MonitoramentoAguaPage() {
     const f = new FormData(e.currentTarget);
     setSalvando(true);
     try {
-      await criarMonitoramentoAgua({
+      const payload = {
         data: String(f.get('data') ?? new Date().toISOString().slice(0, 10)),
         hora: String(f.get('hora') ?? '') || null,
         ponto_coleta: String(f.get('ponto_coleta') ?? '').trim() || null,
@@ -39,8 +41,11 @@ export function MonitoramentoAguaPage() {
         responsavel: String(f.get('responsavel') ?? '').trim() || null,
         validado_por: String(f.get('validado_por') ?? '').trim() || null,
         observacao: String(f.get('observacao') ?? '').trim() || null,
-      });
-      sucesso('Medição registrada.'); setModal(false); rec();
+      };
+      if (editando) await atualizarMonitoramentoAgua(editando.id, payload);
+      else await criarMonitoramentoAgua(payload);
+      sucesso(editando ? 'Medição atualizada.' : 'Medição registrada.');
+      setModal(false); setEditando(null); rec();
     } catch (err) { erro(err instanceof Error ? err.message : 'Falha.'); }
     finally { setSalvando(false); }
   }
@@ -50,7 +55,13 @@ export function MonitoramentoAguaPage() {
     catch (err) { erro(err instanceof Error ? err.message : 'Falha.'); }
   }
 
-  function abrir() { setCloro(''); setPh(''); setModal(true); }
+  function abrir() { setCloro(''); setPh(''); setEditando(null); setModal(true); }
+
+  function abrirEdicao(m: MonitoramentoAgua) {
+    setCloro(m.cloro_ppm != null ? String(m.cloro_ppm) : '');
+    setPh(m.ph != null ? String(m.ph) : '');
+    setEditando(m); setModal(true);
+  }
 
   return (
     <>
@@ -99,7 +110,8 @@ export function MonitoramentoAguaPage() {
                       </span>
                     </td>
                     <td className="hidden px-3 py-2.5 text-slate-500 lg:table-cell">{m.validado_por ?? '—'}</td>
-                    <td className="px-3 py-2.5 text-right">
+                    <td className="px-3 py-2.5 text-right whitespace-nowrap">
+                      <button onClick={() => abrirEdicao(m)} className="mr-3 text-xs font-medium text-slate-500 hover:text-emerald-600">Editar</button>
                       <button onClick={() => void remover(m.id)} className="text-xs font-medium text-slate-400 hover:text-red-600">Excluir</button>
                     </td>
                   </tr>
@@ -110,13 +122,13 @@ export function MonitoramentoAguaPage() {
         </Card>
       )}
 
-      <Modal open={modal} onClose={() => setModal(false)} title="Nova medição de água" size="lg">
+      <Modal open={modal} onClose={() => { setModal(false); setEditando(null); }} title={editando ? "Editar medição" : "Nova medição de água"} size="lg">
         <form onSubmit={onCriar} className="space-y-4">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <Field label="Data"><TextInput name="data" type="date" defaultValue={new Date().toISOString().slice(0, 10)} required /></Field>
-            <Field label="Hora"><TextInput name="hora" type="time" /></Field>
-            <Field label="Ponto de coleta"><TextInput name="ponto_coleta" defaultValue="Laboratório" /></Field>
-            <Field label="Aspecto"><TextInput name="aspecto" placeholder="Incolor" /></Field>
+            <Field label="Data"><TextInput name="data" type="date" defaultValue={editando?.data ?? new Date().toISOString().slice(0, 10)} required /></Field>
+            <Field label="Hora"><TextInput name="hora" type="time" defaultValue={editando?.hora?.slice(0, 5) ?? ''} /></Field>
+            <Field label="Ponto de coleta"><TextInput name="ponto_coleta" defaultValue={editando?.ponto_coleta ?? "Laboratório"} /></Field>
+            <Field label="Aspecto"><TextInput name="aspecto" defaultValue={editando?.aspecto ?? ''} placeholder="Incolor" /></Field>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <Field label={`Cloro residual (ppm) — ${AGUA_CLORO_MIN} a ${AGUA_CLORO_MAX}`}>
@@ -127,15 +139,15 @@ export function MonitoramentoAguaPage() {
             </Field>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Responsável"><TextInput name="responsavel" placeholder="—" /></Field>
-            <Field label="Validação da Qualidade"><TextInput name="validado_por" placeholder="—" /></Field>
+            <Field label="Responsável"><TextInput name="responsavel" defaultValue={editando?.responsavel ?? ''} placeholder="—" /></Field>
+            <Field label="Validação da Qualidade"><TextInput name="validado_por" defaultValue={editando?.validado_por ?? ''} placeholder="—" /></Field>
           </div>
-          <Field label="Observação"><TextInput name="observacao" placeholder="—" /></Field>
+          <Field label="Observação"><TextInput name="observacao" defaultValue={editando?.observacao ?? ''} placeholder="—" /></Field>
           <div className={`rounded-lg px-3 py-2 text-sm font-medium ${preConforme ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
             {preConforme ? 'Dentro dos padrões.' : 'Fora do padrão — comunique a Qualidade imediatamente.'}
           </div>
           <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
-            <Button type="button" variant="outline" onClick={() => setModal(false)}>Cancelar</Button>
+            <Button type="button" variant="outline" onClick={() => { setModal(false); setEditando(null); }}>Cancelar</Button>
             <Button type="submit" loading={salvando}>Registrar</Button>
           </div>
         </form>

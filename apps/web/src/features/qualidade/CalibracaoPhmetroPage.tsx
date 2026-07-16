@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import {
-  listCalibracoesPhmetro, criarCalibracaoPhmetro, excluirCalibracaoPhmetro,
+  listCalibracoesPhmetro, criarCalibracaoPhmetro, atualizarCalibracaoPhmetro, excluirCalibracaoPhmetro,
 } from '../../lib/db';
+import type { CalibracaoPhmetro } from '@sistema/domain';
 import { useAsync } from '../../lib/useAsync';
 import { formatarData } from '../../lib/format';
 import {
@@ -14,6 +15,7 @@ import { useToast } from '../../components/Toast';
 export function CalibracaoPhmetroPage() {
   const [recarregar, setRecarregar] = useState(0);
   const [modal, setModal] = useState(false);
+  const [editando, setEditando] = useState<CalibracaoPhmetro | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [ph4, setPh4] = useState('');
   const [ph7, setPh7] = useState('');
@@ -29,7 +31,7 @@ export function CalibracaoPhmetroPage() {
     const f = new FormData(e.currentTarget);
     setSalvando(true);
     try {
-      await criarCalibracaoPhmetro({
+      const payload = {
         data: String(f.get('data') ?? new Date().toISOString().slice(0, 10)),
         hora: String(f.get('hora') ?? '') || null,
         tampao_ph4: ph4 ? Number(ph4) : null,
@@ -37,8 +39,11 @@ export function CalibracaoPhmetroPage() {
         responsavel: String(f.get('responsavel') ?? '').trim() || null,
         validado_por: String(f.get('validado_por') ?? '').trim() || null,
         observacao: String(f.get('observacao') ?? '').trim() || null,
-      });
-      sucesso('Calibração registrada.'); setModal(false); rec();
+      };
+      if (editando) await atualizarCalibracaoPhmetro(editando.id, payload);
+      else await criarCalibracaoPhmetro(payload);
+      sucesso(editando ? 'Calibração atualizada.' : 'Calibração registrada.');
+      setModal(false); setEditando(null); rec();
     } catch (err) { erro(err instanceof Error ? err.message : 'Falha.'); }
     finally { setSalvando(false); }
   }
@@ -48,7 +53,13 @@ export function CalibracaoPhmetroPage() {
     catch (err) { erro(err instanceof Error ? err.message : 'Falha.'); }
   }
 
-  function abrir() { setPh4(''); setPh7(''); setModal(true); }
+  function abrir() { setPh4(''); setPh7(''); setEditando(null); setModal(true); }
+
+  function abrirEdicao(c: CalibracaoPhmetro) {
+    setPh4(c.tampao_ph4 != null ? String(c.tampao_ph4) : '');
+    setPh7(c.tampao_ph7 != null ? String(c.tampao_ph7) : '');
+    setEditando(c); setModal(true);
+  }
 
   return (
     <>
@@ -95,7 +106,8 @@ export function CalibracaoPhmetroPage() {
                     </td>
                     <td className="hidden px-3 py-2.5 text-slate-500 md:table-cell">{c.responsavel ?? '—'}</td>
                     <td className="hidden px-3 py-2.5 text-slate-500 lg:table-cell">{c.validado_por ?? '—'}</td>
-                    <td className="px-3 py-2.5 text-right">
+                    <td className="px-3 py-2.5 text-right whitespace-nowrap">
+                      <button onClick={() => abrirEdicao(c)} className="mr-3 text-xs font-medium text-slate-500 hover:text-emerald-600">Editar</button>
                       <button onClick={() => void remover(c.id)} className="text-xs font-medium text-slate-400 hover:text-red-600">Excluir</button>
                     </td>
                   </tr>
@@ -106,11 +118,11 @@ export function CalibracaoPhmetroPage() {
         </Card>
       )}
 
-      <Modal open={modal} onClose={() => setModal(false)} title="Nova calibração do pHmetro" size="lg">
+      <Modal open={modal} onClose={() => { setModal(false); setEditando(null); }} title={editando ? "Editar calibração" : "Nova calibração do pHmetro"} size="lg">
         <form onSubmit={onCriar} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Data"><TextInput name="data" type="date" defaultValue={new Date().toISOString().slice(0, 10)} required /></Field>
-            <Field label="Hora"><TextInput name="hora" type="time" /></Field>
+            <Field label="Data"><TextInput name="data" type="date" defaultValue={editando?.data ?? new Date().toISOString().slice(0, 10)} required /></Field>
+            <Field label="Hora"><TextInput name="hora" type="time" defaultValue={editando?.hora?.slice(0, 5) ?? ''} /></Field>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <Field label={`Tampão pH 4,0 — ${PHMETRO_PH4_MIN} a ${PHMETRO_PH4_MAX}`}>
@@ -121,15 +133,15 @@ export function CalibracaoPhmetroPage() {
             </Field>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Responsável"><TextInput name="responsavel" placeholder="—" /></Field>
-            <Field label="Validação da Qualidade"><TextInput name="validado_por" placeholder="—" /></Field>
+            <Field label="Responsável"><TextInput name="responsavel" defaultValue={editando?.responsavel ?? ''} placeholder="—" /></Field>
+            <Field label="Validação da Qualidade"><TextInput name="validado_por" defaultValue={editando?.validado_por ?? ''} placeholder="—" /></Field>
           </div>
-          <Field label="Observação"><TextInput name="observacao" placeholder="—" /></Field>
+          <Field label="Observação"><TextInput name="observacao" defaultValue={editando?.observacao ?? ''} placeholder="—" /></Field>
           <div className={`rounded-lg px-3 py-2 text-sm font-medium ${preConforme ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
             {preConforme ? 'Dentro dos padrões.' : 'Fora do padrão — comunique a Qualidade imediatamente.'}
           </div>
           <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
-            <Button type="button" variant="outline" onClick={() => setModal(false)}>Cancelar</Button>
+            <Button type="button" variant="outline" onClick={() => { setModal(false); setEditando(null); }}>Cancelar</Button>
             <Button type="submit" loading={salvando}>Registrar</Button>
           </div>
         </form>

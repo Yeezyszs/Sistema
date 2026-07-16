@@ -57,6 +57,7 @@ type DataShape = {
 
 function AbaCaixas({ data, rec, sucesso, erro }: { data: DataShape; rec: () => void; sucesso: ToastFn; erro: ToastFn }) {
   const [modal, setModal] = useState(false);
+  const [editando, setEditando] = useState<Contraprova | null>(null);
   const [busca, setBusca] = useState('');
   const [filtro, setFiltro] = useState<'todas' | 'estoque' | 'descarte' | 'descartadas'>('todas');
 
@@ -143,6 +144,7 @@ function AbaCaixas({ data, rec, sucesso, erro }: { data: DataShape; rec: () => v
                       )}
                     </td>
                     <td className="px-3 py-2.5 text-right whitespace-nowrap">
+                      <button onClick={() => setEditando(c)} className="mr-3 text-xs font-medium text-slate-500 hover:text-emerald-600">Editar</button>
                       {c.em_estoque && (
                         <button onClick={() => void marcarDescarte(c)} className="mr-3 text-xs font-medium text-amber-600 hover:text-amber-700">Descartar</button>
                       )}
@@ -156,15 +158,20 @@ function AbaCaixas({ data, rec, sucesso, erro }: { data: DataShape; rec: () => v
         </Card>
       )}
 
-      {modal && <ModalNovaCaixa data={data} onClose={() => setModal(false)} onSaved={() => { setModal(false); rec(); }} sucesso={sucesso} erro={erro} />}
+      {(modal || editando) && (
+        <ModalNovaCaixa data={data} editando={editando}
+          onClose={() => { setModal(false); setEditando(null); }}
+          onSaved={() => { setModal(false); setEditando(null); rec(); }} sucesso={sucesso} erro={erro} />
+      )}
     </>
   );
 }
 
-function ModalNovaCaixa({ data, onClose, onSaved, sucesso, erro }: {
-  data: DataShape; onClose: () => void; onSaved: () => void; sucesso: ToastFn; erro: ToastFn;
+function ModalNovaCaixa({ data, editando, onClose, onSaved, sucesso, erro }: {
+  data: DataShape; editando?: Contraprova | null;
+  onClose: () => void; onSaved: () => void; sucesso: ToastFn; erro: ToastFn;
 }) {
-  const [retencaoId, setRetencaoId] = useState('');
+  const [retencaoId, setRetencaoId] = useState(editando?.retencao_id ?? '');
   const [salvando, setSalvando] = useState(false);
   const retencao = data.retencoes.find((r) => r.id === retencaoId);
 
@@ -173,7 +180,7 @@ function ModalNovaCaixa({ data, onClose, onSaved, sucesso, erro }: {
     const f = new FormData(e.currentTarget);
     setSalvando(true);
     try {
-      await criarContraprova({
+      const payload = {
         data_lancamento: String(f.get('data_lancamento') ?? new Date().toISOString().slice(0, 10)),
         lotes: String(f.get('lotes') ?? '').trim() || null,
         cliente_id: String(f.get('cliente_id') ?? '') || null,
@@ -181,25 +188,27 @@ function ModalNovaCaixa({ data, onClose, onSaved, sucesso, erro }: {
         dias_retencao: retencao?.dias ?? null,
         local_estoque: String(f.get('local_estoque') ?? 'Laboratório').trim() || 'Laboratório',
         observacao: String(f.get('observacao') ?? '').trim() || null,
-      });
-      sucesso('Contraprova registrada.'); onSaved();
+      };
+      if (editando) await atualizarContraprova(editando.id, payload);
+      else await criarContraprova(payload);
+      sucesso(editando ? 'Contraprova atualizada.' : 'Contraprova registrada.'); onSaved();
     } catch (err) { erro(err instanceof Error ? err.message : 'Falha.'); }
     finally { setSalvando(false); }
   }
 
   return (
-    <Modal open onClose={onClose} title="Nova caixa de contraprova" size="lg">
+    <Modal open onClose={onClose} title={editando ? `Editar caixa ${editando.numero_caixa}` : "Nova caixa de contraprova"} size="lg">
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Data de lançamento"><TextInput name="data_lancamento" type="date" defaultValue={new Date().toISOString().slice(0, 10)} required /></Field>
+          <Field label="Data de lançamento"><TextInput name="data_lancamento" type="date" defaultValue={editando?.data_lancamento ?? new Date().toISOString().slice(0, 10)} required /></Field>
           <Field label="Cliente">
-            <Select name="cliente_id" defaultValue="">
+            <Select name="cliente_id" defaultValue={editando?.cliente_id ?? ""}>
               <option value="">—</option>
               {data.clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
             </Select>
           </Field>
         </div>
-        <Field label="Lotes"><TextInput name="lotes" placeholder="MD2147 - MD2248 - ..." /></Field>
+        <Field label="Lotes"><TextInput name="lotes" defaultValue={editando?.lotes ?? ''} placeholder="MD2147 - MD2248 - ..." /></Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Tempo de retenção">
             <Select value={retencaoId} onChange={(e) => setRetencaoId(e.target.value)}>
@@ -207,17 +216,17 @@ function ModalNovaCaixa({ data, onClose, onSaved, sucesso, erro }: {
               {data.retencoes.map((r) => <option key={r.id} value={r.id}>{r.rotulo} ({r.dias}d)</option>)}
             </Select>
           </Field>
-          <Field label="Local de estoque"><TextInput name="local_estoque" defaultValue="Laboratório" /></Field>
+          <Field label="Local de estoque"><TextInput name="local_estoque" defaultValue={editando?.local_estoque ?? "Laboratório"} /></Field>
         </div>
         {retencao && (
           <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">
             Prazo de {retencao.dias} dias — poderá ser descartada após esse período.
           </p>
         )}
-        <Field label="Observação"><TextInput name="observacao" placeholder="—" /></Field>
+        <Field label="Observação"><TextInput name="observacao" defaultValue={editando?.observacao ?? ''} placeholder="—" /></Field>
         <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
           <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button type="submit" loading={salvando}>Registrar</Button>
+          <Button type="submit" loading={salvando}>{editando ? "Salvar" : "Registrar"}</Button>
         </div>
       </form>
     </Modal>

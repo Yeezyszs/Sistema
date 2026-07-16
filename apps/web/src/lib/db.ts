@@ -122,6 +122,10 @@ import type {
   PlanoPcm,
   LubrificacaoPcm,
   FerramentaPcm,
+  OrdemPcm,
+  NovaOrdemPcm,
+  OsExecucao,
+  NovaOsExecucao,
 } from '@sistema/domain';
 
 const producao = () => supabase.schema('producao');
@@ -1275,6 +1279,50 @@ export async function listFerramentasPcm(): Promise<FerramentaPcm[]> {
   return unwrap<FerramentaPcm[]>(
     await manutencao().from('ferramentas').select('*').order('tipo').order('caixa').order('nome'),
   );
+}
+
+// ── PCM: Ordens de Serviço (F2) ────────────────────────────────
+export async function listOrdensPcm(): Promise<OrdemPcm[]> {
+  return unwrap<OrdemPcm[]>(
+    await manutencao().from('ordens').select('*').order('numero', { ascending: false }),
+  );
+}
+
+export async function getOrdemPcm(id: string): Promise<OrdemPcm | null> {
+  const res = await manutencao().from('ordens').select('*').eq('id', id).maybeSingle();
+  if (res.error) throw new Error(res.error.message);
+  return (res.data as OrdemPcm | null) ?? null;
+}
+
+export async function criarOrdemPcm(payload: NovaOrdemPcm): Promise<void> {
+  const res = await manutencao().from('ordens').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function atualizarOrdemPcm(id: string, patch: Partial<NovaOrdemPcm>): Promise<void> {
+  const res = await manutencao().from('ordens').update(patch).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function excluirOrdemPcm(id: string): Promise<void> {
+  const res = await manutencao().from('ordens').delete().eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function getExecucoesDaOs(osId: string): Promise<OsExecucao[]> {
+  return unwrap<OsExecucao[]>(
+    await manutencao().from('os_execucoes').select('*').eq('os_id', osId).order('created_at'),
+  );
+}
+
+// Persistência do checklist de execução: delete + re-insert (padrão do PCM).
+export async function salvarExecucoesDaOs(osId: string, linhas: NovaOsExecucao[]): Promise<void> {
+  const del = await manutencao().from('os_execucoes').delete().eq('os_id', osId);
+  if (del.error) throw new Error(del.error.message);
+  if (linhas.length > 0) {
+    const ins = await manutencao().from('os_execucoes').insert(linhas.map((l) => ({ ...l, os_id: osId })));
+    if (ins.error) throw new Error(ins.error.message);
+  }
 }
 
 // ── Helpers de lookup ──────────────────────────────────────────

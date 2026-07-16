@@ -21,7 +21,8 @@ import { EspecificacoesPage } from '../features/qualidade/EspecificacoesPage';
 import { PccFisicoPage } from '../features/qualidade/PccFisicoPage';
 import { PphoPage } from '../features/qualidade/PphoPage';
 import { CalibracaoPage } from '../features/qualidade/CalibracaoPage';
-import { ManutencaoPage } from '../features/manutencao/ManutencaoPage';
+import { PcmOrdensPage } from '../features/pcm/PcmOrdensPage';
+import { PcmOsPrint } from '../features/pcm/PcmOsPrint';
 import { AnaliseRiscoPage } from '../features/qualidade/AnaliseRiscoPage';
 import { AuditoriaPage } from '../features/qualidade/AuditoriaPage';
 import { AmbientalPage } from '../features/qualidade/AmbientalPage';
@@ -75,6 +76,15 @@ export default function App() {
               </Protected>
             }
           />
+          {/* Impressão de O.S. (PCM) — página cheia, fora do Layout */}
+          <Route
+            path="/pcm-os/:id/imprimir"
+            element={
+              <Protected>
+                <PcmOsPrint />
+              </Protected>
+            }
+          />
           <Route
             element={
               <Protected>
@@ -107,7 +117,7 @@ export default function App() {
             <Route path="/calibracao-phmetro" element={<ModuloGuard modulo="calibracao"><CalibracaoPhmetroPage /></ModuloGuard>} />
             <Route path="/insumos-lab" element={<ModuloGuard modulo="insumos_lab"><InsumosLaboratorioPage /></ModuloGuard>} />
             <Route path="/contraprovas" element={<ModuloGuard modulo="contraprovas"><ContraprovasPage /></ModuloGuard>} />
-            <Route path="/manutencao" element={<ModuloGuard modulo="manutencao"><ManutencaoPage /></ModuloGuard>} />
+            <Route path="/manutencao" element={<ModuloGuard modulo="manutencao"><PcmOrdensPage /></ModuloGuard>} />
             <Route path="/pcm-cadastros" element={<ModuloGuard modulo="manutencao"><PcmCadastrosPage /></ModuloGuard>} />
             <Route path="/analise-risco" element={<ModuloGuard modulo="analise_risco"><AnaliseRiscoPage /></ModuloGuard>} />
             <Route path="/auditoria" element={<ModuloGuard modulo="auditoria"><AuditoriaPage /></ModuloGuard>} />

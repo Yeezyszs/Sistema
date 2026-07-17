@@ -6,6 +6,7 @@ interface ProdutoLite {
   id: string;
   nome: string;
   codigo: string | null;
+  nome_curto?: string | null;
 }
 
 // Seletor de produto com atalho por código: digitar o código (ex.: 16229)
@@ -50,7 +51,7 @@ export function ProdutoPicker({
           <Select value={value} onChange={(e) => onSelectChange(e.target.value)} required={obrigatorio}>
             <option value="">—</option>
             {produtos.map((p) => (
-              <option key={p.id} value={p.id}>{p.codigo ? `${p.codigo} · ` : ''}{p.nome}</option>
+              <option key={p.id} value={p.id}>{p.codigo ? `${p.codigo} · ` : ''}{p.nome_curto || p.nome}</option>
             ))}
           </Select>
         </div>

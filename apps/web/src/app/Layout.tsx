@@ -77,6 +77,7 @@ const ITENS_TOPO: SubItem[] = [
 const ITENS_PCP: SubItem[] = [
   { to: '/programacao', icon: <IconClipboard width={18} height={18} />, label: 'Programação', modulo: 'pcp' },
   { to: '/apontamento', icon: <IconCheck width={18} height={18} />, label: 'Apontamento', modulo: 'pcp' },
+  { to: '/produtos', icon: <IconBox width={18} height={18} />, label: 'Produtos', modulo: 'produtos' },
   { to: '/ordens', icon: <IconClipboard width={18} height={18} />, label: 'Ordens de produção', modulo: 'ordens' },
   { to: '/estoque', icon: <IconBox width={18} height={18} />, label: 'Estoque', modulo: 'estoque' },
   { to: '/pedidos', icon: <IconDoc width={18} height={18} />, label: 'Pedidos', modulo: 'pedidos' },

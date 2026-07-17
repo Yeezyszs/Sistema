@@ -153,6 +153,14 @@ export async function listProdutos(): Promise<Produto[]> {
   return unwrap<Produto[]>(await core().from('produtos').select('*').eq('ativo', true).order('nome'));
 }
 
+export async function atualizarProduto(
+  id: string,
+  patch: Partial<Pick<Produto, 'nome' | 'codigo' | 'nome_curto' | 'peso_unitario' | 'rendimento' | 'kg_por_lote' | 'tempo_por_lote_min'>>,
+): Promise<void> {
+  const res = await core().from('produtos').update(patch).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
 export async function listFornecedores(): Promise<Fornecedor[]> {
   return unwrap<Fornecedor[]>(await core().from('fornecedores').select('*').order('razao_social'));
 }

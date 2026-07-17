@@ -33,7 +33,7 @@ const DIA_LABEL = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 function rotuloProduto(p: Programacao, produtosMap: Map<string, Produto>): string {
   if (p.produto_id) {
     const prod = produtosMap.get(p.produto_id);
-    if (prod) return prod.codigo || prod.nome;
+    if (prod) return prod.nome_curto || prod.codigo || prod.nome;
   }
   return p.atividade ?? '—';
 }

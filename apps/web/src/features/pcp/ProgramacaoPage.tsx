@@ -44,6 +44,7 @@ export function ProgramacaoPage() {
   // Célula sendo criada (data+linha+turno) ou programação sendo editada.
   const [criando, setCriando] = useState<{ data: string; linhaId: string; turno: TurnoProd } | null>(null);
   const [editando, setEditando] = useState<Programacao | null>(null);
+  const [copiando, setCopiando] = useState(false);
   const { dias, de, ate } = semanaDe(refBase);
   const { sucesso, erro } = useToast();
 
@@ -73,6 +74,29 @@ export function ProgramacaoPage() {
     catch (err) { erro(err instanceof Error ? err.message : 'Falha.'); }
   }
 
+  // Copia todas as programações de um dia para os dias de destino (real zerado).
+  async function copiarDia(origem: string, destinos: string[]) {
+    const doOrigem = (data?.prog ?? []).filter((p) => p.data === origem);
+    if (doOrigem.length === 0) { erro('O dia de origem não tem programação.'); return; }
+    try {
+      for (const destino of destinos) {
+        for (const p of doOrigem) {
+          await criarProgramacao({
+            data: destino,
+            turno: p.turno,
+            linha_id: p.linha_id,
+            produto_id: p.produto_id,
+            atividade: p.atividade,
+            meta_kg: p.meta_kg,
+            observacao: p.observacao,
+          });
+        }
+      }
+      sucesso(`Programação copiada para ${destinos.length} dia(s).`);
+      setCopiando(false); rec();
+    } catch (err) { erro(err instanceof Error ? err.message : 'Falha.'); }
+  }
+
   return (
     <>
       <PageHeader title="Programação de Produção" subtitle="Quadro semanal — segunda a sábado, linhas × turnos (PCP)" />
@@ -84,6 +108,7 @@ export function ProgramacaoPage() {
           <span className="text-sm font-medium text-slate-700">{formatarData(de)} — {formatarData(ate)}</span>
           <button onClick={() => mudarSemana(1)} className="rounded-lg border border-slate-200 p-2 text-slate-500 hover:bg-slate-50"><IconChevronRight width={16} height={16} /></button>
           <button onClick={() => setRefBase(new Date())} className="ml-1 text-xs font-medium text-emerald-600 hover:text-emerald-700">Semana atual</button>
+          <button onClick={() => setCopiando(true)} className="ml-2 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50">Copiar dia</button>
         </div>
         <div className="flex gap-4 text-sm">
           <span className="text-slate-500">Meta: <span className="font-semibold text-slate-800">{formatarQuantidade(totMeta, 'kg')}</span></span>
@@ -197,7 +222,85 @@ export function ProgramacaoPage() {
           onExcluir={editando ? () => void excluir(editando.id) : undefined}
         />
       )}
+
+      {copiando && (
+        <ModalCopiarDia
+          dias={dias}
+          contarDia={(dia) => (data?.prog ?? []).filter((p) => p.data === dia).length}
+          onClose={() => setCopiando(false)}
+          onCopiar={copiarDia}
+        />
+      )}
     </>
+  );
+}
+
+// Copia a programação de um dia para outros dias da semana.
+function ModalCopiarDia({ dias, contarDia, onClose, onCopiar }: {
+  dias: string[];
+  contarDia: (dia: string) => number;
+  onClose: () => void;
+  onCopiar: (origem: string, destinos: string[]) => Promise<void>;
+}) {
+  const primeiroComProg = dias.find((d) => contarDia(d) > 0) ?? dias[0] ?? '';
+  const [origem, setOrigem] = useState(primeiroComProg);
+  const [destinos, setDestinos] = useState<string[]>([]);
+  const [salvando, setSalvando] = useState(false);
+
+  const nomeDia = (dia: string) => {
+    const i = dias.indexOf(dia);
+    return `${DIA_LABEL[i] ?? ''} ${dia.slice(8, 10)}/${dia.slice(5, 7)}`;
+  };
+
+  function toggle(dia: string) {
+    setDestinos((arr) => (arr.includes(dia) ? arr.filter((d) => d !== dia) : [...arr, dia]));
+  }
+
+  async function confirmar() {
+    if (destinos.length === 0) return;
+    setSalvando(true);
+    await onCopiar(origem, destinos);
+    setSalvando(false);
+  }
+
+  return (
+    <Modal open onClose={onClose} title="Copiar programação de um dia" size="lg">
+      <div className="space-y-4">
+        <Field label="Copiar do dia">
+          <Select value={origem} onChange={(e) => { setOrigem(e.target.value); setDestinos((arr) => arr.filter((d) => d !== e.target.value)); }}>
+            {dias.map((d) => (
+              <option key={d} value={d}>{nomeDia(d)} · {contarDia(d)} item(ns)</option>
+            ))}
+          </Select>
+        </Field>
+
+        <div>
+          <p className="mb-2 text-sm font-medium text-slate-600">Para os dias:</p>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {dias.filter((d) => d !== origem).map((d) => (
+              <label key={d} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${destinos.includes(d) ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+                <input type="checkbox" checked={destinos.includes(d)} onChange={() => toggle(d)} className="accent-emerald-600" />
+                {nomeDia(d)}
+                {contarDia(d) > 0 && <span className="ml-auto text-xs text-slate-400">{contarDia(d)}</span>}
+              </label>
+            ))}
+          </div>
+          <button type="button" onClick={() => setDestinos(dias.filter((d) => d !== origem))}
+            className="mt-2 text-xs font-medium text-emerald-600 hover:text-emerald-700">Selecionar todos</button>
+        </div>
+
+        <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">
+          Os itens do dia de origem são <span className="font-medium">adicionados</span> aos dias marcados (o real fica zerado). Não apaga o que já existe.
+        </p>
+
+        <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
+          <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button type="button" loading={salvando} disabled={destinos.length === 0} onClick={() => void confirmar()}>
+            Copiar para {destinos.length || ''} dia(s)
+          </Button>
+        </div>
+      </div>
+    </Modal>
   );
 }
 

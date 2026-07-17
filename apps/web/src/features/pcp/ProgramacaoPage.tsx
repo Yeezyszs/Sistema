@@ -103,7 +103,7 @@ export function ProgramacaoPage() {
           <table className="w-full min-w-[900px] text-sm">
             <thead>
               <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
-                <th className="px-3 py-3 font-medium">Linha / turno</th>
+                <th className="px-3 py-3 font-medium">Linha</th>
                 {dias.map((dia, i) => (
                   <th key={dia} className="px-2 py-3 text-center font-medium">
                     {DIA_LABEL[i]}<br /><span className="font-normal text-slate-300">{dia.slice(8, 10)}/{dia.slice(5, 7)}</span>
@@ -111,50 +111,77 @@ export function ProgramacaoPage() {
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
-              {data.linhas.flatMap((linha) =>
-                TURNO_PROD.map((turno) => (
-                  <tr key={`${linha.id}-${turno}`} className="align-top">
-                    <td className="whitespace-nowrap px-3 py-2.5">
-                      <span className="font-medium text-slate-700">{linha.codigo}</span>
-                      <span className={`ml-2 rounded px-1.5 py-0.5 text-xs font-medium ${turno === '2t' ? 'bg-indigo-100 text-indigo-700' : 'bg-amber-100 text-amber-700'}`}>
+            {TURNO_PROD.map((turno) => {
+              // Totais do turno na semana (meta e real de todas as células).
+              const doTurno = (data.prog ?? []).filter((p) => p.turno === turno);
+              const metaTurno = doTurno.reduce((s, p) => s + (p.meta_kg ?? 0), 0);
+              const realTurno = doTurno.reduce((s, p) => s + (p.real_kg ?? 0), 0);
+              return (
+                <tbody key={turno} className="divide-y divide-slate-100 border-b-4 border-slate-100">
+                  {/* Faixa do turno */}
+                  <tr className={turno === '2t' ? 'bg-indigo-50/60' : 'bg-amber-50/60'}>
+                    <td colSpan={dias.length + 1} className="px-3 py-2">
+                      <span className={`rounded px-2 py-0.5 text-xs font-semibold ${turno === '2t' ? 'bg-indigo-100 text-indigo-700' : 'bg-amber-100 text-amber-700'}`}>
                         {TURNO_PROD_LABEL[turno]}
                       </span>
                     </td>
-                    {dias.map((dia) => {
-                      const itens = celula(linha.id, turno, dia);
-                      return (
-                        <td key={dia} className="px-1.5 py-1.5">
-                          <div className="space-y-1">
-                            {itens.map((p) => {
-                              const at = p.meta_kg ? (p.real_kg ?? 0) / p.meta_kg : null;
-                              return (
-                                <button key={p.id} onClick={() => setEditando(p)}
-                                  className={`block w-full rounded-md px-2 py-1 text-left text-xs transition hover:ring-2 hover:ring-emerald-200 ${
-                                    at != null && at >= 1 ? 'bg-emerald-50 text-emerald-800'
-                                    : at != null && at > 0 ? 'bg-amber-50 text-amber-800'
-                                    : 'bg-slate-100 text-slate-700'
-                                  }`}>
-                                  <span className="font-semibold">{rotuloProduto(p, data.produtosMap)}</span>
-                                  <span className="block text-[11px] opacity-75">
-                                    {formatarQuantidade(p.meta_kg)}{p.real_kg != null ? ` · real ${formatarQuantidade(p.real_kg)}` : ''}
-                                  </span>
-                                </button>
-                              );
-                            })}
-                            <button
-                              onClick={() => setCriando({ data: dia, linhaId: linha.id, turno })}
-                              className="block w-full rounded-md border border-dashed border-slate-200 px-2 py-0.5 text-center text-xs text-slate-300 transition hover:border-emerald-300 hover:text-emerald-500">
-                              +
-                            </button>
-                          </div>
-                        </td>
-                      );
-                    })}
                   </tr>
-                )),
-              )}
-            </tbody>
+                  {/* Uma linha por linha de produção */}
+                  {data.linhas.map((linha) => (
+                    <tr key={`${turno}-${linha.id}`} className="align-top">
+                      <td className="whitespace-nowrap px-3 py-2.5 pl-6">
+                        <span className="font-medium text-slate-700">{linha.codigo}</span>
+                        {linha.nome && <span className="ml-1 text-xs text-slate-400">{linha.nome}</span>}
+                      </td>
+                      {dias.map((dia) => {
+                        const itens = celula(linha.id, turno, dia);
+                        return (
+                          <td key={dia} className="px-1.5 py-1.5">
+                            <div className="space-y-1">
+                              {itens.map((p) => {
+                                const at = p.meta_kg ? (p.real_kg ?? 0) / p.meta_kg : null;
+                                return (
+                                  <button key={p.id} onClick={() => setEditando(p)}
+                                    className={`block w-full rounded-md px-2 py-1 text-left text-xs transition hover:ring-2 hover:ring-emerald-200 ${
+                                      at != null && at >= 1 ? 'bg-emerald-50 text-emerald-800'
+                                      : at != null && at > 0 ? 'bg-amber-50 text-amber-800'
+                                      : 'bg-slate-100 text-slate-700'
+                                    }`}>
+                                    <span className="font-semibold">{rotuloProduto(p, data.produtosMap)}</span>
+                                    <span className="block text-[11px] opacity-75">
+                                      {formatarQuantidade(p.meta_kg)}{p.real_kg != null ? ` · real ${formatarQuantidade(p.real_kg)}` : ''}
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                              <button
+                                onClick={() => setCriando({ data: dia, linhaId: linha.id, turno })}
+                                className="block w-full rounded-md border border-dashed border-slate-200 px-2 py-0.5 text-center text-xs text-slate-300 transition hover:border-emerald-300 hover:text-emerald-500">
+                                +
+                              </button>
+                            </div>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                  {/* Total do turno */}
+                  <tr className="bg-slate-50 font-medium">
+                    <td className="px-3 py-2 pl-6 text-sm text-slate-600">Total {TURNO_PROD_LABEL[turno]}</td>
+                    <td colSpan={dias.length} className="px-3 py-2 text-sm text-slate-600">
+                      Meta <span className="font-semibold text-slate-800">{formatarQuantidade(metaTurno, 'kg')}</span>
+                      <span className="mx-2 text-slate-300">·</span>
+                      Real <span className="font-semibold text-slate-800">{formatarQuantidade(realTurno, 'kg')}</span>
+                      {metaTurno > 0 && (
+                        <span className={`ml-2 font-semibold ${realTurno / metaTurno >= 1 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                          {(realTurno / metaTurno * 100).toFixed(0)}%
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                </tbody>
+              );
+            })}
           </table>
         </Card>
       )}

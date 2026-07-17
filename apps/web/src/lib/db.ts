@@ -7,6 +7,8 @@ import type {
   NovoLote,
   Produto,
   Fornecedor,
+  DocumentoFornecedor,
+  NovoDocumentoFornecedor,
   EtapaLote,
   Etapa,
   Recebimento,
@@ -1017,6 +1019,77 @@ export async function listHomologacoes(): Promise<Homologacao[]> {
 export async function criarHomologacao(payload: NovaHomologacao): Promise<void> {
   const res = await qualidade().from('homologacoes').insert(payload);
   if (res.error) throw new Error(res.error.message);
+}
+
+// ── Fornecedores: laudos / documentos (PDF no Storage) ─────────
+export async function listDocumentosFornecedor(): Promise<DocumentoFornecedor[]> {
+  return unwrap<DocumentoFornecedor[]>(
+    await qualidade().from('documentos_fornecedor').select('*'),
+  );
+}
+
+export async function getDocumentosDoFornecedor(
+  fornecedorId: string,
+): Promise<DocumentoFornecedor[]> {
+  return unwrap<DocumentoFornecedor[]>(
+    await qualidade()
+      .from('documentos_fornecedor')
+      .select('*')
+      .eq('fornecedor_id', fornecedorId)
+      .order('ano', { ascending: false, nullsFirst: false })
+      .order('numero_laudo', { ascending: false, nullsFirst: false }),
+  );
+}
+
+// Sobe o arquivo ao bucket privado e registra o documento.
+export async function enviarDocumentoFornecedor(
+  meta: NovoDocumentoFornecedor,
+  arquivo: File,
+): Promise<DocumentoFornecedor> {
+  const path = `${meta.fornecedor_id}/${Date.now()}-${arquivo.name}`;
+  const up = await supabase.storage
+    .from('fornecedores')
+    .upload(path, arquivo, { upsert: false, contentType: arquivo.type || undefined });
+  if (up.error) throw new Error(up.error.message);
+
+  const res = await qualidade()
+    .from('documentos_fornecedor')
+    .insert({
+      tipo: 'laudo_laboratorial',
+      resultado: 'pendente',
+      ...meta,
+      arquivo_bucket: 'fornecedores',
+      arquivo_path: path,
+      arquivo_nome: arquivo.name,
+    })
+    .select('*')
+    .single();
+  if (res.error) {
+    await supabase.storage.from('fornecedores').remove([path]);
+    throw new Error(res.error.message);
+  }
+  return res.data as DocumentoFornecedor;
+}
+
+export async function atualizarResultadoDocumento(
+  documentoId: string,
+  resultado: DocumentoFornecedor['resultado'],
+): Promise<void> {
+  const res = await qualidade()
+    .from('documentos_fornecedor')
+    .update({ resultado })
+    .eq('id', documentoId);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// URL temporária (bucket privado) para visualizar/baixar o laudo.
+export async function urlAssinadaDocumento(
+  path: string,
+  bucket = 'fornecedores',
+): Promise<string> {
+  const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 3600);
+  if (error) throw new Error(error.message);
+  return data.signedUrl;
 }
 
 // ── PCP: linhas de produção ────────────────────────────────────

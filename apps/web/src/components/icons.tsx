@@ -75,6 +75,12 @@ export const IconDoc = (p: IconProps) => (
   </svg>
 );
 
+export const IconDownload = (p: IconProps) => (
+  <svg {...base} {...p}>
+    <path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14" />
+  </svg>
+);
+
 export const IconBox = (p: IconProps) => (
   <svg {...base} {...p}>
     <path d="m7.5 4.3 9 5.2M3 7l9 5 9-5M12 22V12" />

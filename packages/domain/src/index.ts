@@ -20,6 +20,7 @@ export * from './entities/MovimentoEstoque';
 export * from './entities/RegistroEtapa';
 export * from './entities/Produto';
 export * from './entities/Fornecedor';
+export * from './entities/DocumentoFornecedor';
 export * from './entities/PontoControle';
 export * from './entities/Monitoramento';
 export * from './entities/Cliente';

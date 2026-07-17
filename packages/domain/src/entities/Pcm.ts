@@ -177,6 +177,110 @@ export interface NovaLuExecucao {
   obs?: string | null;
 }
 
+// ── F4: Indicadores (paradas, produção, custos) ────────────────
+export const TIPO_PARADA = ['Manutenção / Quebra', 'Queda de Energia', 'Falta de Matéria Prima', 'Outro'] as const;
+export type TipoParada = (typeof TIPO_PARADA)[number];
+export const TURNO_PARADA = ['1º', '2º', 'Revezamento'] as const;
+
+export interface Parada {
+  id: string;
+  org_id: string;
+  data: string;
+  tipo: TipoParada;
+  setor: string | null;
+  turno: string | null;
+  hora_inicio: string | null;
+  hora_fim: string | null;
+  horas: number;
+  motivo: string | null;
+  os_id: string | null;
+  created_at: string;
+  created_by: string | null;
+}
+export interface NovaParada {
+  data: string;
+  tipo: TipoParada;
+  setor?: string | null;
+  turno?: string | null;
+  hora_inicio?: string | null;
+  hora_fim?: string | null;
+  horas: number;
+  motivo?: string | null;
+  os_id?: string | null;
+}
+
+export interface ProducaoHoras {
+  id: string;
+  org_id: string;
+  mes: number;
+  ano: number;
+  horas: number;
+  created_at: string;
+  created_by: string | null;
+}
+export interface NovaProducaoHoras { mes: number; ano: number; horas: number }
+
+export interface CustoManut {
+  id: string;
+  org_id: string;
+  data: string;
+  categoria: string | null;
+  descricao: string | null;
+  valor: number;
+  created_at: string;
+  created_by: string | null;
+}
+export interface NovoCustoManut {
+  data: string;
+  categoria?: string | null;
+  descricao?: string | null;
+  valor: number;
+}
+
+// Duração em horas entre "HH:MM" início e fim (vira dia seguinte se fim < início).
+export function horasEntre(inicio: string | null, fim: string | null): number {
+  if (!inicio || !fim) return 0;
+  const [hi, mi] = inicio.split(':').map(Number);
+  const [hf, mf] = fim.split(':').map(Number);
+  if ([hi, mi, hf, mf].some((n) => n === undefined || Number.isNaN(n))) return 0;
+  let min = (hf! * 60 + mf!) - (hi! * 60 + mi!);
+  if (min < 0) min += 24 * 60;
+  return Math.round((min / 60) * 100) / 100;
+}
+
+export interface IndicadoresManut {
+  horasPlanejadas: number;
+  horasParadas: number;
+  horasOperacao: number;
+  horasManutencao: number;
+  nFalhas: number;
+  disponibilidade: number | null; // %
+  mttr: number | null;            // horas
+  mtbf: number | null;            // horas
+}
+
+// KPIs do período (mesma regra do PCM: só "Manutenção / Quebra" gera MTTR/MTBF).
+export function calcularIndicadores(
+  paradas: Pick<Parada, 'tipo' | 'horas'>[],
+  horasPlanejadas: number,
+): IndicadoresManut {
+  const horasParadas = paradas.reduce((s, p) => s + (p.horas ?? 0), 0);
+  const manut = paradas.filter((p) => p.tipo === 'Manutenção / Quebra');
+  const horasManutencao = manut.reduce((s, p) => s + (p.horas ?? 0), 0);
+  const nFalhas = manut.length;
+  const horasOperacao = Math.max(0, horasPlanejadas - horasParadas);
+  return {
+    horasPlanejadas,
+    horasParadas,
+    horasOperacao,
+    horasManutencao,
+    nFalhas,
+    disponibilidade: horasPlanejadas > 0 ? (horasOperacao / horasPlanejadas) * 100 : null,
+    mttr: nFalhas > 0 ? horasManutencao / nFalhas : null,
+    mtbf: nFalhas > 0 ? horasOperacao / nFalhas : null,
+  };
+}
+
 export interface FerramentaPcm {
   id: string;
   org_id: string;

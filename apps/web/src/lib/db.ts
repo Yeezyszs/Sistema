@@ -130,6 +130,12 @@ import type {
   NovaPreventivaPcm,
   LuExecucao,
   NovaLuExecucao,
+  Parada,
+  NovaParada,
+  ProducaoHoras,
+  NovaProducaoHoras,
+  CustoManut,
+  NovoCustoManut,
 } from '@sistema/domain';
 
 const producao = () => supabase.schema('producao');
@@ -1386,6 +1392,58 @@ export async function listLuExecucoes(): Promise<LuExecucao[]> {
 
 export async function criarLuExecucao(payload: NovaLuExecucao): Promise<void> {
   const res = await manutencao().from('lu_execucoes').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// ── PCM: Indicadores (paradas, produção, custos) ───────────────
+export async function listParadas(): Promise<Parada[]> {
+  return unwrap<Parada[]>(
+    await manutencao().from('paradas').select('*').order('data', { ascending: false }),
+  );
+}
+export async function criarParada(payload: NovaParada): Promise<void> {
+  const res = await manutencao().from('paradas').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+export async function atualizarParada(id: string, patch: Partial<NovaParada>): Promise<void> {
+  const res = await manutencao().from('paradas').update(patch).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+export async function excluirParada(id: string): Promise<void> {
+  const res = await manutencao().from('paradas').delete().eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function listProducaoHoras(): Promise<ProducaoHoras[]> {
+  return unwrap<ProducaoHoras[]>(
+    await manutencao().from('producao_horas').select('*').order('ano', { ascending: false }).order('mes', { ascending: false }),
+  );
+}
+// Upsert por (mes, ano) — o par é único.
+export async function salvarProducaoHoras(payload: NovaProducaoHoras): Promise<void> {
+  const res = await manutencao().from('producao_horas').upsert(payload, { onConflict: 'org_id,mes,ano' });
+  if (res.error) throw new Error(res.error.message);
+}
+export async function excluirProducaoHoras(id: string): Promise<void> {
+  const res = await manutencao().from('producao_horas').delete().eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function listCustosManut(): Promise<CustoManut[]> {
+  return unwrap<CustoManut[]>(
+    await manutencao().from('custos').select('*').order('data', { ascending: false }),
+  );
+}
+export async function criarCustoManut(payload: NovoCustoManut): Promise<void> {
+  const res = await manutencao().from('custos').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+export async function atualizarCustoManut(id: string, patch: Partial<NovoCustoManut>): Promise<void> {
+  const res = await manutencao().from('custos').update(patch).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+export async function excluirCustoManut(id: string): Promise<void> {
+  const res = await manutencao().from('custos').delete().eq('id', id);
   if (res.error) throw new Error(res.error.message);
 }
 

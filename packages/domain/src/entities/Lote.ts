@@ -77,3 +77,12 @@ export function loteEstaBloqueado(lote: Pick<Lote, 'status'>): boolean {
 export function lotePodeSolicitarLiberacao(lote: Pick<Lote, 'status'>): boolean {
   return lote.status === 'em_processo';
 }
+
+export function loteFoiCancelado(lote: Pick<Lote, 'status'>): boolean {
+  return lote.status === 'cancelado';
+}
+
+// Cancelar preserva rastreabilidade; só não faz sentido para o que já saiu ou já está cancelado.
+export function lotePodeCancelar(lote: Pick<Lote, 'status'>): boolean {
+  return lote.status !== 'expedido' && lote.status !== 'cancelado';
+}

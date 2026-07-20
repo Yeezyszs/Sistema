@@ -260,6 +260,19 @@ export async function atualizarLote(loteId: string, patch: AtualizacaoLote): Pro
   if (res.error) throw new Error(res.error.message);
 }
 
+// Cancelamento suave: mantém o lote e todo o histórico, só muda o status.
+export async function cancelarLote(loteId: string): Promise<void> {
+  const res = await producao().from('lotes').update({ status: 'cancelado' }).eq('id', loteId);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// Exclusão física: só deve ser usada em lote sem histórico (criado por engano).
+// Se houver registros vinculados, o banco bloqueia por chave estrangeira.
+export async function excluirLote(loteId: string): Promise<void> {
+  const res = await producao().from('lotes').delete().eq('id', loteId);
+  if (res.error) throw new Error(res.error.message);
+}
+
 // Gate de liberação: valida não-conformidades no DB antes de liberar
 export async function liberarLoteGate(loteId: string): Promise<void> {
   const { error } = await supabase.rpc('liberar_lote', { p_lote_id: loteId });

@@ -5,6 +5,7 @@ export const STATUS_LOTE = [
   'liberado',
   'bloqueado',
   'expedido',
+  'cancelado',
 ] as const;
 
 export type StatusLote = (typeof STATUS_LOTE)[number];
@@ -15,6 +16,7 @@ export const STATUS_LOTE_LABEL: Record<StatusLote, string> = {
   liberado: 'Liberado',
   bloqueado: 'Bloqueado',
   expedido: 'Expedido',
+  cancelado: 'Cancelado',
 };
 
 // "Tom" semântico do status — a camada de UI mapeia para cores.
@@ -26,6 +28,7 @@ export const STATUS_LOTE_TOM: Record<StatusLote, Tom> = {
   liberado: 'sucesso',
   bloqueado: 'erro',
   expedido: 'neutro',
+  cancelado: 'neutro',
 };
 
 export function isStatusLote(v: unknown): v is StatusLote {

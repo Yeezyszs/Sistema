@@ -292,3 +292,47 @@ export interface FerramentaPcm {
   created_at: string;
   created_by: string | null;
 }
+
+// ── F5: Checklist diário de ferramentas ────────────────────────
+export const ESTADO_CHECKLIST = ['C', 'NC', 'F', 'FE', 'A'] as const;
+export type EstadoChecklist = (typeof ESTADO_CHECKLIST)[number];
+export const ESTADO_CHECKLIST_LABEL: Record<EstadoChecklist, string> = {
+  C: 'Conforme',
+  NC: 'Não conforme',
+  F: 'Faltando',
+  FE: 'Ferramenta emprestada',
+  A: 'Ausente',
+};
+// Classe de fundo/tom por estado (a UI aplica).
+export const ESTADO_CHECKLIST_TOM: Record<EstadoChecklist, string> = {
+  C: 'bg-emerald-100 text-emerald-700',
+  NC: 'bg-red-100 text-red-700',
+  F: 'bg-amber-100 text-amber-700',
+  FE: 'bg-sky-100 text-sky-700',
+  A: 'bg-slate-200 text-slate-600',
+};
+
+export interface EstadoChecklistFerramenta {
+  id: string;
+  org_id: string;
+  colaborador_id: string;
+  ferramenta_id: string;
+  ano: number;
+  mes: number;
+  dia: number;
+  estado: EstadoChecklist;
+  created_at: string;
+  created_by: string | null;
+}
+
+// Próximo estado no ciclo (clique avança; depois do último volta a vazio/null).
+export function proximoEstadoChecklist(atual: EstadoChecklist | null): EstadoChecklist | null {
+  if (atual === null) return 'C';
+  const i = ESTADO_CHECKLIST.indexOf(atual);
+  return i === ESTADO_CHECKLIST.length - 1 ? null : ESTADO_CHECKLIST[i + 1]!;
+}
+
+// Nº de dias do mês (mes 1-12).
+export function diasNoMes(ano: number, mes: number): number {
+  return new Date(ano, mes, 0).getDate();
+}

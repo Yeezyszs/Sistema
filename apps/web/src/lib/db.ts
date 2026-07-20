@@ -124,6 +124,8 @@ import type {
   PlanoPcm,
   LubrificacaoPcm,
   FerramentaPcm,
+  EstadoChecklistFerramenta,
+  EstadoChecklist,
   OrdemPcm,
   NovaOrdemPcm,
   OsExecucao,
@@ -1389,6 +1391,44 @@ export async function listFerramentasPcm(): Promise<FerramentaPcm[]> {
   return unwrap<FerramentaPcm[]>(
     await manutencao().from('ferramentas').select('*').order('tipo').order('caixa').order('nome'),
   );
+}
+
+// ── PCM: Checklist diário de ferramentas (F5) ──────────────────
+export async function listEstadosChecklist(
+  colaboradorId: string, ano: number, mes: number,
+): Promise<EstadoChecklistFerramenta[]> {
+  return unwrap<EstadoChecklistFerramenta[]>(
+    await manutencao()
+      .from('checklist_ferramenta_estado')
+      .select('*')
+      .eq('colaborador_id', colaboradorId)
+      .eq('ano', ano)
+      .eq('mes', mes),
+  );
+}
+
+// Define (upsert) ou limpa (delete) o estado de uma célula ferramenta×dia.
+export async function salvarEstadoChecklist(
+  colaboradorId: string, ferramentaId: string, ano: number, mes: number, dia: number,
+  estado: EstadoChecklist | null,
+): Promise<void> {
+  if (estado === null) {
+    const res = await manutencao()
+      .from('checklist_ferramenta_estado')
+      .delete()
+      .eq('colaborador_id', colaboradorId)
+      .eq('ferramenta_id', ferramentaId)
+      .eq('ano', ano).eq('mes', mes).eq('dia', dia);
+    if (res.error) throw new Error(res.error.message);
+    return;
+  }
+  const res = await manutencao()
+    .from('checklist_ferramenta_estado')
+    .upsert(
+      { colaborador_id: colaboradorId, ferramenta_id: ferramentaId, ano, mes, dia, estado },
+      { onConflict: 'org_id,colaborador_id,ferramenta_id,ano,mes,dia' },
+    );
+  if (res.error) throw new Error(res.error.message);
 }
 
 // ── PCM: Ordens de Serviço (F2) ────────────────────────────────

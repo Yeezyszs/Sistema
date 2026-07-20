@@ -1,12 +1,12 @@
 import { useState, type FormEvent } from 'react';
 import {
-  listProgramacao, listLinhas, listProdutos,
+  listProgramacao, listLinhas, listProdutos, listApontamentos,
   criarProgramacao, atualizarProgramacao, excluirProgramacao, mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { formatarData, formatarQuantidade } from '../../lib/format';
 import { TURNO_PROD, TURNO_PROD_LABEL, calcularMeta } from '@sistema/domain';
-import type { TurnoProd, Linha, Produto, Programacao } from '@sistema/domain';
+import type { TurnoProd, Linha, Produto, Programacao, Apontamento } from '@sistema/domain';
 import { PageHeader, Card, Spinner, Button, Field, TextInput, Select, Modal } from '../../components/ui';
 import { IconArrowLeft, IconChevronRight, IconX } from '../../components/icons';
 import { useToast } from '../../components/Toast';
@@ -49,17 +49,28 @@ export function ProgramacaoPage() {
   const { sucesso, erro } = useToast();
 
   const { data, loading } = useAsync(async () => {
-    const [prog, linhas, produtos] = await Promise.all([
-      listProgramacao(de, ate), listLinhas(), listProdutos(),
+    const [prog, linhas, produtos, apont] = await Promise.all([
+      listProgramacao(de, ate), listLinhas(), listProdutos(), listApontamentos(de, ate),
     ]);
-    return { prog, linhas, produtos, produtosMap: mapBy(produtos, 'id') };
+    return { prog, linhas, produtos, apont, produtosMap: mapBy(produtos, 'id') };
   }, [de, ate, recarregar]);
   const rec = () => setRecarregar((n) => n + 1);
 
   const produtosAcabados = data?.produtos.filter((p) => p.tipo === 'produto_acabado') ?? [];
 
+  // Real derivado dos apontamentos: card casa por data+turno+linha+produto;
+  // os totais de turno/semana somam toda a produção do período (mesmo sem programação).
+  const chaveReal = (data: string, turno: string, linha: string | null, produto: string | null) =>
+    `${data}|${turno}|${linha ?? ''}|${produto ?? ''}`;
+  const realPorChave = new Map<string, number>();
+  for (const a of data?.apont ?? []) {
+    const k = chaveReal(a.data, a.turno, a.linha_id, a.produto_id);
+    realPorChave.set(k, (realPorChave.get(k) ?? 0) + (a.quantidade_kg ?? 0));
+  }
+  const realDe = (p: Programacao) => realPorChave.get(chaveReal(p.data, p.turno, p.linha_id, p.produto_id)) ?? 0;
+
   const totMeta = (data?.prog ?? []).reduce((s, p) => s + (p.meta_kg ?? 0), 0);
-  const totReal = (data?.prog ?? []).reduce((s, p) => s + (p.real_kg ?? 0), 0);
+  const totReal = (data?.apont ?? []).reduce((s, a) => s + (a.quantidade_kg ?? 0), 0);
 
   function mudarSemana(delta: number) {
     const d = new Date(refBase); d.setDate(d.getDate() + delta * 7); setRefBase(d);
@@ -140,7 +151,7 @@ export function ProgramacaoPage() {
               // Totais do turno na semana (meta e real de todas as células).
               const doTurno = (data.prog ?? []).filter((p) => p.turno === turno);
               const metaTurno = doTurno.reduce((s, p) => s + (p.meta_kg ?? 0), 0);
-              const realTurno = doTurno.reduce((s, p) => s + (p.real_kg ?? 0), 0);
+              const realTurno = (data.apont ?? []).filter((a) => a.turno === turno).reduce((s, a) => s + (a.quantidade_kg ?? 0), 0);
               return (
                 <tbody key={turno} className="divide-y divide-slate-100 border-b-4 border-slate-100">
                   {/* Faixa do turno */}
@@ -164,7 +175,8 @@ export function ProgramacaoPage() {
                           <td key={dia} className="px-1.5 py-1.5">
                             <div className="space-y-1">
                               {itens.map((p) => {
-                                const at = p.meta_kg ? (p.real_kg ?? 0) / p.meta_kg : null;
+                                const real = realDe(p);
+                                const at = p.meta_kg ? real / p.meta_kg : null;
                                 return (
                                   <button key={p.id} onClick={() => setEditando(p)}
                                     className={`block w-full rounded-md px-2 py-1 text-left text-xs transition hover:ring-2 hover:ring-emerald-200 ${
@@ -174,7 +186,7 @@ export function ProgramacaoPage() {
                                     }`}>
                                     <span className="font-semibold">{rotuloProduto(p, data.produtosMap)}</span>
                                     <span className="block text-[11px] opacity-75">
-                                      {formatarQuantidade(p.meta_kg)}{p.real_kg != null ? ` · real ${formatarQuantidade(p.real_kg)}` : ''}
+                                      {formatarQuantidade(p.meta_kg)}{real > 0 ? ` · real ${formatarQuantidade(real)}` : ''}
                                     </span>
                                   </button>
                                 );

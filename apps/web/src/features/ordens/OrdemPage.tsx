@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import {
   getOrdemProducao,
   getLotesDaOrdem,
@@ -8,6 +8,7 @@ import {
   criarLote,
   atualizarStatusOP,
   atualizarOrdemProducao,
+  excluirOrdemProducao,
   mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
@@ -22,11 +23,14 @@ import { ApontamentosLoteCard } from '../lotes/ApontamentosLoteCard';
 
 export function OrdemPage() {
   const { id = '' } = useParams();
+  const navigate = useNavigate();
   const [recarregar, setRecarregar] = useState(0);
   const [modalAberto, setModalAberto] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [mudandoStatus, setMudandoStatus] = useState(false);
   const [editandoOp, setEditandoOp] = useState(false);
+  const [confirmarExcluir, setConfirmarExcluir] = useState(false);
+  const [excluindo, setExcluindo] = useState(false);
   // Sinal para o card de apontamentos abrir o modal a partir do botão do topo.
   const [sinalApontar, setSinalApontar] = useState(0);
   const { sucesso, erro } = useToast();
@@ -92,6 +96,24 @@ export function OrdemPage() {
       erro(err instanceof Error ? err.message : 'Falha.');
     } finally {
       setMudandoStatus(false);
+    }
+  }
+
+  async function handleExcluir() {
+    if (!data?.op) return;
+    setExcluindo(true);
+    try {
+      await excluirOrdemProducao(data.op.id);
+      sucesso(`Ordem #${data.op.numero} excluída.`);
+      navigate('/ordens');
+    } catch (err) {
+      erro(
+        err instanceof Error && /foreign key|violates|constraint/i.test(err.message)
+          ? 'Não é possível excluir: a ordem já tem um lote vinculado. Cancele ou exclua o lote primeiro.'
+          : err instanceof Error ? err.message : 'Falha ao excluir.',
+      );
+      setConfirmarExcluir(false);
+      setExcluindo(false);
     }
   }
 
@@ -173,6 +195,20 @@ export function OrdemPage() {
               </Button>
             </div>
           )}
+
+          <div className="mt-4 border-t border-slate-100 pt-4">
+            <button
+              onClick={() => setConfirmarExcluir(true)}
+              className="text-xs font-medium text-red-500 hover:text-red-600"
+            >
+              Excluir ordem
+            </button>
+            {loteDaOrdem && (
+              <p className="mt-1 text-xs text-slate-400">
+                Esta ordem tem um lote — exclua ou cancele o lote antes.
+              </p>
+            )}
+          </div>
         </Card>
 
         <div className="space-y-6 lg:col-span-3">
@@ -269,6 +305,25 @@ export function OrdemPage() {
             </Button>
           </div>
         </form>
+      </Modal>
+
+      <Modal open={confirmarExcluir} onClose={() => setConfirmarExcluir(false)} title="Excluir ordem">
+        <p className="text-sm text-slate-600">
+          Excluir a ordem <span className="font-semibold">#{op.numero}</span> de forma definitiva?
+          Esta ação não pode ser desfeita.
+          {loteDaOrdem && ' A ordem tem um lote vinculado — será preciso tratar o lote antes.'}
+        </p>
+        <div className="mt-5 flex justify-end gap-3">
+          <Button type="button" variant="outline" onClick={() => setConfirmarExcluir(false)}>Voltar</Button>
+          <Button
+            type="button"
+            loading={excluindo}
+            className="bg-red-600 hover:bg-red-700 disabled:bg-red-300"
+            onClick={() => void handleExcluir()}
+          >
+            Excluir definitivamente
+          </Button>
+        </div>
       </Modal>
     </>
   );

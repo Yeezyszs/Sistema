@@ -221,6 +221,12 @@ export async function atualizarStatusOP(id: string, status: StatusOP): Promise<v
   if (res.error) throw new Error(res.error.message);
 }
 
+// Exclui a ordem de produção. Se já houver lote vinculado, o banco bloqueia por FK.
+export async function excluirOrdemProducao(id: string): Promise<void> {
+  const res = await producao().from('ordens_producao').delete().eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
 export async function getLotesDaOrdem(ordemId: string): Promise<Lote[]> {
   return unwrap<Lote[]>(
     await producao()

@@ -6,7 +6,7 @@ import {
   criarCustoManut, atualizarCustoManut, excluirCustoManut,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
-import { formatarData } from '../../lib/format';
+import { formatarData, hojeLocalISO } from '../../lib/format';
 import {
   TIPO_PARADA, TURNO_PARADA, horasEntre, calcularIndicadores,
 } from '@sistema/domain';
@@ -258,7 +258,7 @@ function ModalParada({ setores, ordens, editando, onClose, onSaved, sucesso, err
     setSalvando(true);
     try {
       const payload = {
-        data: String(f.get('data') ?? new Date().toISOString().slice(0, 10)),
+        data: String(f.get('data') ?? hojeLocalISO()),
         tipo: String(f.get('tipo') ?? 'Outro') as TipoParada,
         setor: txt('setor'),
         turno: txt('turno'),
@@ -279,7 +279,7 @@ function ModalParada({ setores, ordens, editando, onClose, onSaved, sucesso, err
     <Modal open onClose={onClose} title={editando ? 'Editar parada' : 'Nova parada'} size="lg">
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Field label="Data"><TextInput name="data" type="date" defaultValue={editando?.data ?? new Date().toISOString().slice(0, 10)} required /></Field>
+          <Field label="Data"><TextInput name="data" type="date" defaultValue={editando?.data ?? hojeLocalISO()} required /></Field>
           <Field label="Tipo">
             <Select name="tipo" defaultValue={editando?.tipo ?? 'Manutenção / Quebra'}>
               {TIPO_PARADA.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -466,7 +466,7 @@ function ModalCusto({ editando, onClose, onSaved, sucesso, erro }: {
     setSalvando(true);
     try {
       const payload = {
-        data: String(f.get('data') ?? new Date().toISOString().slice(0, 10)),
+        data: String(f.get('data') ?? hojeLocalISO()),
         categoria: String(f.get('categoria') ?? '').trim() || null,
         descricao: String(f.get('descricao') ?? '').trim() || null,
         valor: Number(f.get('valor') ?? 0),
@@ -481,7 +481,7 @@ function ModalCusto({ editando, onClose, onSaved, sucesso, erro }: {
     <Modal open onClose={onClose} title={editando ? 'Editar custo' : 'Novo custo'} size="lg">
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Data"><TextInput name="data" type="date" defaultValue={editando?.data ?? new Date().toISOString().slice(0, 10)} required /></Field>
+          <Field label="Data"><TextInput name="data" type="date" defaultValue={editando?.data ?? hojeLocalISO()} required /></Field>
           <Field label="Categoria"><TextInput name="categoria" defaultValue={editando?.categoria ?? ''} list="cats-custo" placeholder="Peças, Serviço externo…" /></Field>
         </div>
         <datalist id="cats-custo">

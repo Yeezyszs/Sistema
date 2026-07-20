@@ -5,7 +5,7 @@ import {
   criarReprocesso, atualizarReprocesso, excluirReprocesso, mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
-import { formatarData, formatarQuantidade } from '../../lib/format';
+import { formatarData, formatarQuantidade, hojeLocalISO } from '../../lib/format';
 import {
   STATUS_REPROCESSO_LABEL, STATUS_REPROCESSO_TOM,
   DESTINO_REPROCESSO, DESTINO_REPROCESSO_LABEL,
@@ -192,7 +192,7 @@ function ModalNovoRetido({ data, editando, onClose, onSaved, sucesso, erro }: {
     setSalvando(true);
     try {
       const payload = {
-        data: String(f.get('data') ?? new Date().toISOString().slice(0, 10)),
+        data: String(f.get('data') ?? hojeLocalISO()),
         produto_id: String(f.get('produto_id') ?? '') || null,
         lote_id: String(f.get('lote_id') ?? '') || null,
         lacre: String(f.get('lacre') ?? '').trim() || null,
@@ -218,7 +218,7 @@ function ModalNovoRetido({ data, editando, onClose, onSaved, sucesso, erro }: {
     <Modal open onClose={onClose} title={editando ? `Editar retido #${editando.numero}` : "Novo retido"} size="xl">
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Field label="Data"><TextInput name="data" type="date" defaultValue={editando?.data ?? new Date().toISOString().slice(0, 10)} required /></Field>
+          <Field label="Data"><TextInput name="data" type="date" defaultValue={editando?.data ?? hojeLocalISO()} required /></Field>
           <Field label="Produto">
             <Select name="produto_id" defaultValue={editando?.produto_id ?? ""}>
               <option value="">—</option>

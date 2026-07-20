@@ -5,7 +5,7 @@ import {
   criarOrdemPcm, atualizarOrdemPcm, excluirOrdemPcm, salvarExecucoesDaOs,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
-import { formatarData } from '../../lib/format';
+import { formatarData, hojeLocalISO } from '../../lib/format';
 import { TIPO_OS_PCM, NATUREZA_OS, PRIORIDADE_OS_PCM, PRIORIDADE_OS_PCM_TOM } from '@sistema/domain';
 import type { OrdemPcm, NovaOsExecucao, ColaboradorPcm } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
@@ -154,7 +154,7 @@ function ModalNovaOs({ setores, editando, onClose, onSaved, sucesso, erro }: {
     setSalvando(true);
     try {
       const payload = {
-        data: String(f.get('data') ?? new Date().toISOString().slice(0, 10)),
+        data: String(f.get('data') ?? hojeLocalISO()),
         hora: txt('hora'),
         req: txt('req'),
         setor: txt('setor'),
@@ -185,7 +185,7 @@ function ModalNovaOs({ setores, editando, onClose, onSaved, sucesso, erro }: {
     <Modal open onClose={onClose} title={editando ? `Editar O.S. #${editando.numero}` : "Nova Ordem de Serviço"} size="xl">
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Field label="Data"><TextInput name="data" type="date" defaultValue={editando?.data ?? new Date().toISOString().slice(0, 10)} required /></Field>
+          <Field label="Data"><TextInput name="data" type="date" defaultValue={editando?.data ?? hojeLocalISO()} required /></Field>
           <Field label="Hora"><TextInput name="hora" type="time" defaultValue={editando?.hora ?? ''} /></Field>
           <Field label="Requisitante"><TextInput name="req" defaultValue={editando?.req ?? ''} placeholder="—" /></Field>
           <Field label="Setor">
@@ -263,7 +263,7 @@ function ModalConcluirOs({ os, colaboradores, onClose, onSaved, sucesso, erro }:
   os: OrdemPcm; colaboradores: ColaboradorPcm[];
   onClose: () => void; onSaved: () => void; sucesso: ToastFn; erro: ToastFn;
 }) {
-  const hoje = new Date().toISOString().slice(0, 10);
+  const hoje = hojeLocalISO();
   const [linhas, setLinhas] = useState<LinhaExec[]>([
     { mantenedor: '', data_exec: hoje, hora_ini: '', data_fim: hoje, hora_fim: '' },
   ]);

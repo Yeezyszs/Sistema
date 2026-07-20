@@ -5,7 +5,7 @@ import {
   criarCarregamento, atualizarCarregamento, cancelarCarregamento, excluirCarregamento, mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
-import { formatarData, formatarQuantidade } from '../../lib/format';
+import { formatarData, formatarQuantidade, hojeLocalISO } from '../../lib/format';
 import { STATUS_CARGA_LABEL, STATUS_CARGA_TOM, posicaoLabel } from '@sistema/domain';
 import type { Carregamento } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
@@ -90,7 +90,7 @@ export function ExpedicaoPage() {
     setSalvando(true);
     try {
       await criarCarregamento({
-        data: String(f.get('data') ?? new Date().toISOString().slice(0, 10)),
+        data: String(f.get('data') ?? hojeLocalISO()),
         pedido_id: pedidoSel.id,
         cliente_id: pedidoSel.cliente_id,
         produto_id: pedidoSel.produto_id,
@@ -245,7 +245,7 @@ export function ExpedicaoPage() {
           )}
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <Field label="Data"><TextInput name="data" type="date" defaultValue={new Date().toISOString().slice(0, 10)} required /></Field>
+            <Field label="Data"><TextInput name="data" type="date" defaultValue={hojeLocalISO()} required /></Field>
             <Field label="Bags"><TextInput name="qtd_bags" type="number" step="any" min="0" defaultValue={posicaoSel?.qtd_bags ?? ''} key={`b-${posicaoSel?.id ?? 'v'}`} placeholder="0" /></Field>
             <Field label="Peso (kg)"><TextInput name="peso_kg" type="number" step="any" min="0" defaultValue={pedidoSel?.peso_carga_kg ?? ''} key={`p-${pedidoSel?.id ?? 'v'}`} placeholder="0" /></Field>
             <Field label="Placa"><TextInput name="placa" placeholder="ABC-1D23" /></Field>

@@ -4,7 +4,7 @@ import {
 } from '../../lib/db';
 import type { CalibracaoPhmetro } from '@sistema/domain';
 import { useAsync } from '../../lib/useAsync';
-import { formatarData } from '../../lib/format';
+import { formatarData, hojeLocalISO } from '../../lib/format';
 import {
   phmetroConforme, PHMETRO_PH4_MIN, PHMETRO_PH4_MAX, PHMETRO_PH7_MIN, PHMETRO_PH7_MAX,
 } from '@sistema/domain';
@@ -32,7 +32,7 @@ export function CalibracaoPhmetroPage() {
     setSalvando(true);
     try {
       const payload = {
-        data: String(f.get('data') ?? new Date().toISOString().slice(0, 10)),
+        data: String(f.get('data') ?? hojeLocalISO()),
         hora: String(f.get('hora') ?? '') || null,
         tampao_ph4: ph4 ? Number(ph4) : null,
         tampao_ph7: ph7 ? Number(ph7) : null,
@@ -121,7 +121,7 @@ export function CalibracaoPhmetroPage() {
       <Modal open={modal} onClose={() => { setModal(false); setEditando(null); }} title={editando ? "Editar calibração" : "Nova calibração do pHmetro"} size="lg">
         <form onSubmit={onCriar} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Data"><TextInput name="data" type="date" defaultValue={editando?.data ?? new Date().toISOString().slice(0, 10)} required /></Field>
+            <Field label="Data"><TextInput name="data" type="date" defaultValue={editando?.data ?? hojeLocalISO()} required /></Field>
             <Field label="Hora"><TextInput name="hora" type="time" defaultValue={editando?.hora?.slice(0, 5) ?? ''} /></Field>
           </div>
           <div className="grid grid-cols-2 gap-3">

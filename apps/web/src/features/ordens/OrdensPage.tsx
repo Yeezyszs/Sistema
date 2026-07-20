@@ -9,7 +9,7 @@ import {
   mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
-import { formatarData, formatarQuantidade } from '../../lib/format';
+import { formatarData, formatarQuantidade, hojeLocalISO } from '../../lib/format';
 import { STATUS_OP_LABEL, STATUS_OP_TOM } from '@sistema/domain';
 import type { StatusOP } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
@@ -241,7 +241,7 @@ export function OrdensPage() {
               <TextInput name="pedido" placeholder="Nº do pedido" />
             </Field>
             <Field label="Data de produção">
-              <TextInput name="data" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} />
+              <TextInput name="data" type="date" required defaultValue={hojeLocalISO()} />
             </Field>
 
             {/* Produto ocupa a linha inteira — digite o código para puxar direto */}

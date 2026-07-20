@@ -4,7 +4,7 @@ import {
   listRecebimentosPeriodo, criarApontamento, atualizarApontamento, excluirApontamento, mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
-import { formatarData, formatarQuantidade } from '../../lib/format';
+import { formatarData, formatarQuantidade, hojeLocalISO } from '../../lib/format';
 import { TURNO_PROD, TURNO_PROD_LABEL, calcularRendimento } from '@sistema/domain';
 import type { TurnoProd, Apontamento, Linha, Produto, Lote } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
@@ -107,7 +107,7 @@ export function ApontamentoPage() {
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-400">Novo apontamento</h2>
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="grid grid-cols-3 gap-3">
-              <Field label="Data"><TextInput name="data" type="date" defaultValue={new Date().toISOString().slice(0, 10)} required /></Field>
+              <Field label="Data"><TextInput name="data" type="date" defaultValue={hojeLocalISO()} required /></Field>
               <Field label="Turno"><Select name="turno" defaultValue="1t">{TURNO_PROD.map((t) => <option key={t} value={t}>{TURNO_PROD_LABEL[t]}</option>)}</Select></Field>
               <Field label="Linha"><Select name="linha_id" defaultValue=""><option value="">—</option>{(data?.linhas ?? []).map((l) => <option key={l.id} value={l.id}>{l.codigo}</option>)}</Select></Field>
             </div>

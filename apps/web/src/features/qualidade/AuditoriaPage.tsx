@@ -4,7 +4,7 @@ import {
   listVerificacoesPpr, criarVerificacaoPpr, listFuncionarios, mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
-import { formatarData, formatarDataHora } from '../../lib/format';
+import { formatarData, formatarDataHora, hojeLocalISO } from '../../lib/format';
 import {
   STATUS_AUDITORIA_LABEL, STATUS_AUDITORIA_TOM, CLASSIFICACAO_ITEM, CLASSIFICACAO_ITEM_LABEL, itemEhNaoConforme,
 } from '@sistema/domain';
@@ -144,7 +144,7 @@ export function AuditoriaPage() {
         <form onSubmit={onCriarAud} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <Field label="Norma"><TextInput name="norma" placeholder="ISO 22000:2018" /></Field>
-            <Field label="Data"><TextInput name="data" type="date" required defaultValue={new Date().toISOString().slice(0,10)} /></Field>
+            <Field label="Data"><TextInput name="data" type="date" required defaultValue={hojeLocalISO()} /></Field>
           </div>
           <Field label="Escopo"><TextInput name="escopo" placeholder="Processo / setores auditados" /></Field>
           <div className="grid grid-cols-2 gap-3">

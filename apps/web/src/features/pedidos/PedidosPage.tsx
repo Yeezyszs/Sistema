@@ -4,7 +4,7 @@ import {
   criarPedido, atualizarPedido, definirStatusPedido, excluirPedido, mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
-import { formatarData, formatarQuantidade } from '../../lib/format';
+import { formatarData, formatarQuantidade, hojeLocalISO } from '../../lib/format';
 import {
   STATUS_PEDIDO, STATUS_PEDIDO_LABEL, STATUS_PEDIDO_TOM,
   SITUACAO_PEDIDO, SITUACAO_PEDIDO_LABEL, valorTotalPedido,
@@ -68,7 +68,7 @@ export function PedidosPage() {
     setSalvando(true);
     try {
       const payload = {
-        data: String(f.get('data') ?? new Date().toISOString().slice(0, 10)),
+        data: String(f.get('data') ?? hojeLocalISO()),
         cliente_id: String(f.get('cliente_id') ?? '') || null,
         produto_id: produtoId || null,
         lote_id: String(f.get('lote_id') ?? '') || null,
@@ -202,7 +202,7 @@ export function PedidosPage() {
                 </Select>
               </Field>
             </div>
-            <Field label="Data"><TextInput name="data" type="date" defaultValue={editando?.data ?? new Date().toISOString().slice(0, 10)} required /></Field>
+            <Field label="Data"><TextInput name="data" type="date" defaultValue={editando?.data ?? hojeLocalISO()} required /></Field>
             <Field label="Destino"><TextInput name="destino" defaultValue={editando?.destino ?? ''} placeholder="Local de entrega" /></Field>
           </div>
           <div className="grid grid-cols-2 gap-3">

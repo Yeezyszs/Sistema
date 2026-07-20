@@ -4,7 +4,7 @@ import {
   criarPreventivaPcm, atualizarPreventivaPcm, excluirPreventivaPcm,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
-import { formatarData } from '../../lib/format';
+import { formatarData, hojeLocalISO } from '../../lib/format';
 import { TRIMESTRE_PCM } from '@sistema/domain';
 import type { PreventivaPcm, TrimestrePcm, ColaboradorPcm } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
@@ -198,7 +198,7 @@ function ModalRealizar({ preventiva, colaboradores, onClose, onSaved, sucesso, e
     setSalvando(true);
     try {
       await atualizarPreventivaPcm(preventiva.id, {
-        realizada: String(f.get('realizada') ?? new Date().toISOString().slice(0, 10)),
+        realizada: String(f.get('realizada') ?? hojeLocalISO()),
         exec: String(f.get('exec') ?? '').trim() || null,
       });
       sucesso('Preventiva realizada.'); onSaved();
@@ -210,7 +210,7 @@ function ModalRealizar({ preventiva, colaboradores, onClose, onSaved, sucesso, e
       <form onSubmit={onSubmit} className="space-y-4">
         <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">{preventiva.equip} · {preventiva.comp}</p>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Data realizada"><TextInput name="realizada" type="date" defaultValue={new Date().toISOString().slice(0, 10)} required /></Field>
+          <Field label="Data realizada"><TextInput name="realizada" type="date" defaultValue={hojeLocalISO()} required /></Field>
           <Field label="Executores">
             <TextInput name="exec" list="colabs-prev" placeholder="Valmir / Luan" />
             <datalist id="colabs-prev">{colaboradores.map((c) => <option key={c.id} value={c.nome} />)}</datalist>

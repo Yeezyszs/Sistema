@@ -4,7 +4,7 @@ import {
   criarRecebimento, atualizarRecebimento, excluirRecebimento, mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
-import { formatarData, formatarQuantidade } from '../../lib/format';
+import { formatarData, formatarQuantidade, hojeLocalISO } from '../../lib/format';
 import { TURNO, TURNO_LABEL } from '@sistema/domain';
 import type { Turno, Recebimento, NovoRecebimento, Produto, Fornecedor } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
@@ -42,7 +42,7 @@ function montarPayload(form: FormData, fornecedores: Fornecedor[]): NovoRecebime
 function CamposCarga({ materiasPrimas, fornecedores, carga }: {
   materiasPrimas: Produto[]; fornecedores: Fornecedor[]; carga?: Recebimento;
 }) {
-  const dataDefault = carga?.recebido_em ? carga.recebido_em.slice(0, 10) : new Date().toISOString().slice(0, 10);
+  const dataDefault = carga?.recebido_em ? carga.recebido_em.slice(0, 10) : hojeLocalISO();
   return (
     <>
       <div className="grid grid-cols-2 gap-3">

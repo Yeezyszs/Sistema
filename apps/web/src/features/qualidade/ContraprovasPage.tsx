@@ -5,7 +5,7 @@ import {
   criarRetencao, atualizarRetencao, excluirRetencao, mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
-import { formatarData } from '../../lib/format';
+import { formatarData, hojeLocalISO } from '../../lib/format';
 import { elegivelDescarte, vencimentoContraprova } from '@sistema/domain';
 import type { Contraprova, ContraprovaRetencao } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
@@ -181,7 +181,7 @@ function ModalNovaCaixa({ data, editando, onClose, onSaved, sucesso, erro }: {
     setSalvando(true);
     try {
       const payload = {
-        data_lancamento: String(f.get('data_lancamento') ?? new Date().toISOString().slice(0, 10)),
+        data_lancamento: String(f.get('data_lancamento') ?? hojeLocalISO()),
         lotes: String(f.get('lotes') ?? '').trim() || null,
         cliente_id: String(f.get('cliente_id') ?? '') || null,
         retencao_id: retencaoId || null,
@@ -200,7 +200,7 @@ function ModalNovaCaixa({ data, editando, onClose, onSaved, sucesso, erro }: {
     <Modal open onClose={onClose} title={editando ? `Editar caixa ${editando.numero_caixa}` : "Nova caixa de contraprova"} size="lg">
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Data de lançamento"><TextInput name="data_lancamento" type="date" defaultValue={editando?.data_lancamento ?? new Date().toISOString().slice(0, 10)} required /></Field>
+          <Field label="Data de lançamento"><TextInput name="data_lancamento" type="date" defaultValue={editando?.data_lancamento ?? hojeLocalISO()} required /></Field>
           <Field label="Cliente">
             <Select name="cliente_id" defaultValue={editando?.cliente_id ?? ""}>
               <option value="">—</option>

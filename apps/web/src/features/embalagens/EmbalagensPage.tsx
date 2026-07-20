@@ -3,7 +3,7 @@ import {
   listEmbalagens, listMovimentosEmbalagem, criarEmbalagem, lancarMovimentoEmbalagem,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
-import { formatarData, formatarQuantidade } from '../../lib/format';
+import { formatarData, formatarQuantidade, hojeLocalISO } from '../../lib/format';
 import {
   MOV_EMBALAGEM, MOV_EMBALAGEM_LABEL, embalagemAbaixoMinimo,
 } from '@sistema/domain';
@@ -53,7 +53,7 @@ export function EmbalagensPage() {
         quantidade: Number(f.get('quantidade') ?? 0),
         origem: String(f.get('origem') ?? '').trim() || null,
         observacao: String(f.get('observacao') ?? '').trim() || null,
-        data: String(f.get('data') ?? new Date().toISOString().slice(0, 10)),
+        data: String(f.get('data') ?? hojeLocalISO()),
       });
       sucesso('Movimento lançado.'); setMov(null); rec();
     } catch (err) { erro(err instanceof Error ? err.message : 'Falha.'); }
@@ -145,7 +145,7 @@ export function EmbalagensPage() {
             <Field label="Quantidade"><TextInput name="quantidade" type="number" step="any" required placeholder="0" /></Field>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Data"><TextInput name="data" type="date" defaultValue={new Date().toISOString().slice(0, 10)} /></Field>
+            <Field label="Data"><TextInput name="data" type="date" defaultValue={hojeLocalISO()} /></Field>
             <Field label="Origem"><TextInput name="origem" placeholder="NF, fornecedor…" /></Field>
           </div>
           <Field label="Observação"><TextInput name="observacao" placeholder="—" /></Field>

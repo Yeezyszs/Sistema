@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { listPallets, listMovimentosPallet, lancarMovimentoPallet } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
-import { formatarData, formatarQuantidade } from '../../lib/format';
+import { formatarData, formatarQuantidade, hojeLocalISO } from '../../lib/format';
 import {
   TIPO_PALLET_LABEL, MOV_PALLET, MOV_PALLET_LABEL, palletsEmTerceiros,
 } from '@sistema/domain';
@@ -33,7 +33,7 @@ export function PalletsPage() {
         quantidade: Number(f.get('quantidade') ?? 0),
         parceiro: String(f.get('parceiro') ?? '').trim() || null,
         observacao: String(f.get('observacao') ?? '').trim() || null,
-        data: String(f.get('data') ?? new Date().toISOString().slice(0, 10)),
+        data: String(f.get('data') ?? hojeLocalISO()),
       });
       sucesso('Movimento lançado.'); setMov(false); rec();
     } catch (err) { erro(err instanceof Error ? err.message : 'Falha.'); }
@@ -125,7 +125,7 @@ export function PalletsPage() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Quantidade"><TextInput name="quantidade" type="number" step="any" required placeholder="0" /></Field>
-            <Field label="Data"><TextInput name="data" type="date" defaultValue={new Date().toISOString().slice(0, 10)} /></Field>
+            <Field label="Data"><TextInput name="data" type="date" defaultValue={hojeLocalISO()} /></Field>
           </div>
           <Field label="Parceiro"><TextInput name="parceiro" placeholder="Cliente / transportadora" /></Field>
           <Field label="Observação"><TextInput name="observacao" placeholder="—" /></Field>

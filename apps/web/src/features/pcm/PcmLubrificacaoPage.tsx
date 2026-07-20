@@ -3,7 +3,7 @@ import {
   listLubrificacaoPcm, listLuExecucoes, listColaboradoresPcm, criarLuExecucao,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
-import { formatarData } from '../../lib/format';
+import { formatarData, hojeLocalISO } from '../../lib/format';
 import type { LubrificacaoPcm, LuExecucao, ColaboradorPcm } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
 import { IconSearch } from '../../components/icons';
@@ -159,7 +159,7 @@ function ModalExecutar({ ponto, colaboradores, onClose, onSaved, sucesso, erro }
         setor: ponto.setor,
         equip: ponto.equip,
         item: ponto.item,
-        data: String(f.get('data') ?? new Date().toISOString().slice(0, 10)),
+        data: String(f.get('data') ?? hojeLocalISO()),
         exec: String(f.get('exec') ?? '').trim() || null,
         obs: String(f.get('obs') ?? '').trim() || null,
       });
@@ -175,7 +175,7 @@ function ModalExecutar({ ponto, colaboradores, onClose, onSaved, sucesso, erro }
           {ponto.lubrificante && <> — {ponto.lubrificante}{ponto.bombadas ? ` (${ponto.bombadas})` : ''}</>}
         </p>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Data"><TextInput name="data" type="date" defaultValue={new Date().toISOString().slice(0, 10)} required /></Field>
+          <Field label="Data"><TextInput name="data" type="date" defaultValue={hojeLocalISO()} required /></Field>
           <Field label="Executor">
             <TextInput name="exec" list="colabs-lu" placeholder="Nome" />
             <datalist id="colabs-lu">{colaboradores.map((c) => <option key={c.id} value={c.nome} />)}</datalist>

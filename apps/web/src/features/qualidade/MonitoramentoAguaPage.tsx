@@ -4,7 +4,7 @@ import {
 } from '../../lib/db';
 import type { MonitoramentoAgua } from '@sistema/domain';
 import { useAsync } from '../../lib/useAsync';
-import { formatarData } from '../../lib/format';
+import { formatarData, hojeLocalISO } from '../../lib/format';
 import {
   aguaConforme, AGUA_CLORO_MIN, AGUA_CLORO_MAX, AGUA_PH_MIN, AGUA_PH_MAX,
 } from '@sistema/domain';
@@ -32,7 +32,7 @@ export function MonitoramentoAguaPage() {
     setSalvando(true);
     try {
       const payload = {
-        data: String(f.get('data') ?? new Date().toISOString().slice(0, 10)),
+        data: String(f.get('data') ?? hojeLocalISO()),
         hora: String(f.get('hora') ?? '') || null,
         ponto_coleta: String(f.get('ponto_coleta') ?? '').trim() || null,
         cloro_ppm: cloro ? Number(cloro) : null,
@@ -125,7 +125,7 @@ export function MonitoramentoAguaPage() {
       <Modal open={modal} onClose={() => { setModal(false); setEditando(null); }} title={editando ? "Editar medição" : "Nova medição de água"} size="lg">
         <form onSubmit={onCriar} className="space-y-4">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <Field label="Data"><TextInput name="data" type="date" defaultValue={editando?.data ?? new Date().toISOString().slice(0, 10)} required /></Field>
+            <Field label="Data"><TextInput name="data" type="date" defaultValue={editando?.data ?? hojeLocalISO()} required /></Field>
             <Field label="Hora"><TextInput name="hora" type="time" defaultValue={editando?.hora?.slice(0, 5) ?? ''} /></Field>
             <Field label="Ponto de coleta"><TextInput name="ponto_coleta" defaultValue={editando?.ponto_coleta ?? "Laboratório"} /></Field>
             <Field label="Aspecto"><TextInput name="aspecto" defaultValue={editando?.aspecto ?? ''} placeholder="Incolor" /></Field>

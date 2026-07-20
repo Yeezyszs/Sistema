@@ -4,7 +4,7 @@ import {
   listMonitoramentoAmbiental, criarMonitoramentoAmbiental, mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
-import { formatarData } from '../../lib/format';
+import { formatarData, hojeLocalISO } from '../../lib/format';
 import { MATRIZ_AMBIENTAL, MATRIZ_AMBIENTAL_LABEL, situacaoEnvio, SITUACAO_ENVIO_LABEL } from '@sistema/domain';
 import type { SituacaoEnvio } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
@@ -190,7 +190,7 @@ export function AmbientalPage() {
           </Field>
           <div className="grid grid-cols-3 gap-3">
             <Field label="Matriz"><Select name="matriz" defaultValue="superficie">{MATRIZ_AMBIENTAL.map((m) => <option key={m} value={m}>{MATRIZ_AMBIENTAL_LABEL[m]}</option>)}</Select></Field>
-            <Field label="Enviado em"><TextInput name="enviado_em" type="date" defaultValue={new Date().toISOString().slice(0,10)} /></Field>
+            <Field label="Enviado em"><TextInput name="enviado_em" type="date" defaultValue={hojeLocalISO()} /></Field>
             <Field label="Próxima coleta"><TextInput name="proxima_em" type="date" /></Field>
           </div>
           <div className="grid grid-cols-3 gap-3">

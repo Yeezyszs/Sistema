@@ -3,7 +3,7 @@ import {
   getApontamentosDoLote, listLinhas, listRecebimentosPeriodo, criarApontamento, mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
-import { formatarData, formatarQuantidade } from '../../lib/format';
+import { formatarData, formatarQuantidade, hojeLocalISO } from '../../lib/format';
 import { TURNO_PROD, TURNO_PROD_LABEL, calcularRendimento } from '@sistema/domain';
 import type { TurnoProd } from '@sistema/domain';
 import { Card, Button, Field, TextInput, Select, Modal, Spinner } from '../../components/ui';
@@ -59,7 +59,7 @@ export function ApontamentosLoteCard({ loteId, produtoId, sinalAbrir = 0 }: {
     setSalvando(true);
     try {
       await criarApontamento({
-        data: String(f.get('data') ?? new Date().toISOString().slice(0, 10)),
+        data: String(f.get('data') ?? hojeLocalISO()),
         turno: String(f.get('turno') ?? '1t') as TurnoProd,
         linha_id: String(f.get('linha_id') ?? '') || null,
         produto_id: produtoId,
@@ -125,7 +125,7 @@ export function ApontamentosLoteCard({ loteId, produtoId, sinalAbrir = 0 }: {
       <Modal open={modal} onClose={() => setModal(false)} title="Apontar produção do lote">
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="grid grid-cols-3 gap-3">
-            <Field label="Data"><TextInput name="data" type="date" defaultValue={new Date().toISOString().slice(0, 10)} required /></Field>
+            <Field label="Data"><TextInput name="data" type="date" defaultValue={hojeLocalISO()} required /></Field>
             <Field label="Turno"><Select name="turno" defaultValue="1t">{TURNO_PROD.map((t) => <option key={t} value={t}>{TURNO_PROD_LABEL[t]}</option>)}</Select></Field>
             <Field label="Linha">
               <Select name="linha_id" defaultValue="">

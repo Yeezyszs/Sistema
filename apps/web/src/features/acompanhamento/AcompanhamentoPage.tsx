@@ -4,7 +4,7 @@ import {
   excluirAnaliseProcesso, listClientes, listProdutos, listLotes, getEspecificacaoAplicavel, mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
-import { formatarData } from '../../lib/format';
+import { formatarData, hojeLocalISO } from '../../lib/format';
 import {
   TURNO_ANALISE, TURNO_ANALISE_LABEL, valorDentroDoLimite, limiteTexto,
 } from '@sistema/domain';
@@ -209,7 +209,7 @@ function ModalNovaAnalise({
       }));
       const conforme = !algumReprovado;
       const cabecalho = {
-          data: String(f.get('data') ?? new Date().toISOString().slice(0, 10)),
+          data: String(f.get('data') ?? hojeLocalISO()),
           horario: String(f.get('horario') ?? '') || null,
           turno: String(f.get('turno') ?? '') || null,
           produto_id: produtoId || null,
@@ -256,7 +256,7 @@ function ModalNovaAnalise({
           <Field label="Nº do bag"><TextInput name="numero_bag" defaultValue={editando?.numero_bag ?? ''} placeholder="ex.: 4" /></Field>
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Field label="Data"><TextInput name="data" type="date" defaultValue={editando?.data ?? new Date().toISOString().slice(0, 10)} required /></Field>
+          <Field label="Data"><TextInput name="data" type="date" defaultValue={editando?.data ?? hojeLocalISO()} required /></Field>
           <Field label="Horário"><TextInput name="horario" type="time" defaultValue={editando?.horario?.slice(0, 5) ?? ''} /></Field>
           <Field label="Turno">
             <Select name="turno" defaultValue={editando?.turno ?? ""}>

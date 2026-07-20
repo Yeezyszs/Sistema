@@ -7,7 +7,7 @@ import {
   mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
-import { formatarData } from '../../lib/format';
+import { formatarData, hojeLocalISO } from '../../lib/format';
 import {
   TIPO_CALIBRACAO, TIPO_CALIBRACAO_LABEL, situacaoCalibracao, SITUACAO_CALIBRACAO_LABEL,
 } from '@sistema/domain';
@@ -150,7 +150,7 @@ export function CalibracaoPage() {
           </Field>
           <div className="grid grid-cols-3 gap-3">
             <Field label="Tipo"><Select name="tipo" defaultValue="calibracao">{TIPO_CALIBRACAO.map((t) => <option key={t} value={t}>{TIPO_CALIBRACAO_LABEL[t]}</option>)}</Select></Field>
-            <Field label="Calibrado em"><TextInput name="calibrado_em" type="date" required defaultValue={new Date().toISOString().slice(0,10)} /></Field>
+            <Field label="Calibrado em"><TextInput name="calibrado_em" type="date" required defaultValue={hojeLocalISO()} /></Field>
             <Field label="Válido até"><TextInput name="valido_ate" type="date" /></Field>
           </div>
           <div className="grid grid-cols-2 gap-3">

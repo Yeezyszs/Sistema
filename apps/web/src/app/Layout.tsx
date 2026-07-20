@@ -69,12 +69,12 @@ function NavGroup({ icon, label, items }: { icon: ReactNode; label: string; item
 }
 
 const ITENS_TOPO: SubItem[] = [
-  { to: '/lotes', icon: <IconLotes />, label: 'Lotes', modulo: 'lotes' },
   { to: '/recebimentos', icon: <IconRecebimento />, label: 'Recebimentos', modulo: 'recebimentos' },
   { to: '/fornecedores', icon: <IconRecebimento />, label: 'Fornecedores & QA', modulo: 'fornecedores' },
 ];
 
 const ITENS_PCP: SubItem[] = [
+  { to: '/lotes', icon: <IconLotes width={18} height={18} />, label: 'Lotes', modulo: 'lotes' },
   { to: '/programacao', icon: <IconClipboard width={18} height={18} />, label: 'Programação', modulo: 'pcp' },
   { to: '/apontamento', icon: <IconCheck width={18} height={18} />, label: 'Apontamento', modulo: 'pcp' },
   { to: '/produtos', icon: <IconBox width={18} height={18} />, label: 'Produtos', modulo: 'produtos' },

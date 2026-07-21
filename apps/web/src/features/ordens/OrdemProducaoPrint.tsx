@@ -38,13 +38,13 @@ export function OrdemProducaoPrint() {
   const reproc = Array.from({ length: LINHAS_REPROCESSO }, (_, i) => ({ subl: '50', bag: 101 + i, reproc: true }));
   const linhas = [...bags, ...reproc];
 
-  const td = 'border border-slate-700 px-1 leading-tight';
+  const td = 'border border-black px-1 leading-none';
 
   return (
     <div className="min-h-screen bg-slate-100 p-6 print:bg-white print:p-0">
       <style>{'@media print { @page { size: A4 landscape; margin: 6mm; } .no-print { display: none !important; } html, body { height: auto; } }'}</style>
 
-      <div className="no-print mx-auto mb-4 flex max-w-5xl items-center justify-between">
+      <div className="no-print mx-auto mb-4 flex w-full max-w-[1100px] items-center justify-between">
         <Link to={`/ordens/${id}`} className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800">
           <IconArrowLeft width={16} height={16} /> Ordem
         </Link>
@@ -53,22 +53,24 @@ export function OrdemProducaoPrint() {
         </button>
       </div>
 
-      <div className="mx-auto max-w-5xl bg-white p-3 font-mono text-[9px] leading-tight text-black print:max-w-none print:p-0">
+      {/* Folha: paisagem, preenchendo a página inteira */}
+      <div className="mx-auto flex w-full max-w-[1100px] flex-col bg-white p-4 font-mono text-black shadow print:h-[197mm] print:max-w-none print:p-0 print:shadow-none"
+        style={{ minHeight: '640px' }}>
         <div className="border-t-2 border-black" />
 
         {/* Cabeçalho: dados à esquerda + medidas à direita */}
-        <div className="flex justify-between gap-8 border-b-2 border-black py-1">
+        <div className="flex justify-between gap-8 border-b-2 border-black py-1.5 text-[13px]">
           <table className="border-collapse">
             <tbody>
-              <CabLinha t="ORDEM Nº" v={String(op.numero)} extraT="EMBALAGEM" extraV={undefined} hideExtra />
-              <CabLinha t="PEDIDO" v={op.pedido ?? ''} hideExtra />
-              <CabLinha t="CLIENTE" v={cliente?.nome ?? ''} hideExtra />
-              <CabLinha t="PRODUTO" v={produtoTxt} hideExtra />
+              <CabLinha t="ORDEM Nº" v={String(op.numero)} />
+              <CabLinha t="PEDIDO" v={op.pedido ?? ''} />
+              <CabLinha t="CLIENTE" v={cliente?.nome ?? ''} />
+              <CabLinha t="PRODUTO" v={produtoTxt} />
               <CabLinha t="PRODUZIR" v={op.quantidade != null ? formatarQuantidade(op.quantidade, 'kg') : ''}
                 extraT="EMBALAGEM" extraV={op.embalagem ?? 'KG'} />
-              <CabLinha t="LOTE" v={lote?.codigo ?? ''} hideExtra />
-              <CabLinha t="REPROCESSAR" v={op.reprocessar ? 'SIM' : ''} hideExtra />
-              <CabLinha t="OBSERVAÇÃO" v={op.observacao ?? ''} hideExtra />
+              <CabLinha t="LOTE" v={lote?.codigo ?? ''} />
+              <CabLinha t="REPROCESSAR" v={op.reprocessar ? 'SIM' : ''} />
+              <CabLinha t="OBSERVAÇÃO" v={op.observacao ?? ''} />
             </tbody>
           </table>
           <table className="h-min border-collapse">
@@ -82,73 +84,75 @@ export function OrdemProducaoPrint() {
         </div>
 
         {/* Data início / reprocesso */}
-        <div className="flex items-stretch border-b-2 border-black">
-          <div className="flex flex-1 items-center gap-2 py-1">
+        <div className="flex items-stretch border-b-2 border-black text-[13px]">
+          <div className="flex flex-1 items-center gap-2 py-1.5">
             <span className="font-bold">DATA INÍCIO :</span>
-            <span className="min-w-[120px] border border-black px-2 text-center">/&nbsp;&nbsp;&nbsp;&nbsp;/</span>
+            <span className="min-w-[140px] border border-black px-2 text-center">/&nbsp;&nbsp;&nbsp;&nbsp;/</span>
           </div>
-          <div className="flex flex-[2] items-center gap-2 py-1 pl-4">
+          <div className="flex flex-[2] items-center gap-2 py-1.5 pl-4">
             <span className="font-bold">REPROCESSO:</span>
             <span className="flex-1 border border-black px-2 text-right">kg</span>
           </div>
         </div>
 
-        {/* Quadro bag a bag */}
-        <table className="w-full table-fixed border-collapse">
-          <thead>
-            <tr className="font-bold">
-              <th className={`${td} w-[11%] text-center`}>DATA</th>
-              <th className={`${td} w-[5%] text-center`}>SUBL</th>
-              <th className={`${td} w-[5%] text-center`}>BAG</th>
-              <th className={`${td} w-[7%] text-center`}>HORA</th>
-              <th className={`${td} w-[7%] text-center`}>PESO</th>
-              <th className={`${td} w-[10%] text-center`}>LACRE Nº</th>
-              <th className={`${td} w-[12%] text-center`}>BAG INTEGRO</th>
-              <th className={`${td} w-[15%] text-center`}>RESPONSÁVEL</th>
-              <th className={`${td} w-[13%] text-center`}>LIBERADO GQ</th>
-              <th className={`${td} w-[15%] text-center`}>APONTAMENTO</th>
-            </tr>
-          </thead>
-          <tbody>
-            {linhas.map((l) => (
-              <tr key={`${l.subl}-${l.bag}`}>
-                <td className={`${td} whitespace-nowrap`}>{l.reproc ? 'A REPROCESSAR' : ' '}</td>
-                <td className={`${td} text-center`}>{l.subl}</td>
-                <td className={`${td} text-center`}>{l.bag}</td>
-                <td className={td} />
-                <td className={td} />
-                <td className={td} />
-                <td className={`${td} text-center whitespace-nowrap`}>( )S&nbsp;&nbsp;( )N</td>
-                <td className={td} />
-                <td className={`${td} text-center whitespace-nowrap`}>( )S&nbsp;&nbsp;( )N</td>
-                <td className={td} />
+        {/* Quadro bag a bag — cresce para ocupar o resto da página */}
+        <div className="min-h-0 flex-1">
+          <table className="h-full w-full table-fixed border-collapse text-[12px]">
+            <thead>
+              <tr className="font-bold">
+                <th className={`${td} w-[11%] py-1 text-center`}>DATA</th>
+                <th className={`${td} w-[5%] py-1 text-center`}>SUBL</th>
+                <th className={`${td} w-[5%] py-1 text-center`}>BAG</th>
+                <th className={`${td} w-[7%] py-1 text-center`}>HORA</th>
+                <th className={`${td} w-[7%] py-1 text-center`}>PESO</th>
+                <th className={`${td} w-[10%] py-1 text-center`}>LACRE Nº</th>
+                <th className={`${td} w-[12%] py-1 text-center`}>BAG INTEGRO</th>
+                <th className={`${td} w-[15%] py-1 text-center`}>RESPONSÁVEL</th>
+                <th className={`${td} w-[13%] py-1 text-center`}>LIBERADO GQ</th>
+                <th className={`${td} w-[15%] py-1 text-center`}>APONTAMENTO</th>
               </tr>
-            ))}
-            {linhas.length === 0 && (
-              <tr>
-                <td colSpan={10} className={`${td} py-2 text-center`}>
-                  Defina "Total unidades" (qtd/embalagem) na ordem para gerar o quadro de bags.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {linhas.map((l) => (
+                <tr key={`${l.subl}-${l.bag}`}>
+                  <td className={`${td} whitespace-nowrap font-semibold`}>{l.reproc ? 'A REPROCESSAR' : ' '}</td>
+                  <td className={`${td} text-center`}>{l.subl}</td>
+                  <td className={`${td} text-center font-semibold`}>{l.bag}</td>
+                  <td className={td} />
+                  <td className={td} />
+                  <td className={td} />
+                  <td className={`${td} text-center whitespace-nowrap`}>( )S&nbsp;&nbsp;( )N</td>
+                  <td className={td} />
+                  <td className={`${td} text-center whitespace-nowrap`}>( )S&nbsp;&nbsp;( )N</td>
+                  <td className={td} />
+                </tr>
+              ))}
+              {linhas.length === 0 && (
+                <tr>
+                  <td colSpan={10} className={`${td} py-3 text-center`}>
+                    Defina "Total unidades" (qtd/embalagem) na ordem para gerar o quadro de bags.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
 }
 
-function CabLinha({ t, v, extraT, extraV, hideExtra }: {
-  t: string; v: string; extraT?: string; extraV?: string; hideExtra?: boolean;
+function CabLinha({ t, v, extraT, extraV }: {
+  t: string; v: string; extraT?: string; extraV?: string;
 }) {
   return (
     <tr>
       <td className="whitespace-nowrap pr-2 align-top font-bold">{t}</td>
       <td className="pr-1 align-top">:</td>
       <td className="align-top">{v}</td>
-      {!hideExtra && extraT ? (
+      {extraT ? (
         <>
-          <td className="whitespace-nowrap pl-8 pr-2 align-top font-bold">{extraT}</td>
+          <td className="whitespace-nowrap pl-10 pr-2 align-top font-bold">{extraT}</td>
           <td className="pr-1 align-top">:</td>
           <td className="align-top">{extraV}</td>
         </>

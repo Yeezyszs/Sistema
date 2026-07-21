@@ -28,6 +28,7 @@ import { PcmOrdensPage } from '../features/pcm/PcmOrdensPage';
 import { PcmPreventivaPage } from '../features/pcm/PcmPreventivaPage';
 import { PcmLubrificacaoPage } from '../features/pcm/PcmLubrificacaoPage';
 import { PcmOsPrint } from '../features/pcm/PcmOsPrint';
+import { OrdemProducaoPrint } from '../features/ordens/OrdemProducaoPrint';
 import { AnaliseRiscoPage } from '../features/qualidade/AnaliseRiscoPage';
 import { AuditoriaPage } from '../features/qualidade/AuditoriaPage';
 import { AmbientalPage } from '../features/qualidade/AmbientalPage';
@@ -88,6 +89,15 @@ export default function App() {
             element={
               <Protected>
                 <PcmOsPrint />
+              </Protected>
+            }
+          />
+          {/* Impressão de Ordem de Produção — página cheia, fora do Layout */}
+          <Route
+            path="/ordens/:id/imprimir"
+            element={
+              <Protected>
+                <OrdemProducaoPrint />
               </Protected>
             }
           />

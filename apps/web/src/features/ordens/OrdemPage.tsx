@@ -17,7 +17,7 @@ import { STATUS_OP_LABEL } from '@sistema/domain';
 import type { Cliente } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
 import { StatusChip } from '../../components/StatusChip';
-import { IconArrowLeft, IconPlus, IconChevronRight, IconClipboard } from '../../components/icons';
+import { IconArrowLeft, IconPlus, IconChevronRight, IconClipboard, IconDoc } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 import { ApontamentosLoteCard } from '../lotes/ApontamentosLoteCard';
 
@@ -146,19 +146,28 @@ export function OrdemPage() {
         title={`Ordem #${op.numero}`}
         subtitle={cliente}
         action={
-          loteDaOrdem ? (
-            op.status !== 'concluida' ? (
-              <Button onClick={() => setSinalApontar((n) => n + 1)}>
-                <IconClipboard width={16} height={16} />
-                Apontar produção
+          <div className="flex items-center gap-2">
+            <Link
+              to={`/ordens/${op.id}/imprimir`}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+            >
+              <IconDoc width={16} height={16} />
+              Imprimir
+            </Link>
+            {loteDaOrdem ? (
+              op.status !== 'concluida' ? (
+                <Button onClick={() => setSinalApontar((n) => n + 1)}>
+                  <IconClipboard width={16} height={16} />
+                  Apontar produção
+                </Button>
+              ) : null
+            ) : (
+              <Button onClick={() => setModalAberto(true)}>
+                <IconPlus width={16} height={16} />
+                Gerar lote
               </Button>
-            ) : undefined
-          ) : (
-            <Button onClick={() => setModalAberto(true)}>
-              <IconPlus width={16} height={16} />
-              Gerar lote
-            </Button>
-          )
+            )}
+          </div>
         }
       />
 

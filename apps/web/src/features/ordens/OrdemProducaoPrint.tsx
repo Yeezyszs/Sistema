@@ -3,7 +3,7 @@ import { getOrdemProducao, getLotesDaOrdem, getProduto, getCliente } from '../..
 import { useAsync } from '../../lib/useAsync';
 import { formatarQuantidade } from '../../lib/format';
 import { Spinner } from '../../components/ui';
-import { IconArrowLeft, IconLeaf } from '../../components/icons';
+import { IconArrowLeft } from '../../components/icons';
 
 // Bags por sublote (grupo do quadro). Ajuste aqui se o padrão mudar.
 const BAGS_POR_SUBLOTE = 8;
@@ -29,9 +29,8 @@ export function OrdemProducaoPrint() {
 
   const totalUnidades = op.qtd_embalagem ?? 0;
   const pesoPorBag = op.quantidade && op.qtd_embalagem ? op.quantidade / op.qtd_embalagem : null;
-  const produtoTxt = produto ? `${produto.codigo ? `(${produto.codigo}) ` : ''}${produto.nome}` : '—';
+  const produtoTxt = produto ? `${produto.codigo ? `(${produto.codigo} - BAG) ` : ''}${produto.nome}` : '';
 
-  // Linhas do quadro: bags de produção + bloco de reprocesso.
   const bags = Array.from({ length: totalUnidades }, (_, i) => {
     const n = i + 1;
     return { subl: String(Math.ceil(n / BAGS_POR_SUBLOTE)), bag: n, reproc: false };
@@ -39,11 +38,13 @@ export function OrdemProducaoPrint() {
   const reproc = Array.from({ length: LINHAS_REPROCESSO }, (_, i) => ({ subl: '50', bag: 101 + i, reproc: true }));
   const linhas = [...bags, ...reproc];
 
+  const td = 'border border-slate-700 px-1 leading-tight';
+
   return (
     <div className="min-h-screen bg-slate-100 p-6 print:bg-white print:p-0">
-      <style>{'@media print { @page { size: A4 portrait; margin: 8mm; } .no-print { display: none !important; } }'}</style>
+      <style>{'@media print { @page { size: A4 landscape; margin: 6mm; } .no-print { display: none !important; } html, body { height: auto; } }'}</style>
 
-      <div className="no-print mx-auto mb-4 flex max-w-4xl items-center justify-between">
+      <div className="no-print mx-auto mb-4 flex max-w-5xl items-center justify-between">
         <Link to={`/ordens/${id}`} className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800">
           <IconArrowLeft width={16} height={16} /> Ordem
         </Link>
@@ -52,72 +53,80 @@ export function OrdemProducaoPrint() {
         </button>
       </div>
 
-      <div className="mx-auto max-w-4xl border border-slate-400 bg-white p-4 text-xs text-slate-900 print:border-0">
-        {/* Cabeçalho institucional */}
-        <div className="mb-2 flex items-center justify-between border-b-2 border-slate-800 pb-2">
-          <div className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded bg-emerald-700 text-white"><IconLeaf width={20} height={20} /></span>
-            <div>
-              <p className="font-bold leading-tight">INDÚSTRIA E COMÉRCIO ALIMENTOS SUMARÉ</p>
-              <p className="text-[10px] text-slate-500">Bepi Mataruco · Ordem de Produção</p>
-            </div>
-          </div>
-          <p className="font-mono text-lg font-bold">ORDEM Nº {op.numero}</p>
-        </div>
+      <div className="mx-auto max-w-5xl bg-white p-3 font-mono text-[9px] leading-tight text-black print:max-w-none print:p-0">
+        <div className="border-t-2 border-black" />
 
-        {/* Dados da OP: duas colunas */}
-        <div className="mb-2 grid grid-cols-2 gap-x-6 border-b border-slate-400 pb-2">
-          <div className="space-y-0.5">
-            <Ln t="Pedido" v={op.pedido ?? ''} />
-            <Ln t="Cliente" v={cliente?.nome ?? ''} />
-            <Ln t="Produto" v={produtoTxt} />
-            <Ln t="Produzir" v={op.quantidade != null ? formatarQuantidade(op.quantidade, 'kg') : ''} />
-            <Ln t="Embalagem" v={op.embalagem ?? 'KG'} />
-            <Ln t="Lote" v={lote?.codigo ?? ''} />
-            <Ln t="Reprocessar" v={op.reprocessar ? 'SIM' : 'NÃO'} />
-            <Ln t="Observação" v={op.observacao ?? ''} />
-          </div>
-          <div className="space-y-0.5">
-            <Ln t="Qtd/Embalagem" v={pesoPorBag != null ? formatarQuantidade(pesoPorBag, 'kg') : ''} />
-            <Ln t="Total unidades" v={totalUnidades ? `${totalUnidades} un.` : ''} />
-            <Ln t="Peso máximo" v={op.peso_max != null ? `${op.peso_max} kg` : ''} />
-            <Ln t="Peso mínimo" v={op.peso_min != null ? `${op.peso_min} kg` : ''} />
-          </div>
+        {/* Cabeçalho: dados à esquerda + medidas à direita */}
+        <div className="flex justify-between gap-8 border-b-2 border-black py-1">
+          <table className="border-collapse">
+            <tbody>
+              <CabLinha t="ORDEM Nº" v={String(op.numero)} extraT="EMBALAGEM" extraV={undefined} hideExtra />
+              <CabLinha t="PEDIDO" v={op.pedido ?? ''} hideExtra />
+              <CabLinha t="CLIENTE" v={cliente?.nome ?? ''} hideExtra />
+              <CabLinha t="PRODUTO" v={produtoTxt} hideExtra />
+              <CabLinha t="PRODUZIR" v={op.quantidade != null ? formatarQuantidade(op.quantidade, 'kg') : ''}
+                extraT="EMBALAGEM" extraV={op.embalagem ?? 'KG'} />
+              <CabLinha t="LOTE" v={lote?.codigo ?? ''} hideExtra />
+              <CabLinha t="REPROCESSAR" v={op.reprocessar ? 'SIM' : ''} hideExtra />
+              <CabLinha t="OBSERVAÇÃO" v={op.observacao ?? ''} hideExtra />
+            </tbody>
+          </table>
+          <table className="h-min border-collapse">
+            <tbody>
+              <MedLinha t="QTD/EMBALAGEM" v={pesoPorBag != null ? formatarQuantidade(pesoPorBag, 'kg') : ''} />
+              <MedLinha t="TOTAL UNIDADES" v={totalUnidades ? `${totalUnidades} un.` : ''} />
+              <MedLinha t="PESO MÁXIMO" v={op.peso_max != null ? `${op.peso_max} kg` : ''} />
+              <MedLinha t="PESO MÍNIMO" v={op.peso_min != null ? `${op.peso_min} kg` : ''} />
+            </tbody>
+          </table>
         </div>
 
         {/* Data início / reprocesso */}
-        <div className="mb-2 flex items-center gap-6 border-b border-slate-400 pb-2">
-          <span className="font-bold uppercase">Data início: <span className="ml-2 font-normal">___/___/______</span></span>
-          <span className="font-bold uppercase">Reprocesso: <span className="ml-2 font-normal">____________ kg</span></span>
+        <div className="flex items-stretch border-b-2 border-black">
+          <div className="flex flex-1 items-center gap-2 py-1">
+            <span className="font-bold">DATA INÍCIO :</span>
+            <span className="min-w-[120px] border border-black px-2 text-center">/&nbsp;&nbsp;&nbsp;&nbsp;/</span>
+          </div>
+          <div className="flex flex-[2] items-center gap-2 py-1 pl-4">
+            <span className="font-bold">REPROCESSO:</span>
+            <span className="flex-1 border border-black px-2 text-right">kg</span>
+          </div>
         </div>
 
         {/* Quadro bag a bag */}
-        <table className="w-full border-collapse text-[10px]">
+        <table className="w-full table-fixed border-collapse">
           <thead>
-            <tr className="bg-slate-100">
-              {['Data', 'Subl', 'Bag', 'Hora', 'Peso', 'Lacre Nº', 'Bag íntegro', 'Responsável', 'Liberado GQ', 'Apontamento'].map((h) => (
-                <th key={h} className="border border-slate-500 px-1 py-1 text-center font-semibold">{h}</th>
-              ))}
+            <tr className="font-bold">
+              <th className={`${td} w-[11%] text-center`}>DATA</th>
+              <th className={`${td} w-[5%] text-center`}>SUBL</th>
+              <th className={`${td} w-[5%] text-center`}>BAG</th>
+              <th className={`${td} w-[7%] text-center`}>HORA</th>
+              <th className={`${td} w-[7%] text-center`}>PESO</th>
+              <th className={`${td} w-[10%] text-center`}>LACRE Nº</th>
+              <th className={`${td} w-[12%] text-center`}>BAG INTEGRO</th>
+              <th className={`${td} w-[15%] text-center`}>RESPONSÁVEL</th>
+              <th className={`${td} w-[13%] text-center`}>LIBERADO GQ</th>
+              <th className={`${td} w-[15%] text-center`}>APONTAMENTO</th>
             </tr>
           </thead>
           <tbody>
             {linhas.map((l) => (
-              <tr key={`${l.subl}-${l.bag}`} className={l.reproc ? 'bg-amber-50' : ''}>
-                <td className="border border-slate-500 px-1 py-1.5">{l.reproc ? 'A REPROCESSAR' : ''}</td>
-                <td className="border border-slate-500 px-1 py-1.5 text-center font-medium">{l.subl}</td>
-                <td className="border border-slate-500 px-1 py-1.5 text-center font-medium">{l.bag}</td>
-                <td className="border border-slate-500 px-1 py-1.5" />
-                <td className="border border-slate-500 px-1 py-1.5" />
-                <td className="border border-slate-500 px-1 py-1.5" />
-                <td className="border border-slate-500 px-1 py-1.5 text-center whitespace-nowrap">( )S ( )N</td>
-                <td className="border border-slate-500 px-1 py-1.5" />
-                <td className="border border-slate-500 px-1 py-1.5 text-center whitespace-nowrap">( )S ( )N</td>
-                <td className="border border-slate-500 px-1 py-1.5" />
+              <tr key={`${l.subl}-${l.bag}`}>
+                <td className={`${td} whitespace-nowrap`}>{l.reproc ? 'A REPROCESSAR' : ' '}</td>
+                <td className={`${td} text-center`}>{l.subl}</td>
+                <td className={`${td} text-center`}>{l.bag}</td>
+                <td className={td} />
+                <td className={td} />
+                <td className={td} />
+                <td className={`${td} text-center whitespace-nowrap`}>( )S&nbsp;&nbsp;( )N</td>
+                <td className={td} />
+                <td className={`${td} text-center whitespace-nowrap`}>( )S&nbsp;&nbsp;( )N</td>
+                <td className={td} />
               </tr>
             ))}
             {linhas.length === 0 && (
               <tr>
-                <td colSpan={10} className="border border-slate-500 px-2 py-3 text-center text-slate-400">
+                <td colSpan={10} className={`${td} py-2 text-center`}>
                   Defina "Total unidades" (qtd/embalagem) na ordem para gerar o quadro de bags.
                 </td>
               </tr>
@@ -129,11 +138,31 @@ export function OrdemProducaoPrint() {
   );
 }
 
-function Ln({ t, v }: { t: string; v: string }) {
+function CabLinha({ t, v, extraT, extraV, hideExtra }: {
+  t: string; v: string; extraT?: string; extraV?: string; hideExtra?: boolean;
+}) {
   return (
-    <div className="flex gap-2">
-      <span className="w-28 shrink-0 font-bold uppercase text-slate-700">{t}:</span>
-      <span className="flex-1 border-b border-dotted border-slate-300">{v}</span>
-    </div>
+    <tr>
+      <td className="whitespace-nowrap pr-2 align-top font-bold">{t}</td>
+      <td className="pr-1 align-top">:</td>
+      <td className="align-top">{v}</td>
+      {!hideExtra && extraT ? (
+        <>
+          <td className="whitespace-nowrap pl-8 pr-2 align-top font-bold">{extraT}</td>
+          <td className="pr-1 align-top">:</td>
+          <td className="align-top">{extraV}</td>
+        </>
+      ) : null}
+    </tr>
+  );
+}
+
+function MedLinha({ t, v }: { t: string; v: string }) {
+  return (
+    <tr>
+      <td className="whitespace-nowrap pr-2 align-top font-bold">{t}</td>
+      <td className="pr-1 align-top">:</td>
+      <td className="whitespace-nowrap align-top">{v}</td>
+    </tr>
   );
 }

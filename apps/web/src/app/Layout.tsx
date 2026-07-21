@@ -1,10 +1,10 @@
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Link, Outlet, useLocation } from 'react-router-dom';
 import { useState, type ReactNode } from 'react';
 import { useAuth } from '../lib/auth';
 import type { Modulo } from '@sistema/domain';
 import {
   IconLotes, IconRecebimento, IconLogout, IconLeaf, IconShield, IconClipboard, IconDoc,
-  IconFlask, IconBox, IconCheck, IconClock, IconChevronRight, IconTruck,
+  IconFlask, IconBox, IconCheck, IconClock, IconChevronRight, IconTruck, IconArrowLeft,
 } from '../components/icons';
 
 function NavItem({ to, icon, label }: { to: string; icon: ReactNode; label: string }) {
@@ -118,6 +118,9 @@ const ITENS_MANUTENCAO: SubItem[] = [
 export function Layout() {
   const { session, signOut, podeAcessarModulo, perfis } = useAuth();
   const email = session?.user.email ?? '';
+  const location = useLocation();
+  // "Voltar ao painel" aparece em qualquer módulo (menos no próprio painel).
+  const mostrarVoltarPainel = podeAcessarModulo('painel') && location.pathname !== '/painel';
 
   const itensTopo = ITENS_TOPO.filter((i) => podeAcessarModulo(i.modulo));
   const itensPcp = ITENS_PCP.filter((i) => podeAcessarModulo(i.modulo));
@@ -181,6 +184,15 @@ export function Layout() {
       {/* Conteúdo */}
       <main className="px-4 py-6 md:ml-64 md:px-10 md:py-8">
         <div className="mx-auto max-w-5xl">
+          {mostrarVoltarPainel && (
+            <Link
+              to="/painel"
+              className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition hover:text-emerald-600"
+            >
+              <IconArrowLeft width={16} height={16} />
+              Voltar ao painel
+            </Link>
+          )}
           <Outlet />
         </div>
       </main>

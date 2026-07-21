@@ -69,6 +69,7 @@ function NavGroup({ icon, label, items }: { icon: ReactNode; label: string; item
 }
 
 const ITENS_TOPO: SubItem[] = [
+  { to: '/painel', icon: <IconShield width={18} height={18} />, label: 'Painel', modulo: 'painel' },
   { to: '/recebimentos', icon: <IconRecebimento />, label: 'Recebimentos', modulo: 'recebimentos' },
   { to: '/fornecedores', icon: <IconRecebimento />, label: 'Fornecedores & QA', modulo: 'fornecedores' },
 ];

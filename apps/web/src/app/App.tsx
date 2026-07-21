@@ -18,6 +18,7 @@ import { ContraprovasPage } from '../features/qualidade/ContraprovasPage';
 import { PcmCadastrosPage } from '../features/pcm/PcmCadastrosPage';
 import { PcmIndicadoresPage } from '../features/pcm/PcmIndicadoresPage';
 import { PcmChecklistPage } from '../features/pcm/PcmChecklistPage';
+import { PainelPage } from '../features/painel/PainelPage';
 import { NaoConformidadesPage } from '../features/qualidade/NaoConformidadesPage';
 import { EspecificacoesPage } from '../features/qualidade/EspecificacoesPage';
 import { PccFisicoPage } from '../features/qualidade/PccFisicoPage';
@@ -97,7 +98,8 @@ export default function App() {
               </Protected>
             }
           >
-            <Route path="/" element={<Navigate to="/lotes" replace />} />
+            <Route path="/" element={<Navigate to="/painel" replace />} />
+            <Route path="/painel" element={<ModuloGuard modulo="painel"><PainelPage /></ModuloGuard>} />
             <Route path="/programacao" element={<ModuloGuard modulo="pcp"><ProgramacaoPage /></ModuloGuard>} />
             <Route path="/produtos" element={<ModuloGuard modulo="produtos"><ProdutosPage /></ModuloGuard>} />
             <Route path="/apontamento" element={<ModuloGuard modulo="pcp"><ApontamentoPage /></ModuloGuard>} />
@@ -134,7 +136,7 @@ export default function App() {
             <Route path="/ambiental" element={<ModuloGuard modulo="ambiental"><AmbientalPage /></ModuloGuard>} />
             <Route path="/fornecedores" element={<ModuloGuard modulo="fornecedores"><FornecedoresPage /></ModuloGuard>} />
           </Route>
-          <Route path="*" element={<Navigate to="/lotes" replace />} />
+          <Route path="*" element={<Navigate to="/painel" replace />} />
         </Routes>
       </HashRouter>
       </ToastProvider>

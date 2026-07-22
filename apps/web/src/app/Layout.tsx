@@ -97,6 +97,12 @@ const ITENS_SUPRIMENTOS: SubItem[] = [
   { to: '/fornecedores', icon: <IconRecebimento />, label: 'Fornecedores & QA', modulo: 'fornecedores' },
 ];
 
+// Comercial — clientes e carteira de pedidos.
+const ITENS_COMERCIAL: SubItem[] = [
+  { to: '/carteira', icon: <IconDoc width={18} height={18} />, label: 'Carteira de pedidos', modulo: 'comercial' },
+  { to: '/clientes', icon: <IconRecebimento />, label: 'Clientes', modulo: 'comercial' },
+];
+
 const ITENS_QUALIDADE: SubItem[] = [
   { to: '/qualidade', icon: <IconShield width={18} height={18} />, label: 'Qualidade', modulo: 'qualidade' },
   { to: '/acompanhamento', icon: <IconFlask width={18} height={18} />, label: 'Acomp. de Processo', modulo: 'acompanhamento' },
@@ -135,6 +141,7 @@ export function Layout() {
   const itensProducao = ITENS_PRODUCAO.filter((i) => podeAcessarModulo(i.modulo));
   const itensEstoque = ITENS_ESTOQUE.filter((i) => podeAcessarModulo(i.modulo));
   const itensSuprimentos = ITENS_SUPRIMENTOS.filter((i) => podeAcessarModulo(i.modulo));
+  const itensComercial = ITENS_COMERCIAL.filter((i) => podeAcessarModulo(i.modulo));
   const itensQualidade = ITENS_QUALIDADE.filter((i) => podeAcessarModulo(i.modulo));
   const itensManutencao = ITENS_MANUTENCAO.filter((i) => podeAcessarModulo(i.modulo));
 
@@ -159,6 +166,7 @@ export function Layout() {
           <NavGroup icon={<IconClipboard />} label="Produção" items={itensProducao} />
           <NavGroup icon={<IconBox />} label="Estoque & Expedição" items={itensEstoque} />
           <NavGroup icon={<IconRecebimento />} label="Suprimentos" items={itensSuprimentos} />
+          <NavGroup icon={<IconDoc />} label="Comercial" items={itensComercial} />
           <NavGroup icon={<IconShield />} label="Qualidade" items={itensQualidade} />
           <NavGroup icon={<IconBox />} label="Manutenção" items={itensManutencao} />
         </nav>

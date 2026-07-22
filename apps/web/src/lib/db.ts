@@ -21,6 +21,7 @@ import type {
   NovoMonitoramento,
   Cliente,
   NovoCliente,
+  AtualizacaoCliente,
   OrdemProducao,
   NovaOrdemProducao,
   StatusOP,
@@ -197,6 +198,16 @@ export async function criarCliente(payload: NovoCliente): Promise<Cliente> {
   const res = await core().from('clientes').insert(payload).select('*').single();
   if (res.error) throw new Error(res.error.message);
   return res.data as Cliente;
+}
+
+export async function atualizarCliente(id: string, patch: AtualizacaoCliente): Promise<void> {
+  const res = await core().from('clientes').update(patch).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function excluirCliente(id: string): Promise<void> {
+  const res = await core().from('clientes').delete().eq('id', id);
+  if (res.error) throw new Error(res.error.message);
 }
 
 // ── Ordens de produção ─────────────────────────────────────────

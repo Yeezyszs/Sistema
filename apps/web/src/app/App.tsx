@@ -19,6 +19,8 @@ import { PcmCadastrosPage } from '../features/pcm/PcmCadastrosPage';
 import { PcmIndicadoresPage } from '../features/pcm/PcmIndicadoresPage';
 import { PcmChecklistPage } from '../features/pcm/PcmChecklistPage';
 import { PainelPage } from '../features/painel/PainelPage';
+import { ClientesPage } from '../features/comercial/ClientesPage';
+import { CarteiraPage } from '../features/comercial/CarteiraPage';
 import { NaoConformidadesPage } from '../features/qualidade/NaoConformidadesPage';
 import { EspecificacoesPage } from '../features/qualidade/EspecificacoesPage';
 import { PccFisicoPage } from '../features/qualidade/PccFisicoPage';
@@ -145,6 +147,8 @@ export default function App() {
             <Route path="/auditoria" element={<ModuloGuard modulo="auditoria"><AuditoriaPage /></ModuloGuard>} />
             <Route path="/ambiental" element={<ModuloGuard modulo="ambiental"><AmbientalPage /></ModuloGuard>} />
             <Route path="/fornecedores" element={<ModuloGuard modulo="fornecedores"><FornecedoresPage /></ModuloGuard>} />
+            <Route path="/clientes" element={<ModuloGuard modulo="comercial"><ClientesPage /></ModuloGuard>} />
+            <Route path="/carteira" element={<ModuloGuard modulo="comercial"><CarteiraPage /></ModuloGuard>} />
           </Route>
           <Route path="*" element={<Navigate to="/painel" replace />} />
         </Routes>

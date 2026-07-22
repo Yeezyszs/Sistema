@@ -100,6 +100,7 @@ const ITENS_SUPRIMENTOS: SubItem[] = [
 // Comercial — clientes e carteira de pedidos.
 const ITENS_COMERCIAL: SubItem[] = [
   { to: '/carteira', icon: <IconDoc width={18} height={18} />, label: 'Carteira de pedidos', modulo: 'comercial' },
+  { to: '/analise-vendas', icon: <IconShield width={18} height={18} />, label: 'Análise de vendas', modulo: 'comercial' },
   { to: '/clientes', icon: <IconRecebimento />, label: 'Clientes', modulo: 'comercial' },
 ];
 

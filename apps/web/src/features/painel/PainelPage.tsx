@@ -12,6 +12,11 @@ import {
 } from '@sistema/domain';
 import type { StatusLote } from '@sistema/domain';
 import { PageHeader, Card, Spinner } from '../../components/ui';
+import { useAuth } from '../../lib/auth';
+
+function reais(n: number): string {
+  return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
 
 // Semana corrente: segunda a sábado.
 function semanaAtual(): { de: string; ate: string } {
@@ -38,6 +43,8 @@ const TOM_STATUS: Record<StatusLote, string> = {
 export function PainelPage() {
   const hoje = hojeLocalISO();
   const { de, ate } = semanaAtual();
+  const { podeAcessarModulo } = useAuth();
+  const veComercial = podeAcessarModulo('comercial');
 
   const { data, loading } = useAsync(async () => {
     const [apontSemana, linhas, recebimentos, prog, lotes, ops, ncs, osPcm, paradas, calibracoes, pedidos, cargas] =
@@ -103,8 +110,17 @@ export function PainelPage() {
   const paradasHoje = paradas.filter((p) => p.data === hoje);
   const horasParadasHoje = paradasHoje.reduce((s, p) => s + (p.horas ?? 0), 0);
   const calibVencendo = calibracoes.filter((c) => ['a_vencer', 'vencida'].includes(situacaoCalibracao(c.valido_ate))).length;
-  const pedidosAExpedir = pedidos.filter((p) => p.status === 'aprovado' && p.situacao !== 'carregado').length;
+  const carteiraAberta = pedidos.filter((p) => p.status === 'aprovado' && p.situacao !== 'carregado');
+  const pedidosAExpedir = carteiraAberta.length;
   const cargasHoje = cargas.filter((c) => c.data === hoje).length;
+
+  // ── Comercial (só para quem acessa o módulo) ──
+  const kgAExpedir = carteiraAberta.reduce((s, p) => s + (p.peso_carga_kg ?? 0), 0);
+  const rsEmAberto = carteiraAberta.reduce((s, p) => s + (p.valor_total_rs ?? 0), 0);
+  const mesIni = `${hoje.slice(0, 7)}-01`;
+  const faturamentoMes = pedidos
+    .filter((p) => p.status !== 'cancelado' && p.data >= mesIni)
+    .reduce((s, p) => s + (p.valor_total_rs ?? 0), 0);
 
   return (
     <>
@@ -183,6 +199,19 @@ export function PainelPage() {
           <Acao rotulo="Cargas de hoje" valor={cargasHoje} to="/expedicao" tom="info" />
         </div>
       </div>
+
+      {/* Comercial — só para quem acessa o módulo */}
+      {veComercial && (
+        <div className="mt-6">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">Comercial</h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <KpiLink titulo="Faturamento do mês" valor={reais(faturamentoMes)} to="/analise-vendas" tom="destaque" />
+            <KpiLink titulo="Valor em aberto" valor={reais(rsEmAberto)} sub="carteira não entregue" to="/carteira" />
+            <KpiLink titulo="Volume a expedir" valor={`${fmt(kgAExpedir)} kg`} to="/carteira" />
+            <KpiLink titulo="Pedidos em aberto" valor={String(pedidosAExpedir)} to="/carteira" />
+          </div>
+        </div>
+      )}
     </>
   );
 }
@@ -206,6 +235,19 @@ function Kpi({ titulo, valor, unidade, rodape, tom = 'neutro' }: {
       </p>
       {rodape && <p className="mt-0.5 text-xs text-slate-400">{rodape}</p>}
     </Card>
+  );
+}
+
+function KpiLink({ titulo, valor, sub, to, tom }: {
+  titulo: string; valor: string; sub?: string; to: string; tom?: 'destaque';
+}) {
+  return (
+    <Link to={to} className="relative block overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-brand-300 hover:bg-slate-50">
+      <span className={`absolute inset-y-0 left-0 w-1 ${tom === 'destaque' ? 'bg-brand-600' : 'bg-slate-300'}`} />
+      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{titulo}</p>
+      <p className="mt-1 text-2xl font-bold tabular-nums text-slate-900">{valor}</p>
+      {sub && <p className="mt-0.5 text-xs text-slate-400">{sub}</p>}
+    </Link>
   );
 }
 

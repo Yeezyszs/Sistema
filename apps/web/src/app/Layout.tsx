@@ -84,7 +84,6 @@ const ITENS_PRODUCAO: SubItem[] = [
 // Estoque & Expedição — o que sai da produção até o cliente.
 const ITENS_ESTOQUE: SubItem[] = [
   { to: '/estoque', icon: <IconBox width={18} height={18} />, label: 'Estoque', modulo: 'estoque' },
-  { to: '/pedidos', icon: <IconDoc width={18} height={18} />, label: 'Pedidos', modulo: 'pedidos' },
   { to: '/expedicao', icon: <IconTruck width={18} height={18} />, label: 'Expedição', modulo: 'expedicao' },
   { to: '/embalagens', icon: <IconBox width={18} height={18} />, label: 'Embalagens', modulo: 'embalagens' },
   { to: '/pallets', icon: <IconBox width={18} height={18} />, label: 'Pallets', modulo: 'pallets' },
@@ -100,6 +99,7 @@ const ITENS_SUPRIMENTOS: SubItem[] = [
 // Comercial — clientes e carteira de pedidos.
 const ITENS_COMERCIAL: SubItem[] = [
   { to: '/carteira', icon: <IconDoc width={18} height={18} />, label: 'Carteira de pedidos', modulo: 'comercial' },
+  { to: '/pedidos', icon: <IconDoc width={18} height={18} />, label: 'Pedidos', modulo: 'pedidos' },
   { to: '/analise-vendas', icon: <IconShield width={18} height={18} />, label: 'Análise de vendas', modulo: 'comercial' },
   { to: '/clientes', icon: <IconRecebimento />, label: 'Clientes', modulo: 'comercial' },
 ];

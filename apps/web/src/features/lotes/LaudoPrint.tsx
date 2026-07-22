@@ -34,7 +34,7 @@ export function LaudoPrint() {
   if (loading)
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <Spinner className="h-7 w-7 text-emerald-600" />
+        <Spinner className="h-7 w-7 text-brand-600" />
       </div>
     );
   if (error || !data || !data.laudo)
@@ -53,7 +53,7 @@ export function LaudoPrint() {
         </Link>
         <button
           onClick={() => window.print()}
-          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+          className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
         >
           Imprimir / Salvar PDF
         </button>
@@ -72,7 +72,7 @@ export function LaudoPrint() {
             </div>
             <div className="text-right">
               <p className="text-xs uppercase tracking-wide text-slate-400">Laudo nº</p>
-              <p className="text-xl font-bold text-emerald-700">{laudo.numero}</p>
+              <p className="text-xl font-bold text-brand-700">{laudo.numero}</p>
             </div>
           </div>
         </header>
@@ -115,7 +115,7 @@ export function LaudoPrint() {
                 {!isVisual && <td className="px-3 py-2 text-slate-500">{r.unidade ?? '—'}</td>}
                 <td className="px-3 py-2 text-slate-500">{r.referencia_texto ?? '—'}</td>
                 <td className="px-3 py-2">
-                  <span className={r.conforme ? 'text-emerald-700' : 'text-red-700'}>
+                  <span className={r.conforme ? 'text-brand-700' : 'text-red-700'}>
                     {r.conforme ? 'Conforme' : 'Não conforme'}
                   </span>
                 </td>
@@ -131,7 +131,7 @@ export function LaudoPrint() {
             <div className="flex flex-wrap gap-2">
               {dados.bags.map((b, i) => (
                 <span key={i} className="rounded border border-slate-200 px-2 py-1 text-xs text-slate-600">
-                  {b.faixa}: <span className={b.resultado === 'Conforme' ? 'text-emerald-700' : 'text-red-700'}>{b.resultado}</span>
+                  {b.faixa}: <span className={b.resultado === 'Conforme' ? 'text-brand-700' : 'text-red-700'}>{b.resultado}</span>
                 </span>
               ))}
             </div>
@@ -154,7 +154,7 @@ export function LaudoPrint() {
           <p className="text-[10px] text-slate-400">Este documento só pode ser reproduzido por inteiro.</p>
           <div className="text-right">
             <p className="text-xs uppercase tracking-wide text-slate-400">Resultado do laudo</p>
-            <p className={`text-lg font-bold ${laudo.conforme ? 'text-emerald-700' : 'text-red-700'}`}>
+            <p className={`text-lg font-bold ${laudo.conforme ? 'text-brand-700' : 'text-red-700'}`}>
               {laudo.conforme ? 'APROVADO' : 'REPROVADO'}
             </p>
           </div>

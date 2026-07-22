@@ -69,7 +69,7 @@ export function PccFisicoPage() {
 
       {loading && (
         <div className="flex justify-center py-20">
-          <Spinner className="h-7 w-7 text-emerald-600" />
+          <Spinner className="h-7 w-7 text-brand-600" />
         </div>
       )}
 
@@ -198,7 +198,7 @@ function DetectorAba({ data, onSaved }: { data: any; onSaved: () => void }) {
                     <td className="hidden px-5 py-3 text-slate-500 sm:table-cell">{TIPO_TESTE_DM_LABEL[v.tipo_teste as TipoTesteDM]}</td>
                     <td className="px-5 py-3 text-slate-500">{formatarDataHora(v.registrado_em)}</td>
                     <td className="px-5 py-3">
-                      <span className={`text-xs font-semibold ${v.conforme ? 'text-emerald-600' : 'text-red-600'}`}>
+                      <span className={`text-xs font-semibold ${v.conforme ? 'text-brand-600' : 'text-red-600'}`}>
                         {v.conforme ? 'Conforme' : 'Reprovado'}
                       </span>
                     </td>
@@ -385,7 +385,7 @@ function Toggle({ label, valor, onChange }: { label: string; valor: boolean; onC
         type="button"
         onClick={() => onChange(!valor)}
         className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-          valor ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+          valor ? 'bg-brand-100 text-brand-700' : 'bg-red-100 text-red-700'
         }`}
       >
         {valor ? 'Detecta/rejeita' : 'Não detecta'}

@@ -68,7 +68,7 @@ export function EmbalagensPage() {
         action={<Button onClick={() => setModalNova(true)}><IconPlus width={16} height={16} />Nova embalagem</Button>}
       />
 
-      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-emerald-600" /></div>}
+      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
       {data && data.length === 0 && (
         <EmptyState title="Nenhuma embalagem" description='Cadastre a primeira em "Nova embalagem".' />
       )}
@@ -101,7 +101,7 @@ export function EmbalagensPage() {
                     <td className="hidden px-3 py-2.5 text-right text-slate-500 md:table-cell">{e.estoque_minimo != null ? formatarQuantidade(e.estoque_minimo) : '—'}</td>
                     <td className="px-3 py-2.5 text-right whitespace-nowrap">
                       <button onClick={() => setHist(e)} className="mr-3 text-xs font-medium text-slate-400 hover:text-slate-700">Histórico</button>
-                      <button onClick={() => setMov(e)} className="text-xs font-medium text-emerald-600 hover:text-emerald-700">Movimentar</button>
+                      <button onClick={() => setMov(e)} className="text-xs font-medium text-brand-600 hover:text-brand-700">Movimentar</button>
                     </td>
                   </tr>
                 );
@@ -170,7 +170,7 @@ function HistoricoModal({ embalagem, onClose }: { embalagem: Embalagem | null; o
   );
   return (
     <Modal open={!!embalagem} onClose={onClose} title={embalagem ? `Histórico — ${embalagem.nome}` : ''} size="lg">
-      {loading && <div className="flex justify-center py-10"><Spinner className="h-6 w-6 text-emerald-600" /></div>}
+      {loading && <div className="flex justify-center py-10"><Spinner className="h-6 w-6 text-brand-600" /></div>}
       {data && data.length === 0 && <p className="py-6 text-center text-sm text-slate-400">Sem movimentos.</p>}
       {data && data.length > 0 && (
         <div className="overflow-x-auto">
@@ -190,7 +190,7 @@ function HistoricoModal({ embalagem, onClose }: { embalagem: Embalagem | null; o
                   <tr key={m.id}>
                     <td className="px-2 py-2 text-slate-500">{formatarData(m.data)}</td>
                     <td className="px-2 py-2 text-slate-600">{MOV_EMBALAGEM_LABEL[m.tipo]}</td>
-                    <td className={`px-2 py-2 text-right font-medium ${negativo ? 'text-red-600' : 'text-emerald-600'}`}>
+                    <td className={`px-2 py-2 text-right font-medium ${negativo ? 'text-red-600' : 'text-brand-600'}`}>
                       {negativo ? '−' : '+'}{formatarQuantidade(m.quantidade)}
                     </td>
                     <td className="px-2 py-2 text-slate-500">{m.origem ?? '—'}</td>

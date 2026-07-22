@@ -25,11 +25,11 @@ function catLabelDoc(c: string | null): string {
   return CATEGORIA_ANALISE_LABEL[c as CategoriaAnalise] ?? c;
 }
 const RESULTADO_DOC_COR: Record<ResultadoDocumento, string> = {
-  aprovado: 'text-emerald-600', reprovado: 'text-red-600', pendente: 'text-amber-600',
+  aprovado: 'text-brand-600', reprovado: 'text-red-600', pendente: 'text-amber-600',
 };
 
 const TOM_CLASS: Record<string, string> = {
-  alerta: 'bg-amber-100 text-amber-700', sucesso: 'bg-emerald-100 text-emerald-700', erro: 'bg-red-100 text-red-700',
+  alerta: 'bg-amber-100 text-amber-700', sucesso: 'bg-brand-100 text-brand-700', erro: 'bg-red-100 text-red-700',
 };
 
 export function FornecedoresPage() {
@@ -75,7 +75,7 @@ export function FornecedoresPage() {
         ))}
       </div>
 
-      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-emerald-600" /></div>}
+      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
 
       {data && aba === 'inspecoes' && (
         data.inspecoes.length === 0 ? (
@@ -100,7 +100,7 @@ export function FornecedoresPage() {
                     <td className="hidden px-5 py-3 text-slate-500 md:table-cell">{[i.variedade, i.placa].filter(Boolean).join(' · ') || '—'}</td>
                     <td className="px-5 py-3 text-slate-500">{formatarDataHora(i.inspecionado_em)}</td>
                     <td className="px-5 py-3">
-                      <span className={`text-xs font-semibold ${i.conforme ? 'text-emerald-600' : 'text-red-600'}`}>{i.conforme ? 'Conforme' : 'Não conforme'}</span>
+                      <span className={`text-xs font-semibold ${i.conforme ? 'text-brand-600' : 'text-red-600'}`}>{i.conforme ? 'Conforme' : 'Não conforme'}</span>
                     </td>
                   </tr>
                 ))}
@@ -124,7 +124,7 @@ export function FornecedoresPage() {
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-slate-900">{f.razao_social}</span>
-                      {f.homologado && <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">Homologado</span>}
+                      {f.homologado && <span className="rounded-full bg-brand-100 px-2 py-0.5 text-xs font-medium text-brand-700">Homologado</span>}
                     </div>
                     {atual ? (
                       <p className="mt-1 text-xs text-slate-400">
@@ -228,7 +228,7 @@ function ModalInspecao({
               <div className="flex shrink-0 gap-1">
                 {(['conforme', 'nao_conforme', 'na'] as RespostaChecklist[]).map((r) => (
                   <button key={r} type="button" onClick={() => setRespostas((p) => ({ ...p, [it.id]: r }))}
-                    className={`rounded-md px-2 py-1 text-xs font-medium transition ${resp(it.id) === r ? (r === 'conforme' ? 'bg-emerald-600 text-white' : r === 'nao_conforme' ? 'bg-red-600 text-white' : 'bg-slate-500 text-white') : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
+                    className={`rounded-md px-2 py-1 text-xs font-medium transition ${resp(it.id) === r ? (r === 'conforme' ? 'bg-brand-600 text-white' : r === 'nao_conforme' ? 'bg-red-600 text-white' : 'bg-slate-500 text-white') : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
                     {r === 'conforme' ? 'C' : r === 'nao_conforme' ? 'NC' : 'N/A'}
                   </button>
                 ))}
@@ -355,7 +355,7 @@ function ModalLaudos({
 
   return (
     <Modal open onClose={onClose} title={`Laudos — ${fornecedor.razao_social}`} size="lg">
-      {loading && <div className="flex justify-center py-8"><Spinner className="h-6 w-6 text-emerald-600" /></div>}
+      {loading && <div className="flex justify-center py-8"><Spinner className="h-6 w-6 text-brand-600" /></div>}
 
       {docs && docs.length === 0 && (
         <p className="rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-500">Nenhum laudo anexado ainda.</p>
@@ -399,7 +399,7 @@ function ModalLaudos({
         <p className="text-sm font-semibold text-slate-700">Anexar novo laudo</p>
         <input
           name="arquivo" type="file" accept=".pdf,.doc,.docx,image/*" required
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 file:mr-3 file:rounded-md file:border-0 file:bg-emerald-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-emerald-700"
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 file:mr-3 file:rounded-md file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-brand-700"
         />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Field label="Análise">

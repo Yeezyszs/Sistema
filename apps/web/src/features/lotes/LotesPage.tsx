@@ -46,13 +46,13 @@ export function LotesPage() {
           placeholder="Buscar por código ou produto…"
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
-          className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 sm:max-w-xs"
+          className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 sm:max-w-xs"
         />
       </div>
 
       {loading && (
         <div className="flex justify-center py-20">
-          <Spinner className="h-7 w-7 text-emerald-600" />
+          <Spinner className="h-7 w-7 text-brand-600" />
         </div>
       )}
 
@@ -102,7 +102,7 @@ export function LotesPage() {
                   <td className="px-5 py-3.5 text-right">
                     <Link
                       to={`/lotes/${lote.id}`}
-                      className="inline-flex text-slate-300 transition group-hover:text-emerald-600"
+                      className="inline-flex text-slate-300 transition group-hover:text-brand-600"
                       aria-label={`Abrir lote ${lote.codigo}`}
                     >
                       <IconChevronRight />

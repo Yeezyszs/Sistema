@@ -20,7 +20,7 @@ import { ProdutoPicker } from '../../components/ProdutoPicker';
 const TOM_CLASS: Record<string, string> = {
   info: 'bg-sky-100 text-sky-700',
   alerta: 'bg-amber-100 text-amber-700',
-  sucesso: 'bg-emerald-100 text-emerald-700',
+  sucesso: 'bg-brand-100 text-brand-700',
 };
 
 function OPStatusChip({ status }: { status: StatusOP }) {
@@ -152,13 +152,13 @@ export function OrdensPage() {
           placeholder="Buscar por nº, pedido, cliente ou produto…"
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
-          className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 sm:max-w-sm"
+          className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 sm:max-w-sm"
         />
       </div>
 
       {loading && (
         <div className="flex justify-center py-20">
-          <Spinner className="h-7 w-7 text-emerald-600" />
+          <Spinner className="h-7 w-7 text-brand-600" />
         </div>
       )}
 
@@ -213,7 +213,7 @@ export function OrdensPage() {
                   <td className="px-5 py-3.5 text-right">
                     <Link
                       to={`/ordens/${op.id}`}
-                      className="inline-flex text-slate-300 transition group-hover:text-emerald-600"
+                      className="inline-flex text-slate-300 transition group-hover:text-brand-600"
                       aria-label={`Abrir OP ${op.numero}`}
                     >
                       <IconChevronRight />
@@ -306,7 +306,7 @@ export function OrdensPage() {
 
           <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-4">
             <label className="flex items-center gap-2 text-sm text-slate-600">
-              <input type="checkbox" name="reprocessar" className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" />
+              <input type="checkbox" name="reprocessar" className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500" />
               Reprocessar
             </label>
             <div className="flex gap-3">

@@ -14,10 +14,10 @@ import { IconPlus, IconChevronRight } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
 const TOM_CLASS: Record<string, string> = {
-  info: 'bg-sky-100 text-sky-700', alerta: 'bg-amber-100 text-amber-700', sucesso: 'bg-emerald-100 text-emerald-700',
+  info: 'bg-sky-100 text-sky-700', alerta: 'bg-amber-100 text-amber-700', sucesso: 'bg-brand-100 text-brand-700',
 };
 const CLASS_TOM: Record<ClassificacaoItem, string> = {
-  conforme: 'text-emerald-600', nc_critica: 'text-red-700', nc_maior: 'text-red-600', nc_menor: 'text-amber-600', na: 'text-slate-400',
+  conforme: 'text-brand-600', nc_critica: 'text-red-700', nc_maior: 'text-red-600', nc_menor: 'text-amber-600', na: 'text-slate-400',
 };
 
 export function AuditoriaPage() {
@@ -91,7 +91,7 @@ export function AuditoriaPage() {
         ))}
       </div>
 
-      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-emerald-600" /></div>}
+      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
 
       {data && aba === 'auditorias' && (
         data.auditorias.length === 0 ? (
@@ -128,7 +128,7 @@ export function AuditoriaPage() {
                     <td className="hidden px-5 py-3 text-slate-500 md:table-cell">{v.frequencia ?? '—'}</td>
                     <td className="px-5 py-3 text-slate-500">{formatarDataHora(v.verificado_em)}</td>
                     <td className="px-5 py-3">
-                      <span className={`text-xs font-semibold ${v.conforme ? 'text-emerald-600' : 'text-red-600'}`}>
+                      <span className={`text-xs font-semibold ${v.conforme ? 'text-brand-600' : 'text-red-600'}`}>
                         {v.conforme ? 'Conforme' : 'Não conforme'}
                       </span>
                     </td>
@@ -230,7 +230,7 @@ function AuditoriaCard({
           {auditoria.escopo && <p className="text-sm text-slate-600">{auditoria.escopo}{auditoria.auditor_id ? ` · Auditor: ${fmap.get(auditoria.auditor_id)?.nome ?? ''}` : ''}</p>}
 
           {itens == null ? (
-            <Spinner className="h-5 w-5 text-emerald-600" />
+            <Spinner className="h-5 w-5 text-brand-600" />
           ) : itens.length === 0 ? (
             <p className="text-sm text-slate-400">Nenhum item avaliado ainda.</p>
           ) : (

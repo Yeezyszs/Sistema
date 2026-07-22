@@ -211,7 +211,7 @@ export function RecebimentosPage() {
                 placeholder="Buscar produtor, variedade, ticket…"
                 value={busca}
                 onChange={(e) => setBusca(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
               />
             </div>
             {(['todos', ...TURNO] as const).map((t) => (
@@ -227,7 +227,7 @@ export function RecebimentosPage() {
             ))}
           </div>
 
-          {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-emerald-600" /></div>}
+          {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
           {error && <Card className="p-4 text-sm text-red-600">Erro: {error}</Card>}
           {data && linhas.length === 0 && (
             <EmptyState icon={<IconRecebimento width={40} height={40} />} title="Nenhuma carga" description="As cargas da descarga aparecerão aqui." />
@@ -275,7 +275,7 @@ export function RecebimentosPage() {
                       <td className="px-3 py-2.5 text-right text-slate-600">{r.renda ?? '—'}</td>
                       <td className="px-3 py-2.5 text-center text-slate-500">{r.cancha ?? '—'}</td>
                       <td className="px-3 py-2.5 text-right whitespace-nowrap">
-                        <button onClick={() => setEditando(r)} className="text-xs font-medium text-slate-500 hover:text-emerald-600">Editar</button>
+                        <button onClick={() => setEditando(r)} className="text-xs font-medium text-slate-500 hover:text-brand-600">Editar</button>
                         <button onClick={() => setExcluindo(r)} className="ml-3 text-xs font-medium text-slate-400 hover:text-red-600">Excluir</button>
                       </td>
                     </tr>

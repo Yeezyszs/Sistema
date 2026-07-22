@@ -31,7 +31,7 @@ export function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
       <div className="w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center text-center">
-          <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-600 text-white">
+          <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-600 text-white">
             <IconLeaf width={26} height={26} />
           </span>
           <h1 className="text-xl font-semibold text-slate-900">Indústria Sumaré</h1>

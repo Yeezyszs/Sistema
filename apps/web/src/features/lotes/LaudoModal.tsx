@@ -221,7 +221,7 @@ export function LaudoModal({
                       <td className="py-1 px-2 text-xs text-slate-500">{l.referencia_texto}</td>
                       <td className="py-1 pl-2 w-24">
                         {preenchida ? (
-                          <span className={`text-xs font-semibold ${ok ? 'text-emerald-600' : 'text-red-600'}`}>
+                          <span className={`text-xs font-semibold ${ok ? 'text-brand-600' : 'text-red-600'}`}>
                             {ok ? 'Conforme' : 'Não conf.'}
                           </span>
                         ) : (
@@ -298,7 +298,7 @@ export function LaudoModal({
         </Field>
 
         <div className="flex items-center justify-between border-t border-slate-100 pt-4">
-          <span className={`text-sm font-semibold ${conforme ? 'text-emerald-600' : 'text-red-600'}`}>
+          <span className={`text-sm font-semibold ${conforme ? 'text-brand-600' : 'text-red-600'}`}>
             {conforme ? 'Laudo aprovado' : 'Laudo reprovado'}
           </span>
           <div className="flex gap-3">

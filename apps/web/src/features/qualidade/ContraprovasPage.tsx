@@ -40,7 +40,7 @@ export function ContraprovasPage() {
         ))}
       </div>
 
-      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-emerald-600" /></div>}
+      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
       {data && aba === 'caixas' && <AbaCaixas data={data} rec={rec} sucesso={sucesso} erro={erro} />}
       {data && aba === 'retencao' && <AbaRetencao retencoes={data.retencoes} rec={rec} sucesso={sucesso} erro={erro} />}
     </>
@@ -94,7 +94,7 @@ function AbaCaixas({ data, rec, sucesso, erro }: { data: DataShape; rec: () => v
         <div className="relative flex-1 min-w-[180px]">
           <IconSearch width={15} height={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input type="search" placeholder="Buscar nº caixa, cliente, lotes…" value={busca} onChange={(e) => setBusca(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" />
+            className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
         </div>
         <div className="w-48">
           <Select value={filtro} onChange={(e) => setFiltro(e.target.value as typeof filtro)}>
@@ -140,11 +140,11 @@ function AbaCaixas({ data, rec, sucesso, erro }: { data: DataShape; rec: () => v
                       ) : eleg ? (
                         <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">Vencida</span>
                       ) : (
-                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">Em estoque</span>
+                        <span className="rounded-full bg-brand-100 px-2 py-0.5 text-xs font-medium text-brand-700">Em estoque</span>
                       )}
                     </td>
                     <td className="px-3 py-2.5 text-right whitespace-nowrap">
-                      <button onClick={() => setEditando(c)} className="mr-3 text-xs font-medium text-slate-500 hover:text-emerald-600">Editar</button>
+                      <button onClick={() => setEditando(c)} className="mr-3 text-xs font-medium text-slate-500 hover:text-brand-600">Editar</button>
                       {c.em_estoque && (
                         <button onClick={() => void marcarDescarte(c)} className="mr-3 text-xs font-medium text-amber-600 hover:text-amber-700">Descartar</button>
                       )}

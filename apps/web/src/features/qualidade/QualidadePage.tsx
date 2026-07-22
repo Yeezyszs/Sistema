@@ -42,7 +42,7 @@ export function QualidadePage() {
   if (loading)
     return (
       <div className="flex justify-center py-20">
-        <Spinner className="h-7 w-7 text-emerald-600" />
+        <Spinner className="h-7 w-7 text-brand-600" />
       </div>
     );
 
@@ -316,7 +316,7 @@ function LotePendente({
         <div className="border-t border-slate-100 p-4 space-y-4">
           {/* Monitoramentos */}
           {mons === null || mons === undefined ? (
-            <Spinner className="h-5 w-5 text-emerald-600" />
+            <Spinner className="h-5 w-5 text-brand-600" />
           ) : mons.length === 0 ? (
             <p className="text-sm text-slate-400">Nenhum monitoramento registrado para este lote.</p>
           ) : (
@@ -328,11 +328,11 @@ function LotePendente({
                   <li
                     key={m.id}
                     className={`flex items-center justify-between rounded-lg px-3 py-2 ${
-                      isNaoConforme ? 'bg-red-50' : 'bg-emerald-50'
+                      isNaoConforme ? 'bg-red-50' : 'bg-brand-50'
                     }`}
                   >
                     <div>
-                      <p className={`font-medium ${isNaoConforme ? 'text-red-800' : 'text-emerald-800'}`}>
+                      <p className={`font-medium ${isNaoConforme ? 'text-red-800' : 'text-brand-800'}`}>
                         {pc?.nome ?? m.ponto_controle_codigo}
                       </p>
                       {m.valor != null && (
@@ -343,7 +343,7 @@ function LotePendente({
                       {m.observacao && <p className="text-xs text-slate-500">{m.observacao}</p>}
                     </div>
                     <span
-                      className={`text-xs font-semibold ${isNaoConforme ? 'text-red-600' : 'text-emerald-600'}`}
+                      className={`text-xs font-semibold ${isNaoConforme ? 'text-red-600' : 'text-brand-600'}`}
                     >
                       {m.conforme ? 'Conforme' : 'Não conforme'}
                     </span>

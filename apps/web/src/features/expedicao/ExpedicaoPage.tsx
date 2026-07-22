@@ -13,7 +13,7 @@ import { IconPlus, IconSearch } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
 const TOM_CLASS: Record<string, string> = {
-  sucesso: 'bg-emerald-100 text-emerald-700', erro: 'bg-red-100 text-red-700',
+  sucesso: 'bg-brand-100 text-brand-700', erro: 'bg-red-100 text-red-700',
 };
 
 export function ExpedicaoPage() {
@@ -152,11 +152,11 @@ export function ExpedicaoPage() {
         <div className="relative flex-1 min-w-[180px]">
           <IconSearch width={15} height={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input type="search" placeholder="Buscar nº, cliente, lote, placa, transportadora, NF…" value={busca} onChange={(e) => setBusca(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" />
+            className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
         </div>
       </div>
 
-      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-emerald-600" /></div>}
+      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
       {data && linhas.length === 0 && (
         <EmptyState title="Nenhuma carga" description='Registre a primeira em "Novo carregamento".' />
       )}
@@ -197,7 +197,7 @@ export function ExpedicaoPage() {
                     </span>
                   </td>
                   <td className="px-3 py-2.5 text-right whitespace-nowrap">
-                    <button onClick={() => setEditando(c)} className="mr-3 text-xs font-medium text-slate-500 hover:text-emerald-600">Editar</button>
+                    <button onClick={() => setEditando(c)} className="mr-3 text-xs font-medium text-slate-500 hover:text-brand-600">Editar</button>
                     {c.status === 'carregado' && (
                       <button onClick={() => void cancelar(c.id)} className="mr-3 text-xs font-medium text-slate-400 hover:text-amber-600">Cancelar</button>
                     )}

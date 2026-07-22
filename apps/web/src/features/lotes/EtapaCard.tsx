@@ -22,7 +22,7 @@ export interface EtapaCardProps {
 }
 
 const ESTADO_META: Record<EtapaEstado, { label: string; chip: string; ring: string }> = {
-  concluida: { label: 'Concluída', chip: 'bg-emerald-100 text-emerald-700', ring: 'ring-emerald-200' },
+  concluida: { label: 'Concluída', chip: 'bg-brand-100 text-brand-700', ring: 'ring-brand-200' },
   andamento: { label: 'Em andamento', chip: 'bg-sky-100 text-sky-700', ring: 'ring-sky-300' },
   pendente: { label: 'Pendente', chip: 'bg-slate-100 text-slate-500', ring: 'ring-slate-200' },
 };
@@ -70,7 +70,7 @@ export function EtapaCard(props: EtapaCardProps) {
           )}
 
           {expansivel && (
-            <p className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
+            <p className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-brand-600">
               {aberto ? 'Ocultar detalhes' : 'Ver detalhes da etapa'}
               <IconChevronRight
                 width={14}
@@ -86,7 +86,7 @@ export function EtapaCard(props: EtapaCardProps) {
           {estado === 'andamento' && props.onFinalizar && (
             <Button
               variant="outline"
-              className="border-emerald-300 px-3 py-1.5 text-xs text-emerald-700 hover:bg-emerald-50"
+              className="border-brand-300 px-3 py-1.5 text-xs text-brand-700 hover:bg-brand-50"
               loading={props.carregando}
               onClick={props.onFinalizar}
             >
@@ -117,7 +117,7 @@ export function EtapaCard(props: EtapaCardProps) {
 function Marker({ estado, ordem }: { estado: EtapaEstado; ordem: number }) {
   if (estado === 'concluida')
     return (
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-600">
         <IconCheck width={18} height={18} />
       </span>
     );

@@ -57,7 +57,7 @@ export function PcmPreventivaPage() {
         <div className="relative flex-1 min-w-[180px]">
           <IconSearch width={15} height={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input type="search" placeholder="Buscar equipamento, componente, executor…" value={busca} onChange={(e) => setBusca(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" />
+            className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
         </div>
         <div className="w-36">
           <Select value={filtroTri} onChange={(e) => setFiltroTri(e.target.value as typeof filtroTri)}>
@@ -74,7 +74,7 @@ export function PcmPreventivaPage() {
         </div>
       </div>
 
-      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-emerald-600" /></div>}
+      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
       {data && linhas.length === 0 && <EmptyState title="Nenhuma preventiva" description="Ajuste os filtros ou cadastre uma nova." />}
 
       {data && linhas.length > 0 && (
@@ -102,14 +102,14 @@ export function PcmPreventivaPage() {
                     <td className={`px-3 py-2.5 ${atrasada ? 'font-medium text-red-600' : 'text-slate-500'}`}>{p.planejada ? formatarData(p.planejada) : '—'}</td>
                     <td className="px-3 py-2.5">
                       {p.realizada
-                        ? <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">{formatarData(p.realizada)}</span>
+                        ? <span className="rounded-full bg-brand-100 px-2 py-0.5 text-xs font-medium text-brand-700">{formatarData(p.realizada)}</span>
                         : <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">Pendente</span>}
                     </td>
                     <td className="hidden px-3 py-2.5 text-slate-500 md:table-cell">{p.exec ?? '—'}</td>
                     <td className="px-3 py-2.5 text-right whitespace-nowrap">
-                      <button onClick={() => setEditando(p)} className="mr-3 text-xs font-medium text-slate-500 hover:text-emerald-600">Editar</button>
+                      <button onClick={() => setEditando(p)} className="mr-3 text-xs font-medium text-slate-500 hover:text-brand-600">Editar</button>
                       {!p.realizada && (
-                        <button onClick={() => setRealizando(p)} className="mr-3 text-xs font-medium text-emerald-600 hover:text-emerald-700">Realizar</button>
+                        <button onClick={() => setRealizando(p)} className="mr-3 text-xs font-medium text-brand-600 hover:text-brand-700">Realizar</button>
                       )}
                       <button onClick={() => void remover(p.id)} className="text-xs font-medium text-slate-400 hover:text-red-600">Excluir</button>
                     </td>

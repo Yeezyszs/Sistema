@@ -16,7 +16,7 @@ import { useToast } from '../../components/Toast';
 import { ProdutoPicker } from '../../components/ProdutoPicker';
 
 const TOM_CLASS: Record<string, string> = {
-  alerta: 'bg-amber-100 text-amber-700', sucesso: 'bg-emerald-100 text-emerald-700', erro: 'bg-red-100 text-red-700',
+  alerta: 'bg-amber-100 text-amber-700', sucesso: 'bg-brand-100 text-brand-700', erro: 'bg-red-100 text-red-700',
 };
 
 function reais(v: number | null): string {
@@ -121,7 +121,7 @@ export function PedidosPage() {
         <div className="relative flex-1 min-w-[180px]">
           <IconSearch width={15} height={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input type="search" placeholder="Buscar nº, cliente, produto, lote, destino…" value={busca} onChange={(e) => setBusca(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" />
+            className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
         </div>
         <div className="w-52">
           <Select value={filtroCliente} onChange={(e) => setFiltroCliente(e.target.value)}>
@@ -134,7 +134,7 @@ export function PedidosPage() {
         )}
       </div>
 
-      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-emerald-600" /></div>}
+      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
       {data && linhas.length === 0 && (
         <EmptyState title="Nenhum pedido" description='Registre o primeiro em "Novo pedido".' />
       )}
@@ -181,7 +181,7 @@ export function PedidosPage() {
                     </select>
                   </td>
                   <td className="px-3 py-2.5 text-right whitespace-nowrap">
-                    <button onClick={() => abrirEdicao(p)} className="mr-3 text-xs font-medium text-slate-500 hover:text-emerald-600">Editar</button>
+                    <button onClick={() => abrirEdicao(p)} className="mr-3 text-xs font-medium text-slate-500 hover:text-brand-600">Editar</button>
                     <button onClick={() => void remover(p.id)} className="text-xs font-medium text-slate-400 hover:text-red-600">Excluir</button>
                   </td>
                 </tr>

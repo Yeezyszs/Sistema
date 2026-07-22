@@ -71,7 +71,7 @@ export function MonitoramentoAguaPage() {
         action={<Button onClick={abrir}><IconPlus width={16} height={16} />Nova medição</Button>}
       />
 
-      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-emerald-600" /></div>}
+      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
       {data && data.length === 0 && (
         <EmptyState title="Sem medições" description='Registre a primeira em "Nova medição".' />
       )}
@@ -105,13 +105,13 @@ export function MonitoramentoAguaPage() {
                     <td className={`px-3 py-2.5 text-right font-medium ${phFora ? 'text-red-600' : 'text-slate-700'}`}>{m.ph ?? '—'}</td>
                     <td className="hidden px-3 py-2.5 text-slate-500 md:table-cell">{m.aspecto ?? '—'}</td>
                     <td className="px-3 py-2.5">
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${m.conforme ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${m.conforme ? 'bg-brand-100 text-brand-700' : 'bg-red-100 text-red-700'}`}>
                         {m.conforme ? 'Conforme' : 'Não conforme'}
                       </span>
                     </td>
                     <td className="hidden px-3 py-2.5 text-slate-500 lg:table-cell">{m.validado_por ?? '—'}</td>
                     <td className="px-3 py-2.5 text-right whitespace-nowrap">
-                      <button onClick={() => abrirEdicao(m)} className="mr-3 text-xs font-medium text-slate-500 hover:text-emerald-600">Editar</button>
+                      <button onClick={() => abrirEdicao(m)} className="mr-3 text-xs font-medium text-slate-500 hover:text-brand-600">Editar</button>
                       <button onClick={() => void remover(m.id)} className="text-xs font-medium text-slate-400 hover:text-red-600">Excluir</button>
                     </td>
                   </tr>
@@ -143,7 +143,7 @@ export function MonitoramentoAguaPage() {
             <Field label="Validação da Qualidade"><TextInput name="validado_por" defaultValue={editando?.validado_por ?? ''} placeholder="—" /></Field>
           </div>
           <Field label="Observação"><TextInput name="observacao" defaultValue={editando?.observacao ?? ''} placeholder="—" /></Field>
-          <div className={`rounded-lg px-3 py-2 text-sm font-medium ${preConforme ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
+          <div className={`rounded-lg px-3 py-2 text-sm font-medium ${preConforme ? 'bg-brand-50 text-brand-700' : 'bg-red-50 text-red-700'}`}>
             {preConforme ? 'Dentro dos padrões.' : 'Fora do padrão — comunique a Qualidade imediatamente.'}
           </div>
           <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">

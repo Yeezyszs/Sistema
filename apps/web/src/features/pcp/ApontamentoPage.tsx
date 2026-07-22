@@ -132,10 +132,10 @@ export function ApontamentoPage() {
               <button onClick={() => mudarSemana(-1)} className="rounded-lg border border-slate-200 p-2 text-slate-500 hover:bg-slate-50"><IconArrowLeft width={16} height={16} /></button>
               <span className="text-sm font-medium text-slate-700">{formatarData(de)} — {formatarData(ate)}</span>
               <button onClick={() => mudarSemana(1)} className="rounded-lg border border-slate-200 p-2 text-slate-500 hover:bg-slate-50"><IconChevronRight width={16} height={16} /></button>
-              <button onClick={() => setRefBase(new Date())} className="ml-1 text-xs font-medium text-emerald-600 hover:text-emerald-700">Semana atual</button>
+              <button onClick={() => setRefBase(new Date())} className="ml-1 text-xs font-medium text-brand-600 hover:text-brand-700">Semana atual</button>
             </div>
             {rendSemana != null && (
-              <span className="text-sm text-slate-500">Rendimento da semana: <span className="font-semibold text-emerald-600">{(rendSemana * 100).toFixed(1)}%</span></span>
+              <span className="text-sm text-slate-500">Rendimento da semana: <span className="font-semibold text-brand-600">{(rendSemana * 100).toFixed(1)}%</span></span>
             )}
           </div>
 
@@ -160,7 +160,7 @@ export function ApontamentoPage() {
                         <td className="px-3 py-2 text-right text-slate-600">{formatarQuantidade(v.produzido, 'kg')}</td>
                         <td className="px-3 py-2 text-right text-slate-500">{v.raiz ? formatarQuantidade(v.raiz, 'kg') : '—'}</td>
                         <td className="px-3 py-2 text-right">
-                          {r != null ? <span className="font-semibold text-emerald-600">{(r * 100).toFixed(1)}%</span> : <span className="text-slate-300">—</span>}
+                          {r != null ? <span className="font-semibold text-brand-600">{(r * 100).toFixed(1)}%</span> : <span className="text-slate-300">—</span>}
                         </td>
                       </tr>
                     );
@@ -170,7 +170,7 @@ export function ApontamentoPage() {
             </Card>
           )}
 
-          {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-emerald-600" /></div>}
+          {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
           {data && data.apont.length === 0 && (
             <EmptyState icon={<IconClipboard width={40} height={40} />} title="Sem apontamentos" description="Os apontamentos da semana aparecerão aqui." />
           )}
@@ -200,7 +200,7 @@ export function ApontamentoPage() {
                       <td className="hidden px-3 py-2.5 text-slate-500 md:table-cell">{a.lote_id ? data.lotesMap.get(a.lote_id)?.codigo ?? '—' : '—'}</td>
                       <td className="px-3 py-2.5 text-right text-slate-600">{formatarQuantidade(a.quantidade_kg)}</td>
                       <td className="px-3 py-2.5 text-right whitespace-nowrap">
-                        <button onClick={() => setEditando(a)} className="mr-3 text-xs font-medium text-slate-500 hover:text-emerald-600">Editar</button>
+                        <button onClick={() => setEditando(a)} className="mr-3 text-xs font-medium text-slate-500 hover:text-brand-600">Editar</button>
                         <button onClick={() => void excluir(a.id)} className="text-xs font-medium text-slate-400 hover:text-red-600">Excluir</button>
                       </td>
                     </tr>

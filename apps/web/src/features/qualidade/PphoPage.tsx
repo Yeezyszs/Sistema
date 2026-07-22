@@ -60,7 +60,7 @@ export function PphoPage() {
 
       {loading && (
         <div className="flex justify-center py-20">
-          <Spinner className="h-7 w-7 text-emerald-600" />
+          <Spinner className="h-7 w-7 text-brand-600" />
         </div>
       )}
 
@@ -200,7 +200,7 @@ function FormFicha({ equipamentos, onSaved }: { equipamentos: { id: string; nome
             />
           ))}
         </div>
-        <button type="button" onClick={() => setItens((p) => [...p, ''])} className="mt-2 text-xs font-medium text-emerald-600 hover:text-emerald-700">
+        <button type="button" onClick={() => setItens((p) => [...p, ''])} className="mt-2 text-xs font-medium text-brand-600 hover:text-brand-700">
           + Adicionar item
         </button>
       </div>
@@ -252,7 +252,7 @@ function HigienizacaoAba({
         {!ppho ? (
           <Card className="p-4 text-sm text-slate-400">Selecione uma ficha.</Card>
         ) : !execucoes ? (
-          <Spinner className="h-5 w-5 text-emerald-600" />
+          <Spinner className="h-5 w-5 text-brand-600" />
         ) : execucoes.length === 0 ? (
           <Card className="p-4 text-sm text-slate-400">Nenhuma higienização registrada.</Card>
         ) : (
@@ -260,7 +260,7 @@ function HigienizacaoAba({
             {execucoes.map((ex) => (
               <Card key={ex.id} className="flex items-center justify-between p-3">
                 <span className="text-sm text-slate-600">{formatarDataHora(ex.registrado_em)}</span>
-                <span className={`text-xs font-semibold ${ex.conforme ? 'text-emerald-600' : 'text-red-600'}`}>
+                <span className={`text-xs font-semibold ${ex.conforme ? 'text-brand-600' : 'text-red-600'}`}>
                   {ex.conforme ? 'Conforme' : 'Não conforme'}
                 </span>
               </Card>
@@ -337,7 +337,7 @@ function ExecForm({
                   onClick={() => setRespostas((p) => ({ ...p, [it.id]: r }))}
                   className={`rounded-md px-2 py-1 text-xs font-medium transition ${
                     resp(it.id) === r
-                      ? r === 'conforme' ? 'bg-emerald-600 text-white' : r === 'nao_conforme' ? 'bg-red-600 text-white' : 'bg-slate-500 text-white'
+                      ? r === 'conforme' ? 'bg-brand-600 text-white' : r === 'nao_conforme' ? 'bg-red-600 text-white' : 'bg-slate-500 text-white'
                       : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                   }`}
                 >

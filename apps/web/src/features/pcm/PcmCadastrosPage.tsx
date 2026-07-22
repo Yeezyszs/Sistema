@@ -221,7 +221,7 @@ export function PcmCadastrosPage() {
         <div className="relative ml-auto min-w-[180px]">
           <IconSearch width={15} height={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input type="search" placeholder="Buscar…" value={busca} onChange={(e) => setBusca(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" />
+            className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
         </div>
         {aba === 'equipamentos' && (
           <div className="w-44">
@@ -233,7 +233,7 @@ export function PcmCadastrosPage() {
         )}
       </div>
 
-      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-emerald-600" /></div>}
+      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
 
       {data && aba === 'equipamentos' && (
         <AbaEquipamentos
@@ -330,7 +330,7 @@ function TabelaCrud<T extends { id: string }>({ linhas, colunas, onEditar, onExc
                 <td key={h} className="px-3 py-2.5 text-slate-600"><span className="line-clamp-1">{fn(r)}</span></td>
               ))}
               <td className="px-3 py-2.5 text-right whitespace-nowrap">
-                <button onClick={() => onEditar(r)} className="mr-3 text-xs font-medium text-slate-500 hover:text-emerald-600">Editar</button>
+                <button onClick={() => onEditar(r)} className="mr-3 text-xs font-medium text-slate-500 hover:text-brand-600">Editar</button>
                 <button onClick={() => onExcluir(r.id)} className="text-xs font-medium text-slate-400 hover:text-red-600">Excluir</button>
               </td>
             </tr>
@@ -404,7 +404,7 @@ function AbaEquipamentos({
                         {comps.length} componente(s)
                       </span>
                     </button>
-                    <button onClick={() => onEditar(e)} className="shrink-0 text-xs font-medium text-slate-400 hover:text-emerald-600">Editar</button>
+                    <button onClick={() => onEditar(e)} className="shrink-0 text-xs font-medium text-slate-400 hover:text-brand-600">Editar</button>
                     <button onClick={() => onExcluir(e.id)} className="shrink-0 text-xs font-medium text-slate-400 hover:text-red-600">Excluir</button>
                   </div>
                   {estaAberto && (
@@ -417,7 +417,7 @@ function AbaEquipamentos({
                                 <td className="w-14 py-1.5 pr-3 text-right font-mono text-xs text-slate-400">{c.qty ?? '—'}</td>
                                 <td className="py-1.5 text-slate-600">{c.nome}</td>
                                 <td className="w-32 py-1.5 text-right whitespace-nowrap">
-                                  <button onClick={() => onEditarComp(e.id, c)} className="mr-3 text-xs font-medium text-slate-400 hover:text-emerald-600">Editar</button>
+                                  <button onClick={() => onEditarComp(e.id, c)} className="mr-3 text-xs font-medium text-slate-400 hover:text-brand-600">Editar</button>
                                   <button onClick={() => onExcluirComp(c.id)} className="text-xs font-medium text-slate-300 hover:text-red-600">Excluir</button>
                                 </td>
                               </tr>
@@ -425,7 +425,7 @@ function AbaEquipamentos({
                           </tbody>
                         </table>
                       )}
-                      <button onClick={() => onNovoComp(e.id)} className="mt-2 text-xs font-medium text-emerald-600 hover:text-emerald-700">
+                      <button onClick={() => onNovoComp(e.id)} className="mt-2 text-xs font-medium text-brand-600 hover:text-brand-700">
                         + Adicionar componente
                       </button>
                     </div>

@@ -72,7 +72,7 @@ export function PcmIndicadoresPage() {
         )}
       </div>
 
-      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-emerald-600" /></div>}
+      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
 
       {data && aba === 'dashboard' && <Dashboard data={data} desde={desde} desdeISO={desdeISO} meses={meses} />}
       {data && aba === 'paradas' && <AbaParadas data={data} rec={rec} sucesso={sucesso} erro={erro} />}
@@ -151,7 +151,7 @@ function Kpi({ titulo, valor, rodape, tom }: { titulo: string; valor: string; ro
   return (
     <Card className="p-4">
       <p className="text-xs uppercase tracking-wide text-slate-400">{titulo}</p>
-      <p className={`mt-1 text-2xl font-semibold ${tom === 'ok' ? 'text-emerald-600' : tom === 'alerta' ? 'text-amber-600' : 'text-slate-800'}`}>{valor}</p>
+      <p className={`mt-1 text-2xl font-semibold ${tom === 'ok' ? 'text-brand-600' : tom === 'alerta' ? 'text-amber-600' : 'text-slate-800'}`}>{valor}</p>
       {rodape && <p className="text-xs text-slate-400">{rodape}</p>}
     </Card>
   );
@@ -170,7 +170,7 @@ function Barras({ titulo, itens, unidade, money }: { titulo: string; itens: [str
                 <span className="text-slate-600">{nome}</span>
                 <span className="font-medium text-slate-700">{money ? reais(valor) : `${valor.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}${unidade ? ` ${unidade}` : ''}`}</span>
               </div>
-              <div className="h-2 rounded-full bg-slate-100"><div className="h-2 rounded-full bg-emerald-500" style={{ width: `${(valor / max) * 100}%` }} /></div>
+              <div className="h-2 rounded-full bg-slate-100"><div className="h-2 rounded-full bg-brand-500" style={{ width: `${(valor / max) * 100}%` }} /></div>
             </div>
           ))}
         </div>
@@ -220,7 +220,7 @@ function AbaParadas({ data, rec, sucesso, erro }: { data: DataShape; rec: () => 
                   <td className="px-3 py-2.5 text-right font-medium text-slate-700">{p.horas.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}</td>
                   <td className="hidden max-w-[240px] px-3 py-2.5 text-slate-500 lg:table-cell"><span className="line-clamp-1">{p.motivo ?? '—'}</span></td>
                   <td className="px-3 py-2.5 text-right whitespace-nowrap">
-                    <button onClick={() => setEditando(p)} className="mr-3 text-xs font-medium text-slate-500 hover:text-emerald-600">Editar</button>
+                    <button onClick={() => setEditando(p)} className="mr-3 text-xs font-medium text-slate-500 hover:text-brand-600">Editar</button>
                     <button onClick={() => void remover(p.id)} className="text-xs font-medium text-slate-400 hover:text-red-600">Excluir</button>
                   </td>
                 </tr>
@@ -439,7 +439,7 @@ function AbaCustos({ custos, rec, sucesso, erro }: { custos: CustoManut[]; rec: 
                   <td className="max-w-[280px] px-3 py-2.5 text-slate-600"><span className="line-clamp-1">{c.descricao ?? '—'}</span></td>
                   <td className="px-3 py-2.5 text-right font-medium text-slate-700">{reais(c.valor)}</td>
                   <td className="px-3 py-2.5 text-right whitespace-nowrap">
-                    <button onClick={() => setEditando(c)} className="mr-3 text-xs font-medium text-slate-500 hover:text-emerald-600">Editar</button>
+                    <button onClick={() => setEditando(c)} className="mr-3 text-xs font-medium text-slate-500 hover:text-brand-600">Editar</button>
                     <button onClick={() => void remover(c.id)} className="text-xs font-medium text-slate-400 hover:text-red-600">Excluir</button>
                   </td>
                 </tr>

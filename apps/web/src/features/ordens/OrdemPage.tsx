@@ -120,7 +120,7 @@ export function OrdemPage() {
   if (loading)
     return (
       <div className="flex justify-center py-20">
-        <Spinner className="h-7 w-7 text-emerald-600" />
+        <Spinner className="h-7 w-7 text-brand-600" />
       </div>
     );
   if (error) return <Card className="p-4 text-sm text-red-600">Erro: {error}</Card>;
@@ -177,7 +177,7 @@ export function OrdemPage() {
             <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
               Dados da ordem
             </h2>
-            <button onClick={() => setEditandoOp(true)} className="text-xs font-medium text-emerald-600 hover:text-emerald-700">
+            <button onClick={() => setEditandoOp(true)} className="text-xs font-medium text-brand-600 hover:text-brand-700">
               Editar
             </button>
           </div>
@@ -255,7 +255,7 @@ export function OrdemPage() {
                       <td className="px-5 py-3.5 text-right">
                         <Link
                           to={`/lotes/${l.id}`}
-                          className="inline-flex text-slate-300 transition group-hover:text-emerald-600"
+                          className="inline-flex text-slate-300 transition group-hover:text-brand-600"
                           aria-label={`Abrir lote ${l.codigo}`}
                         >
                           <IconChevronRight />
@@ -398,7 +398,7 @@ function ModalEditarOp({ op, clientes, onClose, onSaved }: {
         </div>
         <Field label="Observação"><TextInput name="observacao" defaultValue={op.observacao ?? ''} /></Field>
         <label className="flex items-center gap-2 text-sm text-slate-600">
-          <input type="checkbox" name="reprocessar" defaultChecked={op.reprocessar} className="accent-emerald-600" />
+          <input type="checkbox" name="reprocessar" defaultChecked={op.reprocessar} className="accent-brand-600" />
           Reprocessar
         </label>
         <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">

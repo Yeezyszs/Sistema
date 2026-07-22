@@ -38,7 +38,7 @@ export function InsumosLaboratorioPage() {
         action={<Button onClick={() => setNovo(true)}><IconPlus width={16} height={16} />Novo insumo</Button>}
       />
 
-      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-emerald-600" /></div>}
+      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
       {data && data.length === 0 && (
         <EmptyState title="Nenhum insumo" description='Cadastre o primeiro em "Novo insumo".' />
       )}
@@ -67,14 +67,14 @@ export function InsumosLaboratorioPage() {
                   <td className="px-3 py-2.5 text-right text-slate-600">{formatarQuantidade(i.quantidade_necessaria)}</td>
                   <td className="px-3 py-2.5 text-right text-slate-600">{formatarQuantidade(i.quantidade_estoque)}</td>
                   <td className="px-3 py-2.5">
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${i.precisa_comprar ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${i.precisa_comprar ? 'bg-red-100 text-red-700' : 'bg-brand-100 text-brand-700'}`}>
                       {i.precisa_comprar ? 'SIM' : 'NÃO'}
                     </span>
                   </td>
                   <td className="px-3 py-2.5">
                     {i.precisa_comprar ? (
                       <button onClick={() => void alternarSolicitado(i)}
-                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${i.solicitado ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
+                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${i.solicitado ? 'bg-brand-100 text-brand-700' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
                         {i.solicitado ? 'Solicitado' : 'Marcar'}
                       </button>
                     ) : <span className="text-xs text-slate-300">—</span>}

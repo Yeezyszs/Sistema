@@ -51,7 +51,7 @@ function Protected({ children }: { children: JSX.Element }) {
   if (loading)
     return (
       <FullScreen>
-        <Spinner className="h-8 w-8 text-emerald-600" />
+        <Spinner className="h-8 w-8 text-brand-600" />
       </FullScreen>
     );
   if (!session) return <Navigate to="/login" replace />;

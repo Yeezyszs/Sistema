@@ -11,7 +11,7 @@ import { IconPlus, IconShield } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
 const TOM_CLASS: Record<string, string> = {
-  sucesso: 'bg-emerald-100 text-emerald-700', alerta: 'bg-amber-100 text-amber-700', erro: 'bg-red-100 text-red-700',
+  sucesso: 'bg-brand-100 text-brand-700', alerta: 'bg-amber-100 text-amber-700', erro: 'bg-red-100 text-red-700',
 };
 
 export function AnaliseRiscoPage() {
@@ -38,7 +38,7 @@ export function AnaliseRiscoPage() {
         ))}
       </div>
 
-      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-emerald-600" /></div>}
+      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
 
       {data && data.length === 0 && (
         <EmptyState icon={<IconShield width={36} height={36} />} title="Nenhuma análise" description="Registre a primeira análise de vulnerabilidade." />

@@ -28,7 +28,7 @@ function semanaAtual(): { de: string; ate: string } {
 const TOM_STATUS: Record<StatusLote, string> = {
   em_processo: 'bg-sky-400',
   aguardando_liberacao: 'bg-amber-400',
-  liberado: 'bg-emerald-500',
+  liberado: 'bg-brand-500',
   bloqueado: 'bg-red-500',
   expedido: 'bg-slate-400',
   cancelado: 'bg-slate-300',
@@ -55,7 +55,7 @@ export function PainelPage() {
     return (
       <>
         <PageHeader title="Painel" subtitle="Visão geral do dia e da semana" />
-        <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-emerald-600" /></div>
+        <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>
       </>
     );
   }
@@ -118,7 +118,7 @@ export function PainelPage() {
               ))}
             </div>
           )}
-          <Link to="/lotes" className="mt-4 inline-block text-xs font-medium text-emerald-600 hover:text-emerald-700">Ver lotes →</Link>
+          <Link to="/lotes" className="mt-4 inline-block text-xs font-medium text-brand-600 hover:text-brand-700">Ver lotes →</Link>
         </Card>
 
         {/* Pendências */}
@@ -139,7 +139,7 @@ export function PainelPage() {
 function Kpi({ titulo, valor, rodape, tom = 'neutro' }: {
   titulo: string; valor: string; rodape?: string; tom?: 'neutro' | 'sucesso' | 'alerta';
 }) {
-  const cor = tom === 'sucesso' ? 'text-emerald-600' : tom === 'alerta' ? 'text-amber-600' : 'text-slate-800';
+  const cor = tom === 'sucesso' ? 'text-brand-600' : tom === 'alerta' ? 'text-amber-600' : 'text-slate-800';
   return (
     <Card className="p-5">
       <p className="text-xs font-medium uppercase tracking-wide text-slate-400">{titulo}</p>

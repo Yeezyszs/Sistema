@@ -236,7 +236,7 @@ export function LotePage() {
   if (loading)
     return (
       <div className="flex justify-center py-20">
-        <Spinner className="h-7 w-7 text-emerald-600" />
+        <Spinner className="h-7 w-7 text-brand-600" />
       </div>
     );
 
@@ -329,7 +329,7 @@ export function LotePage() {
                                     </p>
                                   </div>
                                   <span
-                                    className={`text-xs font-semibold ${naoConforme ? 'text-red-600' : 'text-emerald-600'}`}
+                                    className={`text-xs font-semibold ${naoConforme ? 'text-red-600' : 'text-brand-600'}`}
                                   >
                                     {m.conforme === false ? 'Não conforme' : 'Conforme'}
                                   </span>
@@ -357,7 +357,7 @@ export function LotePage() {
                                   </span>
                                   <span
                                     className={`shrink-0 font-semibold ${
-                                      tom === 'positivo' ? 'text-emerald-600' : tom === 'negativo' ? 'text-red-600' : 'text-slate-600'
+                                      tom === 'positivo' ? 'text-brand-600' : tom === 'negativo' ? 'text-red-600' : 'text-slate-600'
                                     }`}
                                   >
                                     {sinal > 0 ? '+' : sinal < 0 ? '−' : ''}
@@ -405,7 +405,7 @@ export function LotePage() {
               </h2>
               <button
                 onClick={() => setEditando(true)}
-                className="text-xs font-medium text-emerald-600 hover:text-emerald-700"
+                className="text-xs font-medium text-brand-600 hover:text-brand-700"
               >
                 Editar
               </button>
@@ -522,7 +522,7 @@ export function LotePage() {
                   <li
                     key={l.id}
                     className={`flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm ${
-                      l.conforme ? 'bg-emerald-50' : 'bg-red-50'
+                      l.conforme ? 'bg-brand-50' : 'bg-red-50'
                     }`}
                   >
                     <div className="min-w-0">
@@ -535,12 +535,12 @@ export function LotePage() {
                       <p className="text-xs text-slate-400">{formatarData(l.emitido_em)}</p>
                     </div>
                     <div className="flex shrink-0 items-center gap-3">
-                      <span className={`text-xs font-semibold ${l.conforme ? 'text-emerald-600' : 'text-red-600'}`}>
+                      <span className={`text-xs font-semibold ${l.conforme ? 'text-brand-600' : 'text-red-600'}`}>
                         {l.conforme ? 'Aprovado' : 'Reprovado'}
                       </span>
                       <Link
                         to={`/laudos/${l.id}/imprimir`}
-                        className="text-xs font-medium text-emerald-600 hover:text-emerald-700"
+                        className="text-xs font-medium text-brand-600 hover:text-brand-700"
                       >
                         Imprimir
                       </Link>
@@ -568,14 +568,14 @@ export function LotePage() {
                   const tom = TIPO_MOVIMENTO_TOM[m.tipo];
                   const sinal = sinalMovimento(m.tipo);
                   const corValor =
-                    tom === 'positivo' ? 'text-emerald-600' : tom === 'negativo' ? 'text-red-600' : 'text-slate-600';
+                    tom === 'positivo' ? 'text-brand-600' : tom === 'negativo' ? 'text-red-600' : 'text-slate-600';
                   return (
                     <li key={m.id} className="rounded-lg border border-slate-100 p-3">
                       <div className="flex items-center justify-between gap-3">
                         <span
                           className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                             tom === 'positivo'
-                              ? 'bg-emerald-100 text-emerald-700'
+                              ? 'bg-brand-100 text-brand-700'
                               : tom === 'negativo'
                                 ? 'bg-red-100 text-red-700'
                                 : 'bg-slate-100 text-slate-600'

@@ -62,7 +62,7 @@ export function AcompanhamentoPage() {
         <div className="relative flex-1 min-w-[180px]">
           <IconSearch width={15} height={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input type="search" placeholder="Buscar nº, cliente, produto, lote, bag…" value={busca} onChange={(e) => setBusca(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" />
+            className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
         </div>
         <div className="w-52">
           <Select value={filtroCliente} onChange={(e) => setFiltroCliente(e.target.value)}>
@@ -72,7 +72,7 @@ export function AcompanhamentoPage() {
         </div>
       </div>
 
-      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-emerald-600" /></div>}
+      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
       {data && linhas.length === 0 && (
         <EmptyState title="Nenhuma análise" description='Registre a primeira em "Nova análise".' />
       )}
@@ -102,12 +102,12 @@ export function AcompanhamentoPage() {
                   <td className="hidden px-3 py-2.5 text-slate-500 lg:table-cell">{a.lote_id ? data.lotesMap.get(a.lote_id)?.codigo ?? '—' : '—'}</td>
                   <td className="px-3 py-2.5 text-slate-500">{a.numero_bag ?? '—'}</td>
                   <td className="px-3 py-2.5">
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${a.conforme ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${a.conforme ? 'bg-brand-100 text-brand-700' : 'bg-red-100 text-red-700'}`}>
                       {a.conforme ? 'Aprovado' : 'Reprovado'}
                     </span>
                   </td>
                   <td className="px-3 py-2.5 text-right whitespace-nowrap">
-                    <button onClick={(e) => { e.stopPropagation(); setEditando(a); }} className="mr-3 text-xs font-medium text-slate-500 hover:text-emerald-600">Editar</button>
+                    <button onClick={(e) => { e.stopPropagation(); setEditando(a); }} className="mr-3 text-xs font-medium text-slate-500 hover:text-brand-600">Editar</button>
                     <button onClick={(e) => { e.stopPropagation(); void remover(a.id); }} className="text-xs font-medium text-slate-400 hover:text-red-600">Excluir</button>
                   </td>
                 </tr>
@@ -290,7 +290,7 @@ function ModalNovaAnalise({
                       placeholder="valor"
                     />
                     {conforme != null && (
-                      <span className={`absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold ${conforme ? 'text-emerald-600' : 'text-red-600'}`}>
+                      <span className={`absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold ${conforme ? 'text-brand-600' : 'text-red-600'}`}>
                         {conforme ? '✓' : '✗'}
                       </span>
                     )}
@@ -313,7 +313,7 @@ function ModalNovaAnalise({
           <Field label="Observação"><TextInput name="observacao" defaultValue={editando?.observacao ?? ''} placeholder="—" /></Field>
         </div>
 
-        <div className={`rounded-lg px-3 py-2 text-sm font-medium ${algumReprovado ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}`}>
+        <div className={`rounded-lg px-3 py-2 text-sm font-medium ${algumReprovado ? 'bg-red-50 text-red-700' : 'bg-brand-50 text-brand-700'}`}>
           Conformidade prévia: {algumReprovado ? 'Reprovado — há ensaio fora do limite' : 'Aprovado'}
         </div>
 
@@ -341,7 +341,7 @@ function DetalheModal({ analise, onClose }: { analise: AnaliseProcesso | null; o
             <Info label="Bag" valor={analise.numero_bag ?? '—'} />
             <Info label="Conformidade" valor={analise.conforme ? 'Aprovado' : 'Reprovado'} />
           </div>
-          {loading && <div className="flex justify-center py-8"><Spinner className="h-6 w-6 text-emerald-600" /></div>}
+          {loading && <div className="flex justify-center py-8"><Spinner className="h-6 w-6 text-brand-600" /></div>}
           {data && data.length > 0 && (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -361,7 +361,7 @@ function DetalheModal({ analise, onClose }: { analise: AnaliseProcesso | null; o
                       <td className="px-2 py-2 text-slate-500">{limiteTexto({ limite_min: v.limite_min, limite_max: v.limite_max, unidade: v.unidade })}</td>
                       <td className="px-2 py-2">
                         {v.conforme == null ? '—' : (
-                          <span className={v.conforme ? 'text-emerald-600' : 'text-red-600'}>{v.conforme ? '✓' : '✗'}</span>
+                          <span className={v.conforme ? 'text-brand-600' : 'text-red-600'}>{v.conforme ? '✓' : '✗'}</span>
                         )}
                       </td>
                     </tr>

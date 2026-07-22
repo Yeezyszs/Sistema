@@ -17,7 +17,7 @@ export function Button({
   ...rest
 }: ButtonProps) {
   const styles: Record<string, string> = {
-    primary: 'bg-emerald-600 text-white hover:bg-emerald-700 disabled:bg-emerald-300',
+    primary: 'bg-brand-600 text-white hover:bg-brand-700 disabled:bg-brand-300',
     outline: 'border border-slate-300 text-slate-700 hover:bg-slate-50',
     ghost: 'text-slate-600 hover:bg-slate-100',
   };
@@ -109,7 +109,7 @@ export function Field({ label, children }: { label: string; children: ReactNode 
 export function TextInput(props: InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
-      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
       {...props}
     />
   );
@@ -118,7 +118,7 @@ export function TextInput(props: InputHTMLAttributes<HTMLInputElement>) {
 export function Select(props: SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select
-      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
       {...props}
     />
   );
@@ -128,7 +128,7 @@ export function TextArea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
     <textarea
       rows={3}
-      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
       {...props}
     />
   );

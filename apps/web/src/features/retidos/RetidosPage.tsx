@@ -16,7 +16,7 @@ import { IconPlus, IconSearch } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
 const TOM_CLASS: Record<string, string> = {
-  alerta: 'bg-amber-100 text-amber-700', sucesso: 'bg-emerald-100 text-emerald-700',
+  alerta: 'bg-amber-100 text-amber-700', sucesso: 'bg-brand-100 text-brand-700',
 };
 
 type Aba = 'retidos' | 'legenda' | 'painel';
@@ -50,7 +50,7 @@ export function RetidosPage() {
         ))}
       </div>
 
-      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-emerald-600" /></div>}
+      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
 
       {data && aba === 'retidos' && <AbaRetidos data={data} rec={rec} sucesso={sucesso} erro={erro} />}
       {data && aba === 'legenda' && <AbaLegenda desvios={data.desvios} rec={rec} sucesso={sucesso} erro={erro} />}
@@ -100,7 +100,7 @@ function AbaRetidos({ data, rec, sucesso, erro }: { data: DataShape; rec: () => 
         <div className="relative flex-1 min-w-[180px]">
           <IconSearch width={15} height={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input type="search" placeholder="Buscar nº, produto, lote, lacre, desvio…" value={busca} onChange={(e) => setBusca(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" />
+            className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
         </div>
         <div className="w-44">
           <Select value={filtro} onChange={(e) => setFiltro(e.target.value as typeof filtro)}>
@@ -152,9 +152,9 @@ function AbaRetidos({ data, rec, sucesso, erro }: { data: DataShape; rec: () => 
                       </span>
                     </td>
                     <td className="px-3 py-2.5 text-right whitespace-nowrap">
-                      <button onClick={() => setEditandoRet(r)} className="mr-3 text-xs font-medium text-slate-500 hover:text-emerald-600">Editar</button>
+                      <button onClick={() => setEditandoRet(r)} className="mr-3 text-xs font-medium text-slate-500 hover:text-brand-600">Editar</button>
                       {r.status === 'em_estoque' && (
-                        <button onClick={() => setConcluir(r)} className="mr-3 text-xs font-medium text-emerald-600 hover:text-emerald-700">Concluir</button>
+                        <button onClick={() => setConcluir(r)} className="mr-3 text-xs font-medium text-brand-600 hover:text-brand-700">Concluir</button>
                       )}
                       <button onClick={() => void remover(r.id)} className="text-xs font-medium text-slate-400 hover:text-red-600">Excluir</button>
                     </td>
@@ -460,7 +460,7 @@ function BarrasCard({ titulo, itens, max, mono }: { titulo: string; itens: [stri
               <span className="font-medium text-slate-700">{formatarQuantidade(valor)}</span>
             </div>
             <div className="h-2 rounded-full bg-slate-100">
-              <div className="h-2 rounded-full bg-emerald-500" style={{ width: `${(valor / max) * 100}%` }} />
+              <div className="h-2 rounded-full bg-brand-500" style={{ width: `${(valor / max) * 100}%` }} />
             </div>
           </div>
         ))}

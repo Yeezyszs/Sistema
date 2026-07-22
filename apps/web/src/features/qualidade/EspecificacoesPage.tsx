@@ -115,7 +115,7 @@ export function EspecificacoesPage() {
 
       {loading && (
         <div className="flex justify-center py-20">
-          <Spinner className="h-7 w-7 text-emerald-600" />
+          <Spinner className="h-7 w-7 text-brand-600" />
         </div>
       )}
       {error && <Card className="p-4 text-sm text-red-600">Erro: {error}</Card>}
@@ -176,7 +176,7 @@ export function EspecificacoesPage() {
 
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Parâmetros</p>
-            <button type="button" onClick={carregarTemplate} className="text-xs font-medium text-emerald-600 hover:text-emerald-700">
+            <button type="button" onClick={carregarTemplate} className="text-xs font-medium text-brand-600 hover:text-brand-700">
               Carregar padrão (farinha)
             </button>
           </div>
@@ -202,7 +202,7 @@ export function EspecificacoesPage() {
               </tbody>
             </table>
           </div>
-          <button type="button" onClick={() => setLinhas((p) => [...p, { ...LINHA_VAZIA }])} className="text-xs font-medium text-emerald-600 hover:text-emerald-700">
+          <button type="button" onClick={() => setLinhas((p) => [...p, { ...LINHA_VAZIA }])} className="text-xs font-medium text-brand-600 hover:text-brand-700">
             + Adicionar parâmetro
           </button>
 
@@ -237,7 +237,7 @@ function EspecCard({
       {aberta && (
         <div className="border-t border-slate-100 px-5 py-4">
           {params == null ? (
-            <Spinner className="h-5 w-5 text-emerald-600" />
+            <Spinner className="h-5 w-5 text-brand-600" />
           ) : params.length === 0 ? (
             <p className="text-sm text-slate-400">Sem parâmetros.</p>
           ) : (

@@ -14,7 +14,7 @@ export function PcmOsPrint() {
     return { os, execucoes };
   }, [id]);
 
-  if (loading) return <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-emerald-600" /></div>;
+  if (loading) return <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>;
   if (!data?.os) return <p className="p-8 text-sm text-slate-500">O.S. não encontrada.</p>;
   const { os, execucoes } = data;
 
@@ -26,7 +26,7 @@ export function PcmOsPrint() {
         <Link to="/manutencao" className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800">
           <IconArrowLeft width={16} height={16} /> O.S.
         </Link>
-        <button onClick={() => window.print()} className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">
+        <button onClick={() => window.print()} className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
           Imprimir
         </button>
       </div>
@@ -35,7 +35,7 @@ export function PcmOsPrint() {
         {/* Cabeçalho */}
         <div className="mb-4 flex items-center justify-between border-b-2 border-slate-800 pb-3">
           <div className="flex items-center gap-2">
-            <span className="flex h-10 w-10 items-center justify-center rounded bg-emerald-700 text-white"><IconLeaf width={22} height={22} /></span>
+            <span className="flex h-10 w-10 items-center justify-center rounded bg-brand-700 text-white"><IconLeaf width={22} height={22} /></span>
             <div>
               <p className="font-bold leading-tight">INDÚSTRIA E COMÉRCIO ALIMENTOS SUMARÉ</p>
               <p className="text-xs text-slate-500">Bepi Mataruco · Manutenção — PCM</p>

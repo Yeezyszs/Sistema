@@ -14,7 +14,7 @@ function NavItem({ to, icon, label }: { to: string; icon: ReactNode; label: stri
       className={({ isActive }) =>
         `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
           isActive
-            ? 'bg-emerald-50 text-emerald-700'
+            ? 'bg-brand-50 text-brand-700'
             : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
         }`
       }
@@ -45,7 +45,7 @@ function NavGroup({ icon, label, items }: { icon: ReactNode; label: string; item
         onClick={() => setAberto((v) => !v)}
         className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
           algumAtivo && !aberto
-            ? 'bg-emerald-50 text-emerald-700'
+            ? 'bg-brand-50 text-brand-700'
             : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
         }`}
       >
@@ -70,22 +70,31 @@ function NavGroup({ icon, label, items }: { icon: ReactNode; label: string; item
 
 const ITENS_TOPO: SubItem[] = [
   { to: '/painel', icon: <IconShield width={18} height={18} />, label: 'Painel', modulo: 'painel' },
-  { to: '/recebimentos', icon: <IconRecebimento />, label: 'Recebimentos', modulo: 'recebimentos' },
-  { to: '/fornecedores', icon: <IconRecebimento />, label: 'Fornecedores & QA', modulo: 'fornecedores' },
 ];
 
-const ITENS_PCP: SubItem[] = [
+// Produção (PCP) — o fluxo do chão de fábrica.
+const ITENS_PRODUCAO: SubItem[] = [
   { to: '/lotes', icon: <IconLotes width={18} height={18} />, label: 'Lotes', modulo: 'lotes' },
   { to: '/programacao', icon: <IconClipboard width={18} height={18} />, label: 'Programação', modulo: 'pcp' },
   { to: '/apontamento', icon: <IconCheck width={18} height={18} />, label: 'Apontamento', modulo: 'pcp' },
-  { to: '/produtos', icon: <IconBox width={18} height={18} />, label: 'Produtos', modulo: 'produtos' },
   { to: '/ordens', icon: <IconClipboard width={18} height={18} />, label: 'Ordens de produção', modulo: 'ordens' },
+  { to: '/produtos', icon: <IconBox width={18} height={18} />, label: 'Produtos', modulo: 'produtos' },
+];
+
+// Estoque & Expedição — o que sai da produção até o cliente.
+const ITENS_ESTOQUE: SubItem[] = [
   { to: '/estoque', icon: <IconBox width={18} height={18} />, label: 'Estoque', modulo: 'estoque' },
   { to: '/pedidos', icon: <IconDoc width={18} height={18} />, label: 'Pedidos', modulo: 'pedidos' },
   { to: '/expedicao', icon: <IconTruck width={18} height={18} />, label: 'Expedição', modulo: 'expedicao' },
   { to: '/embalagens', icon: <IconBox width={18} height={18} />, label: 'Embalagens', modulo: 'embalagens' },
   { to: '/pallets', icon: <IconBox width={18} height={18} />, label: 'Pallets', modulo: 'pallets' },
   { to: '/reprocesso', icon: <IconClock width={18} height={18} />, label: 'Retidos', modulo: 'reprocesso' },
+];
+
+// Suprimentos — entrada de matéria-prima e fornecedores.
+const ITENS_SUPRIMENTOS: SubItem[] = [
+  { to: '/recebimentos', icon: <IconRecebimento />, label: 'Recebimentos', modulo: 'recebimentos' },
+  { to: '/fornecedores', icon: <IconRecebimento />, label: 'Fornecedores & QA', modulo: 'fornecedores' },
 ];
 
 const ITENS_QUALIDADE: SubItem[] = [
@@ -123,16 +132,18 @@ export function Layout() {
   const mostrarVoltarPainel = podeAcessarModulo('painel') && location.pathname !== '/painel';
 
   const itensTopo = ITENS_TOPO.filter((i) => podeAcessarModulo(i.modulo));
-  const itensPcp = ITENS_PCP.filter((i) => podeAcessarModulo(i.modulo));
+  const itensProducao = ITENS_PRODUCAO.filter((i) => podeAcessarModulo(i.modulo));
+  const itensEstoque = ITENS_ESTOQUE.filter((i) => podeAcessarModulo(i.modulo));
+  const itensSuprimentos = ITENS_SUPRIMENTOS.filter((i) => podeAcessarModulo(i.modulo));
   const itensQualidade = ITENS_QUALIDADE.filter((i) => podeAcessarModulo(i.modulo));
   const itensManutencao = ITENS_MANUTENCAO.filter((i) => podeAcessarModulo(i.modulo));
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-white">
       {/* Sidebar */}
       <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col border-r border-slate-200 bg-white md:flex">
         <div className="flex items-center gap-2.5 px-6 py-5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-600 text-white">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-white">
             <IconLeaf width={20} height={20} />
           </span>
           <div>
@@ -145,7 +156,9 @@ export function Layout() {
           {itensTopo.map((item) => (
             <NavItem key={item.to} to={item.to} icon={item.icon} label={item.label} />
           ))}
-          <NavGroup icon={<IconClipboard />} label="PCP" items={itensPcp} />
+          <NavGroup icon={<IconClipboard />} label="Produção" items={itensProducao} />
+          <NavGroup icon={<IconBox />} label="Estoque & Expedição" items={itensEstoque} />
+          <NavGroup icon={<IconRecebimento />} label="Suprimentos" items={itensSuprimentos} />
           <NavGroup icon={<IconShield />} label="Qualidade" items={itensQualidade} />
           <NavGroup icon={<IconBox />} label="Manutenção" items={itensManutencao} />
         </nav>
@@ -155,7 +168,7 @@ export function Layout() {
             <p className="truncate text-xs text-slate-400">Conectado como</p>
             <p className="truncate text-sm font-medium text-slate-700">{email}</p>
             {perfis.length > 0 && (
-              <p className="truncate text-xs text-emerald-600">{perfis.join(', ')}</p>
+              <p className="truncate text-xs text-brand-600">{perfis.join(', ')}</p>
             )}
           </div>
           <button
@@ -171,7 +184,7 @@ export function Layout() {
       {/* Topbar (mobile) */}
       <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 md:hidden">
         <div className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white">
             <IconLeaf width={18} height={18} />
           </span>
           <span className="font-semibold text-slate-900">Sumaré</span>
@@ -187,7 +200,7 @@ export function Layout() {
           {mostrarVoltarPainel && (
             <Link
               to="/painel"
-              className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition hover:text-emerald-600"
+              className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition hover:text-brand-600"
             >
               <IconArrowLeft width={16} height={16} />
               Voltar ao painel

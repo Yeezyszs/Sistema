@@ -69,7 +69,7 @@ export function EstoquePage() {
         ))}
       </div>
 
-      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-emerald-600" /></div>}
+      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
 
       {data && aba === 'mapa' && (
         <div className="space-y-6">
@@ -84,11 +84,11 @@ export function EstoquePage() {
                   const cliente = pos?.cliente_id ? data.clientesMap.get(pos.cliente_id) : null;
                   const reprocesso = pos?.status === 'reprocesso';
                   return (
-                    <Card key={local.id} className={`p-4 ${pos ? (reprocesso ? 'ring-1 ring-amber-200' : 'ring-1 ring-emerald-200') : 'border-dashed'}`}>
+                    <Card key={local.id} className={`p-4 ${pos ? (reprocesso ? 'ring-1 ring-amber-200' : 'ring-1 ring-brand-200') : 'border-dashed'}`}>
                       <div className="flex items-center justify-between">
                         <span className="font-mono text-xs font-semibold text-slate-500">{posicaoLabel(local)}</span>
                         {pos ? (
-                          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${reprocesso ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${reprocesso ? 'bg-amber-100 text-amber-700' : 'bg-brand-100 text-brand-700'}`}>
                             {reprocesso ? 'Reprocesso' : 'Ocupado'}
                           </span>
                         ) : (
@@ -103,12 +103,12 @@ export function EstoquePage() {
                             {pos.qtd_bags != null ? `${pos.qtd_bags} bags` : ''}{cliente ? ` · ${cliente.nome}` : ''}
                           </p>
                           <div className="mt-2 flex gap-3">
-                            <button onClick={() => setEditandoPos(pos)} className="text-xs font-medium text-slate-500 hover:text-emerald-600">Editar</button>
+                            <button onClick={() => setEditandoPos(pos)} className="text-xs font-medium text-slate-500 hover:text-brand-600">Editar</button>
                             <button onClick={() => void liberar(pos.id)} className="text-xs font-medium text-slate-400 hover:text-red-600">Liberar rua</button>
                           </div>
                         </div>
                       ) : (
-                        <button onClick={() => setAlocando(local)} className="mt-3 text-xs font-medium text-emerald-600 hover:text-emerald-700">+ Alocar lote</button>
+                        <button onClick={() => setAlocando(local)} className="mt-3 text-xs font-medium text-brand-600 hover:text-brand-700">+ Alocar lote</button>
                       )}
                     </Card>
                   );

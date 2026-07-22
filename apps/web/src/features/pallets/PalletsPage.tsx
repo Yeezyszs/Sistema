@@ -53,7 +53,7 @@ export function PalletsPage() {
         action={<Button onClick={() => setMov(true)}><IconPlus width={16} height={16} />Movimentar</Button>}
       />
 
-      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-emerald-600" /></div>}
+      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
 
       {data && (
         <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -97,7 +97,7 @@ export function PalletsPage() {
                     <td className="px-3 py-2.5 text-slate-500">{formatarData(m.data)}</td>
                     <td className="px-3 py-2.5 text-slate-700">{pal ? TIPO_PALLET_LABEL[pal.tipo] : '—'}</td>
                     <td className="px-3 py-2.5 text-slate-600">{MOV_PALLET_LABEL[m.tipo_mov]}</td>
-                    <td className={`px-3 py-2.5 text-right font-medium ${negativo ? 'text-red-600' : 'text-emerald-600'}`}>
+                    <td className={`px-3 py-2.5 text-right font-medium ${negativo ? 'text-red-600' : 'text-brand-600'}`}>
                       {negativo ? '−' : '+'}{formatarQuantidade(m.quantidade)}
                     </td>
                     <td className="hidden px-3 py-2.5 text-slate-500 md:table-cell">{m.parceiro ?? '—'}</td>

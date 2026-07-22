@@ -57,7 +57,7 @@ export function PcmOrdensPage() {
         <div className="relative flex-1 min-w-[180px]">
           <IconSearch width={15} height={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input type="search" placeholder="Buscar nº, setor, requisitante, descrição…" value={busca} onChange={(e) => setBusca(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" />
+            className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
         </div>
         <div className="w-40">
           <Select value={filtroStatus} onChange={(e) => setFiltroStatus(e.target.value as typeof filtroStatus)}>
@@ -68,7 +68,7 @@ export function PcmOrdensPage() {
         </div>
       </div>
 
-      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-emerald-600" /></div>}
+      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
       {data && linhas.length === 0 && <EmptyState title="Nenhuma O.S." description='Abra a primeira em "Nova O.S.".' />}
 
       {data && linhas.length > 0 && (
@@ -102,7 +102,7 @@ export function PcmOrdensPage() {
                     ) : '—'}
                   </td>
                   <td className="px-3 py-2.5">
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${o.status === 'Concluído' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${o.status === 'Concluído' ? 'bg-brand-100 text-brand-700' : 'bg-amber-100 text-amber-700'}`}>
                       {o.status}
                     </span>
                   </td>
@@ -110,9 +110,9 @@ export function PcmOrdensPage() {
                     <Link to={`/pcm-os/${o.id}/imprimir`} className="mr-3 inline-flex align-middle text-slate-400 hover:text-slate-700" title="Imprimir O.S.">
                       <IconDoc width={15} height={15} />
                     </Link>
-                    <button onClick={() => setEditando(o)} className="mr-3 text-xs font-medium text-slate-500 hover:text-emerald-600">Editar</button>
+                    <button onClick={() => setEditando(o)} className="mr-3 text-xs font-medium text-slate-500 hover:text-brand-600">Editar</button>
                     {o.status === 'Em Aberto' && (
-                      <button onClick={() => setConcluindo(o)} className="mr-3 text-xs font-medium text-emerald-600 hover:text-emerald-700">Concluir</button>
+                      <button onClick={() => setConcluindo(o)} className="mr-3 text-xs font-medium text-brand-600 hover:text-brand-700">Concluir</button>
                     )}
                     <button onClick={() => void remover(o.id)} className="text-xs font-medium text-slate-400 hover:text-red-600">Excluir</button>
                   </td>
@@ -213,7 +213,7 @@ function ModalNovaOs({ setores, editando, onClose, onSaved, sucesso, erro }: {
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-lg border border-slate-200 p-3">
             <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
-              <input type="checkbox" checked={paradaEquip} onChange={(e) => setParadaEquip(e.target.checked)} className="accent-emerald-600" />
+              <input type="checkbox" checked={paradaEquip} onChange={(e) => setParadaEquip(e.target.checked)} className="accent-brand-600" />
               Parada de equipamento
             </label>
             {paradaEquip && (
@@ -227,7 +227,7 @@ function ModalNovaOs({ setores, editando, onClose, onSaved, sucesso, erro }: {
           </div>
           <div className="rounded-lg border border-slate-200 p-3">
             <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
-              <input type="checkbox" checked={paradaProd} onChange={(e) => setParadaProd(e.target.checked)} className="accent-emerald-600" />
+              <input type="checkbox" checked={paradaProd} onChange={(e) => setParadaProd(e.target.checked)} className="accent-brand-600" />
               Parada de produção
             </label>
             {paradaProd && (
@@ -327,7 +327,7 @@ function ModalConcluirOs({ os, colaboradores, onClose, onSaved, sucesso, erro }:
             {colaboradores.map((c) => <option key={c.id} value={c.nome} />)}
           </datalist>
           <button type="button" onClick={() => setLinhas((ls) => [...ls, { mantenedor: '', data_exec: hoje, hora_ini: '', data_fim: hoje, hora_fim: '' }])}
-            className="mt-2 text-xs font-medium text-emerald-600 hover:text-emerald-700">
+            className="mt-2 text-xs font-medium text-brand-600 hover:text-brand-700">
             + Adicionar mantenedor
           </button>
         </div>

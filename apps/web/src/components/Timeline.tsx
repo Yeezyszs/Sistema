@@ -22,7 +22,7 @@ export function Timeline({ itens }: { itens: TimelineItem[] }) {
             {!last && (
               <span
                 className={`absolute left-[15px] top-8 h-[calc(100%-1.5rem)] w-px ${
-                  item.estado === 'concluida' ? 'bg-emerald-200' : 'bg-slate-200'
+                  item.estado === 'concluida' ? 'bg-brand-200' : 'bg-slate-200'
                 }`}
                 aria-hidden
               />
@@ -48,7 +48,7 @@ export function Timeline({ itens }: { itens: TimelineItem[] }) {
 function Marker({ estado }: { estado: TimelineEstado }) {
   if (estado === 'concluida') {
     return (
-      <span className="z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+      <span className="z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-600">
         <IconCheck width={16} height={16} />
       </span>
     );

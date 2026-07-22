@@ -107,7 +107,7 @@ export function PcmChecklistPage() {
         </span>
       </div>
 
-      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-emerald-600" /></div>}
+      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
 
       {data && !colaboradorId && (
         <EmptyState title="Selecione um colaborador" description="Escolha o colaborador para preencher a grade do mês." />

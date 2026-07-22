@@ -17,7 +17,7 @@ import { IconPlus } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
 const SIT_CLASS: Record<SituacaoCalibracao, string> = {
-  vigente: 'bg-emerald-100 text-emerald-700',
+  vigente: 'bg-brand-100 text-brand-700',
   a_vencer: 'bg-amber-100 text-amber-700',
   vencida: 'bg-red-100 text-red-700',
   sem_registro: 'bg-slate-100 text-slate-500',
@@ -89,7 +89,7 @@ export function CalibracaoPage() {
         }
       />
 
-      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-emerald-600" /></div>}
+      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
 
       {data && data.instrumentos.length === 0 && (
         <EmptyState title="Nenhum instrumento" description='Cadastre um instrumento para controlar sua calibração.' />

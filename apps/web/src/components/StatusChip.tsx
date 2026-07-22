@@ -3,7 +3,7 @@ import { STATUS_LOTE_LABEL, STATUS_LOTE_TOM, type StatusLote, type Tom } from '@
 const TOM_CLASSES: Record<Tom, string> = {
   neutro: 'bg-slate-100 text-slate-600 ring-slate-200',
   info: 'bg-sky-50 text-sky-700 ring-sky-200',
-  sucesso: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+  sucesso: 'bg-brand-50 text-brand-700 ring-brand-200',
   alerta: 'bg-amber-50 text-amber-700 ring-amber-200',
   erro: 'bg-red-50 text-red-700 ring-red-200',
 };

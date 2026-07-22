@@ -118,21 +118,21 @@ export function ProgramacaoPage() {
           <button onClick={() => mudarSemana(-1)} className="rounded-lg border border-slate-200 p-2 text-slate-500 hover:bg-slate-50"><IconArrowLeft width={16} height={16} /></button>
           <span className="text-sm font-medium text-slate-700">{formatarData(de)} — {formatarData(ate)}</span>
           <button onClick={() => mudarSemana(1)} className="rounded-lg border border-slate-200 p-2 text-slate-500 hover:bg-slate-50"><IconChevronRight width={16} height={16} /></button>
-          <button onClick={() => setRefBase(new Date())} className="ml-1 text-xs font-medium text-emerald-600 hover:text-emerald-700">Semana atual</button>
+          <button onClick={() => setRefBase(new Date())} className="ml-1 text-xs font-medium text-brand-600 hover:text-brand-700">Semana atual</button>
           <button onClick={() => setCopiando(true)} className="ml-2 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50">Copiar dia</button>
         </div>
         <div className="flex gap-4 text-sm">
           <span className="text-slate-500">Meta: <span className="font-semibold text-slate-800">{formatarQuantidade(totMeta, 'kg')}</span></span>
           <span className="text-slate-500">Real: <span className="font-semibold text-slate-800">{formatarQuantidade(totReal, 'kg')}</span></span>
           {totMeta > 0 && (
-            <span className={`font-semibold ${totReal / totMeta >= 1 ? 'text-emerald-600' : 'text-amber-600'}`}>
+            <span className={`font-semibold ${totReal / totMeta >= 1 ? 'text-brand-600' : 'text-amber-600'}`}>
               {(totReal / totMeta * 100).toFixed(0)}%
             </span>
           )}
         </div>
       </div>
 
-      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-emerald-600" /></div>}
+      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
 
       {data && (
         <Card className="overflow-x-auto">
@@ -179,8 +179,8 @@ export function ProgramacaoPage() {
                                 const at = p.meta_kg ? real / p.meta_kg : null;
                                 return (
                                   <button key={p.id} onClick={() => setEditando(p)}
-                                    className={`block w-full rounded-md px-2 py-1 text-left text-xs transition hover:ring-2 hover:ring-emerald-200 ${
-                                      at != null && at >= 1 ? 'bg-emerald-50 text-emerald-800'
+                                    className={`block w-full rounded-md px-2 py-1 text-left text-xs transition hover:ring-2 hover:ring-brand-200 ${
+                                      at != null && at >= 1 ? 'bg-brand-50 text-brand-800'
                                       : at != null && at > 0 ? 'bg-amber-50 text-amber-800'
                                       : 'bg-slate-100 text-slate-700'
                                     }`}>
@@ -193,7 +193,7 @@ export function ProgramacaoPage() {
                               })}
                               <button
                                 onClick={() => setCriando({ data: dia, linhaId: linha.id, turno })}
-                                className="block w-full rounded-md border border-dashed border-slate-200 px-2 py-0.5 text-center text-xs text-slate-300 transition hover:border-emerald-300 hover:text-emerald-500">
+                                className="block w-full rounded-md border border-dashed border-slate-200 px-2 py-0.5 text-center text-xs text-slate-300 transition hover:border-brand-300 hover:text-brand-500">
                                 +
                               </button>
                             </div>
@@ -210,7 +210,7 @@ export function ProgramacaoPage() {
                       <span className="mx-2 text-slate-300">·</span>
                       Real <span className="font-semibold text-slate-800">{formatarQuantidade(realTurno, 'kg')}</span>
                       {metaTurno > 0 && (
-                        <span className={`ml-2 font-semibold ${realTurno / metaTurno >= 1 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                        <span className={`ml-2 font-semibold ${realTurno / metaTurno >= 1 ? 'text-brand-600' : 'text-amber-600'}`}>
                           {(realTurno / metaTurno * 100).toFixed(0)}%
                         </span>
                       )}
@@ -290,15 +290,15 @@ function ModalCopiarDia({ dias, contarDia, onClose, onCopiar }: {
           <p className="mb-2 text-sm font-medium text-slate-600">Para os dias:</p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {dias.filter((d) => d !== origem).map((d) => (
-              <label key={d} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${destinos.includes(d) ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
-                <input type="checkbox" checked={destinos.includes(d)} onChange={() => toggle(d)} className="accent-emerald-600" />
+              <label key={d} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${destinos.includes(d) ? 'border-brand-300 bg-brand-50 text-brand-800' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+                <input type="checkbox" checked={destinos.includes(d)} onChange={() => toggle(d)} className="accent-brand-600" />
                 {nomeDia(d)}
                 {contarDia(d) > 0 && <span className="ml-auto text-xs text-slate-400">{contarDia(d)}</span>}
               </label>
             ))}
           </div>
           <button type="button" onClick={() => setDestinos(dias.filter((d) => d !== origem))}
-            className="mt-2 text-xs font-medium text-emerald-600 hover:text-emerald-700">Selecionar todos</button>
+            className="mt-2 text-xs font-medium text-brand-600 hover:text-brand-700">Selecionar todos</button>
         </div>
 
         <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">
@@ -447,7 +447,7 @@ function ModalProgramacao({
               );
             })}
             <button type="button" onClick={() => setItens((arr) => [...arr, { produtoId: '', atividade: '', meta: '' }])}
-              className="text-xs font-medium text-emerald-600 hover:text-emerald-700">
+              className="text-xs font-medium text-brand-600 hover:text-brand-700">
               + Adicionar produto
             </button>
           </div>

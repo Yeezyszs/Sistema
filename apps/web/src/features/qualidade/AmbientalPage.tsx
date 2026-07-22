@@ -12,7 +12,7 @@ import { IconPlus } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
 const SIT_CLASS: Record<SituacaoEnvio, string> = {
-  em_dia: 'bg-emerald-100 text-emerald-700', a_vencer: 'bg-amber-100 text-amber-700',
+  em_dia: 'bg-brand-100 text-brand-700', a_vencer: 'bg-amber-100 text-amber-700',
   em_atraso: 'bg-red-100 text-red-700', sem_previsao: 'bg-slate-100 text-slate-500',
 };
 
@@ -89,7 +89,7 @@ export function AmbientalPage() {
         ))}
       </div>
 
-      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-emerald-600" /></div>}
+      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
 
       {data && aba === 'pontos' && (
         data.pontos.length === 0 ? (
@@ -146,7 +146,7 @@ export function AmbientalPage() {
                       <td className="px-5 py-3 text-slate-700">{ponto?.area ?? '—'}{ponto?.ponto_numero ? ` (${ponto.ponto_numero})` : ''}</td>
                       <td className="hidden px-5 py-3 text-slate-500 sm:table-cell">{m.ensaio ?? MATRIZ_AMBIENTAL_LABEL[m.matriz]}</td>
                       <td className="px-5 py-3">
-                        <span className={`text-xs font-semibold ${m.conforme ? 'text-emerald-600' : 'text-red-600'}`}>
+                        <span className={`text-xs font-semibold ${m.conforme ? 'text-brand-600' : 'text-red-600'}`}>
                           {m.conforme ? 'Conforme' : 'Não conforme'}
                         </span>
                         {m.resultado && <span className="ml-2 text-xs text-slate-400">{m.resultado}</span>}

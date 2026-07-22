@@ -86,7 +86,7 @@ export function ApontamentosLoteCard({ loteId, produtoId, sinalAbrir = 0 }: {
         </Button>
       </div>
 
-      {loading && <div className="flex justify-center py-6"><Spinner className="h-5 w-5 text-emerald-600" /></div>}
+      {loading && <div className="flex justify-center py-6"><Spinner className="h-5 w-5 text-brand-600" /></div>}
 
       {data && data.apontamentos.length === 0 && (
         <p className="text-sm text-slate-400">Nenhum apontamento neste lote ainda.</p>
@@ -107,7 +107,7 @@ export function ApontamentosLoteCard({ loteId, produtoId, sinalAbrir = 0 }: {
                     </p>
                   </div>
                   {ef != null ? (
-                    <span className="shrink-0 text-xs font-semibold text-emerald-600">{(ef * 100).toFixed(1)}%</span>
+                    <span className="shrink-0 text-xs font-semibold text-brand-600">{(ef * 100).toFixed(1)}%</span>
                   ) : (
                     <span className="shrink-0 text-xs text-slate-300">—</span>
                   )}

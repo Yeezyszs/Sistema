@@ -81,11 +81,9 @@ const ITENS_PRODUCAO: SubItem[] = [
   { to: '/produtos', icon: <IconBox width={18} height={18} />, label: 'Produtos', modulo: 'produtos' },
 ];
 
-// Estoque & Expedição — o que sai da produção até o cliente.
 // Almoxarifado — consumíveis e materiais de apoio.
 const ITENS_ALMOX: SubItem[] = [
   { to: '/almoxarifado', icon: <IconBox width={18} height={18} />, label: 'Consumíveis', modulo: 'almoxarifado' },
-  { to: '/embalagens', icon: <IconBox width={18} height={18} />, label: 'Embalagens', modulo: 'embalagens' },
   { to: '/pallets', icon: <IconBox width={18} height={18} />, label: 'Pallets', modulo: 'pallets' },
 ];
 

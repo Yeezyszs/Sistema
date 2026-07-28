@@ -99,10 +99,6 @@ import type {
   SituacaoPedido,
   Carregamento,
   NovoCarregamento,
-  Embalagem,
-  NovaEmbalagem,
-  MovimentoEmbalagem,
-  NovoMovimentoEmbalagem,
   Pallet,
   MovimentoPallet,
   NovoMovimentoPallet,
@@ -1281,34 +1277,11 @@ export async function excluirCarregamento(id: string): Promise<void> {
   if (res.error) throw new Error(res.error.message);
 }
 
-// ── ERP: Embalagens ────────────────────────────────────────────
-export async function listEmbalagens(): Promise<Embalagem[]> {
-  return unwrap<Embalagem[]>(
-    await producao().from('embalagens').select('*').order('nome'),
+// ── ERP: Embalagens (embalagens são itens de almoxarifado, categoria 'embalagem') ──
+export async function listEmbalagensAlmox(): Promise<AlmoxItem[]> {
+  return unwrap<AlmoxItem[]>(
+    await producao().from('almox_itens').select('*').eq('categoria', 'embalagem').order('nome'),
   );
-}
-
-export async function criarEmbalagem(payload: NovaEmbalagem): Promise<void> {
-  const res = await producao().from('embalagens').insert(payload);
-  if (res.error) throw new Error(res.error.message);
-}
-
-export async function atualizarEmbalagem(id: string, patch: Partial<NovaEmbalagem & { ativo: boolean }>): Promise<void> {
-  const res = await producao().from('embalagens').update(patch).eq('id', id);
-  if (res.error) throw new Error(res.error.message);
-}
-
-export async function listMovimentosEmbalagem(embalagemId: string): Promise<MovimentoEmbalagem[]> {
-  return unwrap<MovimentoEmbalagem[]>(
-    await producao().from('movimentos_embalagem').select('*').eq('embalagem_id', embalagemId)
-      .order('data', { ascending: false }).order('created_at', { ascending: false }),
-  );
-}
-
-// Movimento manual → trigger ajusta o saldo.
-export async function lancarMovimentoEmbalagem(payload: NovoMovimentoEmbalagem): Promise<void> {
-  const res = await producao().from('movimentos_embalagem').insert(payload);
-  if (res.error) throw new Error(res.error.message);
 }
 
 // ── ERP: Pallets (CHEP + próprios) ─────────────────────────────

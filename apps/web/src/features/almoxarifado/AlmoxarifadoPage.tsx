@@ -57,6 +57,7 @@ export function AlmoxarifadoPage() {
       unidade: String(f.get('unidade') ?? 'un'),
       estoque_minimo: Number(f.get('estoque_minimo') ?? 0) || 0,
       localizacao: String(f.get('localizacao') ?? '').trim() || null,
+      capacidade_kg: Number(f.get('capacidade_kg') ?? 0) || null,
     };
     setSalvando(true);
     try {
@@ -174,7 +175,10 @@ export function AlmoxarifadoPage() {
             </Field>
             <Field label="Estoque mínimo"><TextInput name="estoque_minimo" type="number" step="any" min="0" defaultValue={editando?.estoque_minimo ?? ''} placeholder="0" /></Field>
           </div>
-          <Field label="Localização"><TextInput name="localizacao" defaultValue={editando?.localizacao ?? ''} placeholder="Ex.: Prateleira A3" /></Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Localização"><TextInput name="localizacao" defaultValue={editando?.localizacao ?? ''} placeholder="Ex.: Prateleira A3" /></Field>
+            <Field label="Capacidade (kg/un) — embalagem"><TextInput name="capacidade_kg" type="number" step="any" min="0" defaultValue={editando?.capacidade_kg ?? ''} placeholder="Ex.: 1000" /></Field>
+          </div>
           <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
             <Button type="button" variant="outline" onClick={() => { setModalItem(false); setEditando(null); }}>Cancelar</Button>
             <Button type="submit" loading={salvando}>{editando ? 'Salvar' : 'Cadastrar'}</Button>

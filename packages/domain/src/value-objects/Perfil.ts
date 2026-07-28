@@ -12,7 +12,7 @@ export const PERFIL_LABEL: Record<Perfil, string> = {
 // Códigos de módulo — usados nas rotas/menu para decidir visibilidade.
 export const MODULO = [
   'painel',
-  'pcp', 'produtos', 'pedidos', 'expedicao', 'estoque', 'embalagens', 'pallets', 'reprocesso',
+  'pcp', 'produtos', 'pedidos', 'expedicao', 'estoque', 'pallets', 'reprocesso',
   'ordens', 'lotes', 'recebimentos', 'fornecedores',
   'qualidade', 'acompanhamento', 'monitoramento_agua', 'insumos_lab', 'contraprovas', 'pcc_fisico', 'ppho', 'especificacoes', 'calibracao',
   'analise_risco', 'auditoria', 'ambiental', 'nao_conformidades',
@@ -25,7 +25,7 @@ export const MODULOS_POR_PERFIL: Record<Perfil, Modulo[]> = {
   gestao: [...MODULO],
   operador: [
     'painel',
-    'pcp', 'produtos', 'pedidos', 'expedicao', 'estoque', 'embalagens', 'pallets', 'reprocesso',
+    'pcp', 'produtos', 'pedidos', 'expedicao', 'estoque', 'pallets', 'reprocesso',
     'ordens', 'lotes', 'recebimentos', 'almoxarifado',
   ],
   qualidade: [

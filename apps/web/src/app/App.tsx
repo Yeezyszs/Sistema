@@ -46,7 +46,6 @@ import { ApontamentoPage } from '../features/pcp/ApontamentoPage';
 import { EstoquePage } from '../features/estoque/EstoquePage';
 import { PedidosPage } from '../features/pedidos/PedidosPage';
 import { ExpedicaoPage } from '../features/expedicao/ExpedicaoPage';
-import { EmbalagensPage } from '../features/embalagens/EmbalagensPage';
 import { PalletsPage } from '../features/pallets/PalletsPage';
 import { RetidosPage } from '../features/retidos/RetidosPage';
 
@@ -120,7 +119,6 @@ export default function App() {
             <Route path="/estoque" element={<ModuloGuard modulo="estoque"><EstoquePage /></ModuloGuard>} />
             <Route path="/pedidos" element={<ModuloGuard modulo="pedidos"><PedidosPage /></ModuloGuard>} />
             <Route path="/expedicao" element={<ModuloGuard modulo="expedicao"><ExpedicaoPage /></ModuloGuard>} />
-            <Route path="/embalagens" element={<ModuloGuard modulo="embalagens"><EmbalagensPage /></ModuloGuard>} />
             <Route path="/pallets" element={<ModuloGuard modulo="pallets"><PalletsPage /></ModuloGuard>} />
             <Route path="/reprocesso" element={<ModuloGuard modulo="reprocesso"><RetidosPage /></ModuloGuard>} />
             <Route path="/ordens" element={<ModuloGuard modulo="ordens"><OrdensPage /></ModuloGuard>} />

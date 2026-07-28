@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   listLocaisEstoque, listPosicoesEstoque, listLotes, listProdutos, listClientes,
-  listEmbalagens, alocarPosicao, atualizarPosicao, liberarPosicao, mapBy,
+  listEmbalagensAlmox, alocarPosicao, atualizarPosicao, liberarPosicao, mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { formatarQuantidade } from '../../lib/format';
@@ -20,7 +20,7 @@ export function EstoquePage() {
 
   const { data, loading } = useAsync(async () => {
     const [locais, posicoes, lotes, produtos, clientes, embalagens] = await Promise.all([
-      listLocaisEstoque(), listPosicoesEstoque(), listLotes(), listProdutos(), listClientes(), listEmbalagens(),
+      listLocaisEstoque(), listPosicoesEstoque(), listLotes(), listProdutos(), listClientes(), listEmbalagensAlmox(),
     ]);
     return {
       locais, posicoes, lotes, produtos, clientes, embalagens,

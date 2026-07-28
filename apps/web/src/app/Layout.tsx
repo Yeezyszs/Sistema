@@ -82,13 +82,17 @@ const ITENS_PRODUCAO: SubItem[] = [
 ];
 
 // Estoque & Expedição — o que sai da produção até o cliente.
-const ITENS_ESTOQUE: SubItem[] = [
+// Almoxarifado — inventários (o que está guardado).
+const ITENS_ALMOX: SubItem[] = [
   { to: '/estoque', icon: <IconBox width={18} height={18} />, label: 'Estoque', modulo: 'estoque' },
-  { to: '/almoxarifado', icon: <IconBox width={18} height={18} />, label: 'Almoxarifado', modulo: 'almoxarifado' },
-  { to: '/expedicao', icon: <IconTruck width={18} height={18} />, label: 'Expedição', modulo: 'expedicao' },
+  { to: '/almoxarifado', icon: <IconBox width={18} height={18} />, label: 'Consumíveis', modulo: 'almoxarifado' },
   { to: '/embalagens', icon: <IconBox width={18} height={18} />, label: 'Embalagens', modulo: 'embalagens' },
   { to: '/pallets', icon: <IconBox width={18} height={18} />, label: 'Pallets', modulo: 'pallets' },
-  { to: '/reprocesso', icon: <IconClock width={18} height={18} />, label: 'Retidos', modulo: 'reprocesso' },
+];
+
+// Logística — despacho ao cliente.
+const ITENS_LOGISTICA: SubItem[] = [
+  { to: '/expedicao', icon: <IconTruck width={18} height={18} />, label: 'Expedição', modulo: 'expedicao' },
 ];
 
 // Suprimentos — entrada de matéria-prima e fornecedores.
@@ -120,6 +124,7 @@ const ITENS_QUALIDADE: SubItem[] = [
   { to: '/auditoria', icon: <IconCheck width={18} height={18} />, label: 'Auditoria & PPR', modulo: 'auditoria' },
   { to: '/ambiental', icon: <IconLeaf width={18} height={18} />, label: 'Ambiental & Pragas', modulo: 'ambiental' },
   { to: '/nao-conformidades', icon: <IconDoc width={18} height={18} />, label: 'Não conformidades', modulo: 'nao_conformidades' },
+  { to: '/reprocesso', icon: <IconClock width={18} height={18} />, label: 'Retidos', modulo: 'reprocesso' },
 ];
 
 // Tudo de manutenção vive aqui (PCM portado).
@@ -141,7 +146,8 @@ export function Layout() {
 
   const itensTopo = ITENS_TOPO.filter((i) => podeAcessarModulo(i.modulo));
   const itensProducao = ITENS_PRODUCAO.filter((i) => podeAcessarModulo(i.modulo));
-  const itensEstoque = ITENS_ESTOQUE.filter((i) => podeAcessarModulo(i.modulo));
+  const itensAlmox = ITENS_ALMOX.filter((i) => podeAcessarModulo(i.modulo));
+  const itensLogistica = ITENS_LOGISTICA.filter((i) => podeAcessarModulo(i.modulo));
   const itensSuprimentos = ITENS_SUPRIMENTOS.filter((i) => podeAcessarModulo(i.modulo));
   const itensComercial = ITENS_COMERCIAL.filter((i) => podeAcessarModulo(i.modulo));
   const itensQualidade = ITENS_QUALIDADE.filter((i) => podeAcessarModulo(i.modulo));
@@ -166,7 +172,8 @@ export function Layout() {
             <NavItem key={item.to} to={item.to} icon={item.icon} label={item.label} />
           ))}
           <NavGroup icon={<IconClipboard />} label="Produção" items={itensProducao} />
-          <NavGroup icon={<IconBox />} label="Estoque & Expedição" items={itensEstoque} />
+          <NavGroup icon={<IconBox />} label="Almoxarifado" items={itensAlmox} />
+          <NavGroup icon={<IconTruck />} label="Logística" items={itensLogistica} />
           <NavGroup icon={<IconRecebimento />} label="Suprimentos" items={itensSuprimentos} />
           <NavGroup icon={<IconDoc />} label="Comercial" items={itensComercial} />
           <NavGroup icon={<IconShield />} label="Qualidade" items={itensQualidade} />

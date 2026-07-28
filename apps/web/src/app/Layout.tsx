@@ -84,6 +84,7 @@ const ITENS_PRODUCAO: SubItem[] = [
 // Estoque & Expedição — o que sai da produção até o cliente.
 const ITENS_ESTOQUE: SubItem[] = [
   { to: '/estoque', icon: <IconBox width={18} height={18} />, label: 'Estoque', modulo: 'estoque' },
+  { to: '/almoxarifado', icon: <IconBox width={18} height={18} />, label: 'Almoxarifado', modulo: 'almoxarifado' },
   { to: '/expedicao', icon: <IconTruck width={18} height={18} />, label: 'Expedição', modulo: 'expedicao' },
   { to: '/embalagens', icon: <IconBox width={18} height={18} />, label: 'Embalagens', modulo: 'embalagens' },
   { to: '/pallets', icon: <IconBox width={18} height={18} />, label: 'Pallets', modulo: 'pallets' },

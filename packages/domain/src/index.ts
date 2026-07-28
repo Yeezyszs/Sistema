@@ -24,6 +24,7 @@ export * from './entities/DocumentoFornecedor';
 export * from './entities/PontoControle';
 export * from './entities/Monitoramento';
 export * from './entities/Cliente';
+export * from './entities/Almoxarifado';
 export * from './entities/OrdemProducao';
 export * from './entities/Especificacao';
 export * from './entities/Laudo';

@@ -22,6 +22,11 @@ import type {
   Cliente,
   NovoCliente,
   AtualizacaoCliente,
+  AlmoxItem,
+  NovoAlmoxItem,
+  AtualizacaoAlmoxItem,
+  AlmoxMovimento,
+  NovoAlmoxMovimento,
   OrdemProducao,
   NovaOrdemProducao,
   StatusOP,
@@ -1636,4 +1641,39 @@ export async function atualizarAnaliseProcesso(
 // ── Helpers de lookup ──────────────────────────────────────────
 export function mapBy<T, K extends keyof T>(rows: T[], key: K): Map<T[K], T> {
   return new Map(rows.map((r) => [r[key], r]));
+}
+
+// ── Almoxarifado ───────────────────────────────────────────────
+export async function listAlmoxItens(): Promise<AlmoxItem[]> {
+  return unwrap<AlmoxItem[]>(
+    await producao().from('almox_itens').select('*').order('categoria').order('nome'),
+  );
+}
+
+export async function criarAlmoxItem(payload: NovoAlmoxItem): Promise<AlmoxItem> {
+  const res = await producao().from('almox_itens').insert(payload).select('*').single();
+  if (res.error) throw new Error(res.error.message);
+  return res.data as AlmoxItem;
+}
+
+export async function atualizarAlmoxItem(id: string, patch: AtualizacaoAlmoxItem): Promise<void> {
+  const res = await producao().from('almox_itens').update(patch).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function excluirAlmoxItem(id: string): Promise<void> {
+  const res = await producao().from('almox_itens').delete().eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function listAlmoxMovimentos(itemId?: string): Promise<AlmoxMovimento[]> {
+  let q = producao().from('almox_movimentos').select('*').order('data', { ascending: false }).order('created_at', { ascending: false });
+  if (itemId) q = q.eq('item_id', itemId);
+  return unwrap<AlmoxMovimento[]>(await q);
+}
+
+// Registra um movimento (o saldo e o custo médio do item são atualizados por gatilho).
+export async function criarAlmoxMovimento(payload: NovoAlmoxMovimento): Promise<void> {
+  const res = await producao().from('almox_movimentos').insert(payload);
+  if (res.error) throw new Error(res.error.message);
 }

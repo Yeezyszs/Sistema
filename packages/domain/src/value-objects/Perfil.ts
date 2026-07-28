@@ -16,7 +16,7 @@ export const MODULO = [
   'ordens', 'lotes', 'recebimentos', 'fornecedores',
   'qualidade', 'acompanhamento', 'monitoramento_agua', 'insumos_lab', 'contraprovas', 'pcc_fisico', 'ppho', 'especificacoes', 'calibracao',
   'analise_risco', 'auditoria', 'ambiental', 'nao_conformidades',
-  'manutencao', 'comercial', 'usuarios',
+  'manutencao', 'comercial', 'almoxarifado', 'usuarios',
 ] as const;
 export type Modulo = (typeof MODULO)[number];
 
@@ -26,7 +26,7 @@ export const MODULOS_POR_PERFIL: Record<Perfil, Modulo[]> = {
   operador: [
     'painel',
     'pcp', 'produtos', 'pedidos', 'expedicao', 'estoque', 'embalagens', 'pallets', 'reprocesso',
-    'ordens', 'lotes', 'recebimentos',
+    'ordens', 'lotes', 'recebimentos', 'almoxarifado',
   ],
   qualidade: [
     'painel',
@@ -34,7 +34,7 @@ export const MODULOS_POR_PERFIL: Record<Perfil, Modulo[]> = {
     'especificacoes', 'calibracao', 'analise_risco', 'auditoria', 'ambiental',
     'nao_conformidades', 'reprocesso',
   ],
-  manutencao: ['painel', 'manutencao', 'calibracao', 'pcc_fisico'],
+  manutencao: ['painel', 'manutencao', 'calibracao', 'pcc_fisico', 'almoxarifado'],
 };
 
 // Verdadeiro se algum dos perfis do usuário dá acesso ao módulo.

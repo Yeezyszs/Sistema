@@ -20,10 +20,10 @@ function reais(n: number): string {
 
 const SETORES = ['Produção', 'Manutenção', 'Qualidade', 'Limpeza', 'Administrativo'];
 
-export function AlmoxarifadoPage() {
+export function AlmoxarifadoPage({ categoriaInicial }: { categoriaInicial?: CategoriaAlmox } = {}) {
   const [recarregar, setRecarregar] = useState(0);
   const [busca, setBusca] = useState('');
-  const [cat, setCat] = useState<'todas' | CategoriaAlmox>('todas');
+  const [cat, setCat] = useState<'todas' | CategoriaAlmox>(categoriaInicial ?? 'todas');
   const [modalItem, setModalItem] = useState(false);
   const [editando, setEditando] = useState<AlmoxItem | null>(null);
   const [movimentando, setMovimentando] = useState<AlmoxItem | null>(null);
@@ -79,8 +79,8 @@ export function AlmoxarifadoPage() {
   return (
     <>
       <PageHeader
-        title="Almoxarifado"
-        subtitle="Estoque de consumíveis — peças, limpeza e EPI"
+        title={categoriaInicial === 'embalagem' ? 'Embalagens' : 'Almoxarifado'}
+        subtitle={categoriaInicial === 'embalagem' ? 'Controle de embalagens' : 'Estoque de consumíveis — peças, limpeza e EPI'}
         action={<Button onClick={() => { setEditando(null); setModalItem(true); }}><IconPlus width={16} height={16} />Novo item</Button>}
       />
 
@@ -164,7 +164,7 @@ export function AlmoxarifadoPage() {
           </div>
           <div className="grid grid-cols-3 gap-3">
             <Field label="Categoria">
-              <Select name="categoria" defaultValue={editando?.categoria ?? 'pecas_manutencao'}>
+              <Select name="categoria" defaultValue={editando?.categoria ?? (cat !== 'todas' ? cat : 'pecas_manutencao')}>
                 {CATEGORIA_ALMOX.map((c) => <option key={c} value={c}>{CATEGORIA_ALMOX_LABEL[c]}</option>)}
               </Select>
             </Field>

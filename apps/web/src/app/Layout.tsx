@@ -84,6 +84,7 @@ const ITENS_PRODUCAO: SubItem[] = [
 // Almoxarifado — consumíveis e materiais de apoio.
 const ITENS_ALMOX: SubItem[] = [
   { to: '/almoxarifado', icon: <IconBox width={18} height={18} />, label: 'Consumíveis', modulo: 'almoxarifado' },
+  { to: '/embalagens', icon: <IconBox width={18} height={18} />, label: 'Embalagens', modulo: 'almoxarifado' },
   { to: '/pallets', icon: <IconBox width={18} height={18} />, label: 'Pallets', modulo: 'pallets' },
 ];
 

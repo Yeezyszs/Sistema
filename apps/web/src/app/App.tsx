@@ -151,6 +151,7 @@ export default function App() {
             <Route path="/carteira" element={<ModuloGuard modulo="comercial"><CarteiraPage /></ModuloGuard>} />
             <Route path="/analise-vendas" element={<ModuloGuard modulo="comercial"><AnaliseVendasPage /></ModuloGuard>} />
             <Route path="/almoxarifado" element={<ModuloGuard modulo="almoxarifado"><AlmoxarifadoPage /></ModuloGuard>} />
+            <Route path="/embalagens" element={<ModuloGuard modulo="almoxarifado"><AlmoxarifadoPage categoriaInicial="embalagem" /></ModuloGuard>} />
           </Route>
           <Route path="*" element={<Navigate to="/painel" replace />} />
         </Routes>

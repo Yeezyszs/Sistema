@@ -19,9 +19,13 @@ export interface AlmoxItem {
   unidade: string;
   estoque_minimo: number;
   localizacao: string | null;
-  saldo: number;
+  saldo: number;            // embalagem: em estoque
   custo_medio: number;
   capacidade_kg: number | null;
+  qtd_uso: number;          // embalagem: em uso
+  qtd_reparo: number;       // embalagem: em reparo
+  qtd_terceiros: number;    // embalagem: com terceiros
+  custo_manutencao: number; // embalagem: gasto acumulado em manutenção
   ativo: boolean;
   created_at: string;
   created_by: string | null;
@@ -84,4 +88,53 @@ export interface NovoAlmoxMovimento {
 // Item abaixo (ou no) estoque mínimo.
 export function abaixoDoMinimo(item: Pick<AlmoxItem, 'saldo' | 'estoque_minimo'>): boolean {
   return item.estoque_minimo > 0 && item.saldo <= item.estoque_minimo;
+}
+
+// ── Embalagens: controle por estado ────────────────────────────
+export const TIPO_EVENTO_EMBALAGEM = [
+  'compra', 'para_uso', 'retorno_uso', 'para_reparo', 'retorno_reparo',
+  'para_terceiros', 'retorno_terceiros', 'baixa',
+] as const;
+export type TipoEventoEmbalagem = (typeof TIPO_EVENTO_EMBALAGEM)[number];
+export const TIPO_EVENTO_EMBALAGEM_LABEL: Record<TipoEventoEmbalagem, string> = {
+  compra: 'Compra (entra em estoque)',
+  para_uso: 'Enviar para uso',
+  retorno_uso: 'Retorno de uso',
+  para_reparo: 'Enviar para reparo',
+  retorno_reparo: 'Retorno de reparo',
+  para_terceiros: 'Enviar a terceiros',
+  retorno_terceiros: 'Retorno de terceiros',
+  baixa: 'Baixa (perda/descarte)',
+};
+
+export interface EmbalagemEvento {
+  id: string;
+  org_id: string;
+  item_id: string;
+  tipo: TipoEventoEmbalagem;
+  quantidade: number;
+  valor: number | null;
+  contraparte: string | null;
+  observacao: string | null;
+  data: string;
+  created_at: string;
+  created_by: string | null;
+}
+export interface NovoEmbalagemEvento {
+  item_id: string;
+  tipo: TipoEventoEmbalagem;
+  quantidade: number;
+  valor?: number | null;
+  contraparte?: string | null;
+  observacao?: string | null;
+  data: string;
+}
+
+// Unidades em posse da empresa (estoque + uso + reparo; terceiros fica de fora).
+export function embalagemEmPosse(i: Pick<AlmoxItem, 'saldo' | 'qtd_uso' | 'qtd_reparo'>): number {
+  return i.saldo + i.qtd_uso + i.qtd_reparo;
+}
+// Total físico (todos os estados).
+export function embalagemTotal(i: Pick<AlmoxItem, 'saldo' | 'qtd_uso' | 'qtd_reparo' | 'qtd_terceiros'>): number {
+  return i.saldo + i.qtd_uso + i.qtd_reparo + i.qtd_terceiros;
 }

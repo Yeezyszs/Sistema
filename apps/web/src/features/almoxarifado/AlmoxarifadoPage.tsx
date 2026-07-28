@@ -20,10 +20,13 @@ function reais(n: number): string {
 
 const SETORES = ['Produção', 'Manutenção', 'Qualidade', 'Limpeza', 'Administrativo'];
 
-export function AlmoxarifadoPage({ categoriaInicial }: { categoriaInicial?: CategoriaAlmox } = {}) {
+// Embalagens têm tela própria (controle por estado); aqui ficam só os consumíveis.
+const CATEGORIAS_CONSUMIVEL = CATEGORIA_ALMOX.filter((c) => c !== 'embalagem');
+
+export function AlmoxarifadoPage() {
   const [recarregar, setRecarregar] = useState(0);
   const [busca, setBusca] = useState('');
-  const [cat, setCat] = useState<'todas' | CategoriaAlmox>(categoriaInicial ?? 'todas');
+  const [cat, setCat] = useState<'todas' | CategoriaAlmox>('todas');
   const [modalItem, setModalItem] = useState(false);
   const [editando, setEditando] = useState<AlmoxItem | null>(null);
   const [movimentando, setMovimentando] = useState<AlmoxItem | null>(null);
@@ -36,6 +39,7 @@ export function AlmoxarifadoPage({ categoriaInicial }: { categoriaInicial?: Cate
   const rec = () => setRecarregar((n) => n + 1);
 
   const itens = (data ?? []).filter((i) => {
+    if (i.categoria === 'embalagem') return false; // embalagens têm tela própria
     if (cat !== 'todas' && i.categoria !== cat) return false;
     if (!busca.trim()) return true;
     const q = busca.toLowerCase();
@@ -79,8 +83,8 @@ export function AlmoxarifadoPage({ categoriaInicial }: { categoriaInicial?: Cate
   return (
     <>
       <PageHeader
-        title={categoriaInicial === 'embalagem' ? 'Embalagens' : 'Almoxarifado'}
-        subtitle={categoriaInicial === 'embalagem' ? 'Controle de embalagens' : 'Estoque de consumíveis — peças, limpeza e EPI'}
+        title="Almoxarifado"
+        subtitle="Estoque de consumíveis — peças, limpeza e EPI"
         action={<Button onClick={() => { setEditando(null); setModalItem(true); }}><IconPlus width={16} height={16} />Novo item</Button>}
       />
 
@@ -96,7 +100,7 @@ export function AlmoxarifadoPage({ categoriaInicial }: { categoriaInicial?: Cate
           <input type="search" placeholder="Buscar item, código, local…" value={busca} onChange={(e) => setBusca(e.target.value)}
             className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
         </div>
-        {(['todas', ...CATEGORIA_ALMOX] as const).map((c) => (
+        {(['todas', ...CATEGORIAS_CONSUMIVEL] as const).map((c) => (
           <button key={c} onClick={() => setCat(c)}
             className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${cat === c ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'}`}>
             {c === 'todas' ? 'Todas' : CATEGORIA_ALMOX_LABEL[c]}
@@ -165,7 +169,7 @@ export function AlmoxarifadoPage({ categoriaInicial }: { categoriaInicial?: Cate
           <div className="grid grid-cols-3 gap-3">
             <Field label="Categoria">
               <Select name="categoria" defaultValue={editando?.categoria ?? (cat !== 'todas' ? cat : 'pecas_manutencao')}>
-                {CATEGORIA_ALMOX.map((c) => <option key={c} value={c}>{CATEGORIA_ALMOX_LABEL[c]}</option>)}
+                {CATEGORIAS_CONSUMIVEL.map((c) => <option key={c} value={c}>{CATEGORIA_ALMOX_LABEL[c]}</option>)}
               </Select>
             </Field>
             <Field label="Unidade">

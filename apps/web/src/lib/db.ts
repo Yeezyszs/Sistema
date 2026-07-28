@@ -27,6 +27,8 @@ import type {
   AtualizacaoAlmoxItem,
   AlmoxMovimento,
   NovoAlmoxMovimento,
+  EmbalagemEvento,
+  NovoEmbalagemEvento,
   OrdemProducao,
   NovaOrdemProducao,
   StatusOP,
@@ -1277,11 +1279,24 @@ export async function excluirCarregamento(id: string): Promise<void> {
   if (res.error) throw new Error(res.error.message);
 }
 
-// ── ERP: Embalagens (embalagens são itens de almoxarifado, categoria 'embalagem') ──
+// ── Embalagens (itens de almoxarifado, categoria 'embalagem', controle por estado) ──
 export async function listEmbalagensAlmox(): Promise<AlmoxItem[]> {
   return unwrap<AlmoxItem[]>(
     await producao().from('almox_itens').select('*').eq('categoria', 'embalagem').order('nome'),
   );
+}
+
+export async function listEventosEmbalagem(itemId: string): Promise<EmbalagemEvento[]> {
+  return unwrap<EmbalagemEvento[]>(
+    await producao().from('embalagem_evento').select('*').eq('item_id', itemId)
+      .order('data', { ascending: false }).order('created_at', { ascending: false }),
+  );
+}
+
+// Registra um evento de embalagem (estados e custo de manutenção via gatilho).
+export async function criarEventoEmbalagem(payload: NovoEmbalagemEvento): Promise<void> {
+  const res = await producao().from('embalagem_evento').insert(payload);
+  if (res.error) throw new Error(res.error.message);
 }
 
 // ── ERP: Pallets (CHEP + próprios) ─────────────────────────────

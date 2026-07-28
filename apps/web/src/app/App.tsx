@@ -23,6 +23,7 @@ import { ClientesPage } from '../features/comercial/ClientesPage';
 import { CarteiraPage } from '../features/comercial/CarteiraPage';
 import { AnaliseVendasPage } from '../features/comercial/AnaliseVendasPage';
 import { AlmoxarifadoPage } from '../features/almoxarifado/AlmoxarifadoPage';
+import { EmbalagensPage } from '../features/embalagens/EmbalagensPage';
 import { NaoConformidadesPage } from '../features/qualidade/NaoConformidadesPage';
 import { EspecificacoesPage } from '../features/qualidade/EspecificacoesPage';
 import { PccFisicoPage } from '../features/qualidade/PccFisicoPage';
@@ -151,7 +152,7 @@ export default function App() {
             <Route path="/carteira" element={<ModuloGuard modulo="comercial"><CarteiraPage /></ModuloGuard>} />
             <Route path="/analise-vendas" element={<ModuloGuard modulo="comercial"><AnaliseVendasPage /></ModuloGuard>} />
             <Route path="/almoxarifado" element={<ModuloGuard modulo="almoxarifado"><AlmoxarifadoPage /></ModuloGuard>} />
-            <Route path="/embalagens" element={<ModuloGuard modulo="almoxarifado"><AlmoxarifadoPage categoriaInicial="embalagem" /></ModuloGuard>} />
+            <Route path="/embalagens" element={<ModuloGuard modulo="almoxarifado"><EmbalagensPage /></ModuloGuard>} />
           </Route>
           <Route path="*" element={<Navigate to="/painel" replace />} />
         </Routes>

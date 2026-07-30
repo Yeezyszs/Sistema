@@ -75,7 +75,7 @@ export function EmbalagensPage() {
 
   return (
     <>
-      <PageHeader
+      <PageHeader grupo="Almoxarifado"
         title="Embalagens"
         subtitle="Controle por estado — estoque, uso, reparo e terceiros"
         action={<Button onClick={() => { setEditando(null); setModalItem(true); }}><IconPlus width={16} height={16} />Nova embalagem</Button>}
@@ -100,16 +100,16 @@ export function EmbalagensPage() {
         <Card className="mt-6 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
-                <th className="px-4 py-3 font-medium">Embalagem</th>
-                <th className="px-4 py-3 text-right font-medium">Estoque</th>
-                <th className="px-4 py-3 text-right font-medium">Em uso</th>
-                <th className="px-4 py-3 text-right font-medium">Reparo</th>
-                <th className="px-4 py-3 text-right font-medium">Terceiros</th>
-                <th className="px-4 py-3 text-right font-medium">Total</th>
-                <th className="hidden px-4 py-3 text-right font-medium lg:table-cell">Valor em posse</th>
-                <th className="hidden px-4 py-3 text-right font-medium lg:table-cell">Manut.</th>
-                <th className="px-4 py-3" />
+              <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                <th className="px-4 py-[11px]">Embalagem</th>
+                <th className="px-4 py-[11px] text-right">Estoque</th>
+                <th className="px-4 py-[11px] text-right">Em uso</th>
+                <th className="px-4 py-[11px] text-right">Reparo</th>
+                <th className="px-4 py-[11px] text-right">Terceiros</th>
+                <th className="px-4 py-[11px] text-right">Total</th>
+                <th className="hidden px-4 py-[11px] text-right lg:table-cell">Valor em posse</th>
+                <th className="hidden px-4 py-[11px] text-right lg:table-cell">Manut.</th>
+                <th className="px-4 py-[11px]" />
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -251,12 +251,12 @@ function ModalExtrato({ item, onClose }: { item: AlmoxItem; onClose: () => void 
         <div className="max-h-[60vh] overflow-y-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
-                <th className="py-2 pr-3 font-medium">Data</th>
-                <th className="py-2 pr-3 font-medium">Evento</th>
-                <th className="py-2 pr-3 text-right font-medium">Qtd</th>
-                <th className="py-2 pr-3 text-right font-medium">Valor</th>
-                <th className="py-2 font-medium">Detalhe</th>
+              <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                <th className="py-[11px] pr-3">Data</th>
+                <th className="py-[11px] pr-3">Evento</th>
+                <th className="py-[11px] pr-3 text-right">Qtd</th>
+                <th className="py-[11px] pr-3 text-right">Valor</th>
+                <th className="py-[11px]">Detalhe</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">

@@ -19,7 +19,7 @@ export function AnaliseVendasPage() {
   if (loading || !data) {
     return (
       <>
-        <PageHeader title="Análise de vendas" subtitle="Faturamento por período, cliente e produto" />
+        <PageHeader grupo="Comercial" title="Análise de vendas" subtitle="Faturamento por período, cliente e produto" />
         <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>
       </>
     );
@@ -141,13 +141,13 @@ export function AnaliseVendasPage() {
             </div>
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
-                  <th className="px-5 py-2 font-medium">#</th>
-                  <th className="px-5 py-2 font-medium">Cliente</th>
-                  <th className="px-5 py-2 text-center font-medium">Classe</th>
-                  <th className="px-5 py-2 text-right font-medium">Volume</th>
-                  <th className="px-5 py-2 text-right font-medium">Faturamento</th>
-                  <th className="px-5 py-2 text-right font-medium">% acum.</th>
+                <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                  <th className="px-5 py-[11px]">#</th>
+                  <th className="px-5 py-[11px]">Cliente</th>
+                  <th className="px-5 py-[11px] text-center">Classe</th>
+                  <th className="px-5 py-[11px] text-right">Volume</th>
+                  <th className="px-5 py-[11px] text-right">Faturamento</th>
+                  <th className="px-5 py-[11px] text-right">% acum.</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">

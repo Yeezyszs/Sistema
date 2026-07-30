@@ -43,7 +43,7 @@ export function UsuariosPage() {
 
   return (
     <>
-      <PageHeader title="Usuários & perfis" subtitle="Quem acessa o quê — o perfil define os módulos visíveis" />
+      <PageHeader grupo="Administração" title="Usuários & perfis" subtitle="Quem acessa o quê — o perfil define os módulos visíveis" />
 
       {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
       {data && data.usuarios.length === 0 && <EmptyState title="Nenhum usuário" />}

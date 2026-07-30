@@ -99,7 +99,7 @@ export function ApontamentoPage() {
 
   return (
     <>
-      <PageHeader title="Apontamento & Rendimento" subtitle="Produção real por turno/linha — rendimento por dia via descargas (PCP)" />
+      <PageHeader grupo="Produção" title="Apontamento & Rendimento" subtitle="Produção real por turno/linha — rendimento por dia via descargas (PCP)" />
 
       <div className="grid gap-6 lg:grid-cols-5">
         {/* Formulário */}
@@ -144,11 +144,11 @@ export function ApontamentoPage() {
             <Card className="mb-4 overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
-                    <th className="px-3 py-2.5 font-medium">Dia</th>
-                    <th className="px-3 py-2.5 font-medium text-right">Produzido</th>
-                    <th className="px-3 py-2.5 font-medium text-right">Raiz (descargas)</th>
-                    <th className="px-3 py-2.5 font-medium text-right">Rendimento do dia</th>
+                  <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                    <th className="px-3 py-[11px].5">Dia</th>
+                    <th className="px-3 py-[11px].5 text-right">Produzido</th>
+                    <th className="px-3 py-[11px].5 text-right">Raiz (descargas)</th>
+                    <th className="px-3 py-[11px].5 text-right">Rendimento do dia</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -178,14 +178,14 @@ export function ApontamentoPage() {
             <Card className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
-                    <th className="px-3 py-3 font-medium">Data</th>
-                    <th className="px-3 py-3 font-medium">Turno</th>
-                    <th className="px-3 py-3 font-medium">Linha</th>
-                    <th className="px-3 py-3 font-medium">Produto</th>
-                    <th className="hidden px-3 py-3 font-medium md:table-cell">Lote</th>
-                    <th className="px-3 py-3 font-medium text-right">Produzido</th>
-                    <th className="px-3 py-3" />
+                  <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                    <th className="px-3 py-[11px]">Data</th>
+                    <th className="px-3 py-[11px]">Turno</th>
+                    <th className="px-3 py-[11px]">Linha</th>
+                    <th className="px-3 py-[11px]">Produto</th>
+                    <th className="hidden px-3 py-[11px] md:table-cell">Lote</th>
+                    <th className="px-3 py-[11px] text-right">Produzido</th>
+                    <th className="px-3 py-[11px]" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">

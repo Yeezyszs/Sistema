@@ -111,7 +111,7 @@ export function PedidosPage() {
 
   return (
     <>
-      <PageHeader
+      <PageHeader grupo="Comercial"
         title="Pedidos"
         subtitle="Carteira de pedidos por cliente (ERP)"
         action={<Button onClick={() => { setValorRs(''); setPesoKg(''); setProdutoId(''); setModal(true); }}><IconPlus width={16} height={16} />Novo pedido</Button>}
@@ -121,7 +121,7 @@ export function PedidosPage() {
         <div className="relative flex-1 min-w-[180px]">
           <IconSearch width={15} height={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input type="search" placeholder="Buscar nº, cliente, produto, lote, destino…" value={busca} onChange={(e) => setBusca(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+            className="w-full rounded-[7px] border border-slate-300 bg-white py-2 pl-9 pr-3 text-[12.5px] outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
         </div>
         <div className="w-52">
           <Select value={filtroCliente} onChange={(e) => setFiltroCliente(e.target.value)}>
@@ -143,18 +143,18 @@ export function PedidosPage() {
         <Card className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
-                <th className="px-3 py-3 font-medium">Nº</th>
-                <th className="px-3 py-3 font-medium">Data</th>
-                <th className="px-3 py-3 font-medium">Cliente</th>
-                <th className="px-3 py-3 font-medium">Produto</th>
-                <th className="hidden px-3 py-3 font-medium lg:table-cell">Lote</th>
-                <th className="px-3 py-3 font-medium text-right">Peso</th>
-                <th className="hidden px-3 py-3 font-medium text-right md:table-cell">R$/kg</th>
-                <th className="px-3 py-3 font-medium text-right">Total</th>
-                <th className="px-3 py-3 font-medium">Aprovação</th>
-                <th className="px-3 py-3 font-medium">Atendimento</th>
-                <th className="px-3 py-3" />
+              <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                <th className="px-3 py-[11px]">Nº</th>
+                <th className="px-3 py-[11px]">Data</th>
+                <th className="px-3 py-[11px]">Cliente</th>
+                <th className="px-3 py-[11px]">Produto</th>
+                <th className="hidden px-3 py-[11px] lg:table-cell">Lote</th>
+                <th className="px-3 py-[11px] text-right">Peso</th>
+                <th className="hidden px-3 py-[11px] text-right md:table-cell">R$/kg</th>
+                <th className="px-3 py-[11px] text-right">Total</th>
+                <th className="px-3 py-[11px]">Aprovação</th>
+                <th className="px-3 py-[11px]">Atendimento</th>
+                <th className="px-3 py-[11px]" />
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">

@@ -29,7 +29,7 @@ export function CarteiraPage() {
   if (loading || !data) {
     return (
       <>
-        <PageHeader title="Carteira de pedidos" subtitle="Pedidos vendidos ainda não entregues" />
+        <PageHeader grupo="Comercial" title="Carteira de pedidos" subtitle="Pedidos vendidos ainda não entregues" />
         <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>
       </>
     );
@@ -84,11 +84,11 @@ export function CarteiraPage() {
             <div className="border-b border-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wide text-slate-400">Por cliente</div>
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
-                  <th className="px-5 py-2 font-medium">Cliente</th>
-                  <th className="px-5 py-2 text-right font-medium">Pedidos</th>
-                  <th className="px-5 py-2 text-right font-medium">Kg</th>
-                  <th className="px-5 py-2 text-right font-medium">Valor</th>
+                <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                  <th className="px-5 py-[11px]">Cliente</th>
+                  <th className="px-5 py-[11px] text-right">Pedidos</th>
+                  <th className="px-5 py-[11px] text-right">Kg</th>
+                  <th className="px-5 py-[11px] text-right">Valor</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -109,13 +109,13 @@ export function CarteiraPage() {
             <div className="border-b border-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wide text-slate-400">Pedidos</div>
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
-                  <th className="px-4 py-2 font-medium">Nº</th>
-                  <th className="px-4 py-2 font-medium">Cliente</th>
-                  <th className="hidden px-4 py-2 font-medium md:table-cell">Produto</th>
-                  <th className="px-4 py-2 font-medium">Situação</th>
-                  <th className="px-4 py-2 text-right font-medium">Kg</th>
-                  <th className="px-4 py-2 text-right font-medium">Valor</th>
+                <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                  <th className="px-4 py-[11px]">Nº</th>
+                  <th className="px-4 py-[11px]">Cliente</th>
+                  <th className="hidden px-4 py-[11px] md:table-cell">Produto</th>
+                  <th className="px-4 py-[11px]">Situação</th>
+                  <th className="px-4 py-[11px] text-right">Kg</th>
+                  <th className="px-4 py-[11px] text-right">Valor</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">

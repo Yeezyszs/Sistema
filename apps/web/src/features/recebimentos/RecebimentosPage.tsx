@@ -189,7 +189,7 @@ export function RecebimentosPage() {
 
   return (
     <>
-      <PageHeader title="Recebimentos" subtitle="Controle de cargas — entrada de matéria-prima (Descarga)" />
+      <PageHeader grupo="Suprimentos" title="Recebimentos" subtitle="Controle de cargas — entrada de matéria-prima (Descarga)" />
 
       <div className="grid gap-6 lg:grid-cols-5">
         {/* Cadastro */}
@@ -211,15 +211,15 @@ export function RecebimentosPage() {
                 placeholder="Buscar produtor, variedade, ticket…"
                 value={busca}
                 onChange={(e) => setBusca(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+                className="w-full rounded-[7px] border border-slate-300 bg-white py-2 pl-9 pr-3 text-[12.5px] outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
               />
             </div>
             {(['todos', ...TURNO] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setFiltroTurno(t)}
-                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-                  filtroTurno === t ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'
+                className={`rounded-full border px-3.5 py-[7px] text-[12.5px] font-semibold transition ${
+                  filtroTurno === t ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
                 }`}
               >
                 {t === 'todos' ? 'Todos' : TURNO_LABEL[t]}
@@ -237,18 +237,18 @@ export function RecebimentosPage() {
             <Card className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
-                    <th className="px-3 py-3 font-medium">Nº</th>
-                    <th className="px-3 py-3 font-medium">Turno</th>
-                    <th className="px-3 py-3 font-medium">Data</th>
-                    <th className="px-3 py-3 font-medium">Ticket</th>
-                    <th className="px-3 py-3 font-medium">Produtor</th>
-                    <th className="hidden px-3 py-3 font-medium lg:table-cell">Variedade</th>
-                    <th className="hidden px-3 py-3 font-medium md:table-cell">Descarga</th>
-                    <th className="px-3 py-3 font-medium text-right">Peso</th>
-                    <th className="px-3 py-3 font-medium text-right">Renda</th>
-                    <th className="px-3 py-3 font-medium text-center">Cancha</th>
-                    <th className="px-3 py-3" />
+                  <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                    <th className="px-3 py-[11px]">Nº</th>
+                    <th className="px-3 py-[11px]">Turno</th>
+                    <th className="px-3 py-[11px]">Data</th>
+                    <th className="px-3 py-[11px]">Ticket</th>
+                    <th className="px-3 py-[11px]">Produtor</th>
+                    <th className="hidden px-3 py-[11px] lg:table-cell">Variedade</th>
+                    <th className="hidden px-3 py-[11px] md:table-cell">Descarga</th>
+                    <th className="px-3 py-[11px] text-right">Peso</th>
+                    <th className="px-3 py-[11px] text-right">Renda</th>
+                    <th className="px-3 py-[11px] text-center">Cancha</th>
+                    <th className="px-3 py-[11px]" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">

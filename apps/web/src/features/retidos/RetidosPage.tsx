@@ -39,12 +39,12 @@ export function RetidosPage() {
 
   return (
     <>
-      <PageHeader title="Controle de Retidos" subtitle="Material retido por desvio (FOR-PQSA18)" />
+      <PageHeader grupo="Qualidade" title="Controle de Retidos" subtitle="Material retido por desvio (FOR-PQSA18)" />
 
       <div className="mb-5 flex gap-2">
         {([['retidos', 'Retidos'], ['legenda', 'Legenda de desvios'], ['painel', 'Painel']] as const).map(([id, label]) => (
           <button key={id} onClick={() => setAba(id)}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${aba === id ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'}`}>
+            className={`rounded-full border px-3.5 py-[7px] text-[12.5px] font-semibold transition ${aba === id ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'}`}>
             {label}
           </button>
         ))}
@@ -100,7 +100,7 @@ function AbaRetidos({ data, rec, sucesso, erro }: { data: DataShape; rec: () => 
         <div className="relative flex-1 min-w-[180px]">
           <IconSearch width={15} height={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input type="search" placeholder="Buscar nº, produto, lote, lacre, desvio…" value={busca} onChange={(e) => setBusca(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+            className="w-full rounded-[7px] border border-slate-300 bg-white py-2 pl-9 pr-3 text-[12.5px] outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
         </div>
         <div className="w-44">
           <Select value={filtro} onChange={(e) => setFiltro(e.target.value as typeof filtro)}>
@@ -118,17 +118,17 @@ function AbaRetidos({ data, rec, sucesso, erro }: { data: DataShape; rec: () => 
         <Card className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
-                <th className="px-3 py-3 font-medium">Nº</th>
-                <th className="px-3 py-3 font-medium">Data</th>
-                <th className="px-3 py-3 font-medium">Produto</th>
-                <th className="hidden px-3 py-3 font-medium lg:table-cell">Lote</th>
-                <th className="hidden px-3 py-3 font-medium xl:table-cell">Lacre</th>
-                <th className="px-3 py-3 font-medium text-right">Kg</th>
-                <th className="px-3 py-3 font-medium">Desvio</th>
-                <th className="hidden px-3 py-3 font-medium md:table-cell">Lote final</th>
-                <th className="px-3 py-3 font-medium">Status</th>
-                <th className="px-3 py-3" />
+              <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                <th className="px-3 py-[11px]">Nº</th>
+                <th className="px-3 py-[11px]">Data</th>
+                <th className="px-3 py-[11px]">Produto</th>
+                <th className="hidden px-3 py-[11px] lg:table-cell">Lote</th>
+                <th className="hidden px-3 py-[11px] xl:table-cell">Lacre</th>
+                <th className="px-3 py-[11px] text-right">Kg</th>
+                <th className="px-3 py-[11px]">Desvio</th>
+                <th className="hidden px-3 py-[11px] md:table-cell">Lote final</th>
+                <th className="px-3 py-[11px]">Status</th>
+                <th className="px-3 py-[11px]" />
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -331,12 +331,12 @@ function AbaLegenda({ desvios, rec, sucesso, erro }: { desvios: Desvio[]; rec: (
       <Card className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
-              <th className="px-3 py-3 font-medium">Código</th>
-              <th className="hidden px-3 py-3 font-medium md:table-cell">Categoria</th>
-              <th className="px-3 py-3 font-medium">Descrição</th>
-              <th className="hidden px-3 py-3 font-medium lg:table-cell">Onde reprocessar</th>
-              <th className="px-3 py-3" />
+            <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+              <th className="px-3 py-[11px]">Código</th>
+              <th className="hidden px-3 py-[11px] md:table-cell">Categoria</th>
+              <th className="px-3 py-[11px]">Descrição</th>
+              <th className="hidden px-3 py-[11px] lg:table-cell">Onde reprocessar</th>
+              <th className="px-3 py-[11px]" />
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">

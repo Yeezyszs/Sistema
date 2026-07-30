@@ -102,7 +102,7 @@ export function EspecificacoesPage() {
 
   return (
     <>
-      <PageHeader
+      <PageHeader grupo="Qualidade"
         title="Especificações"
         subtitle="Limites de referência por produto × cliente (base dos laudos)"
         action={
@@ -183,11 +183,11 @@ export function EspecificacoesPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
-                  <th className="pb-2 pr-2 font-medium">Ensaio</th>
-                  <th className="pb-2 px-2 font-medium">Mín</th>
-                  <th className="pb-2 px-2 font-medium">Máx</th>
-                  <th className="pb-2 pl-2 font-medium">Unidade</th>
+                <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                  <th className="pb-2 pr-2">Ensaio</th>
+                  <th className="pb-2 px-2">Mín</th>
+                  <th className="pb-2 px-2">Máx</th>
+                  <th className="pb-2 pl-2">Unidade</th>
                 </tr>
               </thead>
               <tbody>

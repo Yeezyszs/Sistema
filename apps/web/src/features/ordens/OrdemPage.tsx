@@ -142,7 +142,7 @@ export function OrdemPage() {
     <>
       <BackLink />
 
-      <PageHeader
+      <PageHeader grupo="Produção"
         title={`Ordem #${op.numero}`}
         subtitle={cliente}
         action={
@@ -231,11 +231,11 @@ export function OrdemPage() {
             <Card className="overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
-                    <th className="px-5 py-3 font-medium">Lote</th>
-                    <th className="hidden px-5 py-3 font-medium sm:table-cell">Volume</th>
-                    <th className="px-5 py-3 font-medium">Status</th>
-                    <th className="px-5 py-3" />
+                  <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                    <th className="px-5 py-[11px]">Lote</th>
+                    <th className="hidden px-5 py-[11px] sm:table-cell">Volume</th>
+                    <th className="px-5 py-[11px]">Status</th>
+                    <th className="px-5 py-[11px]" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">

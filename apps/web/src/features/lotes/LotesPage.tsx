@@ -5,7 +5,7 @@ import { useAsync } from '../../lib/useAsync';
 import { formatarData, formatarQuantidade } from '../../lib/format';
 import { STATUS_LOTE, STATUS_LOTE_LABEL } from '@sistema/domain';
 import type { StatusLote } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Pill } from '../../components/ui';
 import { IconBox, IconPlus, IconSearch } from '../../components/icons';
 
 // Badge de status no padrão do novo desenho: pastel + texto escuro.
@@ -134,17 +134,3 @@ export function LotesPage() {
   );
 }
 
-function Pill({ ativo, onClick, children }: { ativo: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`rounded-full border px-3.5 py-[7px] text-[12.5px] font-semibold transition ${
-        ativo
-          ? 'border-slate-900 bg-slate-900 text-white'
-          : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
-      }`}
-    >
-      {children}
-    </button>
-  );
-}

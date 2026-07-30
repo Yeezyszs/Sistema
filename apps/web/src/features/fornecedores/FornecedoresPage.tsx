@@ -56,7 +56,7 @@ export function FornecedoresPage() {
 
   return (
     <>
-      <PageHeader
+      <PageHeader grupo="Suprimentos"
         title="Fornecedores & Recebimento"
         subtitle="Inspeção de matéria-prima e homologação de fornecedores"
         action={
@@ -69,7 +69,7 @@ export function FornecedoresPage() {
       <div className="mb-5 flex gap-2">
         {([['inspecoes', 'Inspeções de recebimento'], ['homologacao', 'Homologação']] as const).map(([id, label]) => (
           <button key={id} onClick={() => setAba(id)}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${aba === id ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'}`}>
+            className={`rounded-full border px-3.5 py-[7px] text-[12.5px] font-semibold transition ${aba === id ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'}`}>
             {label}
           </button>
         ))}
@@ -84,12 +84,12 @@ export function FornecedoresPage() {
           <Card className="overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
-                  <th className="px-5 py-3 font-medium">Tipo</th>
-                  <th className="hidden px-5 py-3 font-medium sm:table-cell">Fornecedor</th>
-                  <th className="hidden px-5 py-3 font-medium md:table-cell">Variedade / placa</th>
-                  <th className="px-5 py-3 font-medium">Quando</th>
-                  <th className="px-5 py-3 font-medium">Resultado</th>
+                <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                  <th className="px-5 py-[11px]">Tipo</th>
+                  <th className="hidden px-5 py-[11px] sm:table-cell">Fornecedor</th>
+                  <th className="hidden px-5 py-[11px] md:table-cell">Variedade / placa</th>
+                  <th className="px-5 py-[11px]">Quando</th>
+                  <th className="px-5 py-[11px]">Resultado</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">

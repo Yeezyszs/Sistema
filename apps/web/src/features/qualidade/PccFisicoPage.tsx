@@ -49,7 +49,7 @@ export function PccFisicoPage() {
 
   return (
     <>
-      <PageHeader title="PCC Físico" subtitle="Detector de metais, imãs e quebra de vidros (FSSC 22000)" />
+      <PageHeader grupo="Qualidade" title="PCC Físico" subtitle="Detector de metais, imãs e quebra de vidros (FSSC 22000)" />
 
       <div className="mb-5 flex gap-2">
         {([['detector', 'Detector de metais'], ['imas', 'Imãs'], ['vidros', 'Quebra de vidros']] as const).map(
@@ -57,8 +57,8 @@ export function PccFisicoPage() {
             <button
               key={id}
               onClick={() => setAba(id)}
-              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-                aba === id ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'
+              className={`rounded-full border px-3.5 py-[7px] text-[12.5px] font-semibold transition ${
+                aba === id ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
               }`}
             >
               {label}
@@ -184,11 +184,11 @@ function DetectorAba({ data, onSaved }: { data: any; onSaved: () => void }) {
           <Card className="overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
-                  <th className="px-5 py-3 font-medium">Linha</th>
-                  <th className="hidden px-5 py-3 font-medium sm:table-cell">Teste</th>
-                  <th className="px-5 py-3 font-medium">Quando</th>
-                  <th className="px-5 py-3 font-medium">Status</th>
+                <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                  <th className="px-5 py-[11px]">Linha</th>
+                  <th className="hidden px-5 py-[11px] sm:table-cell">Teste</th>
+                  <th className="px-5 py-[11px]">Quando</th>
+                  <th className="px-5 py-[11px]">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -276,11 +276,11 @@ function ImasAba({ data, onSaved }: { data: any; onSaved: () => void }) {
           <Card className="overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
-                  <th className="px-5 py-3 font-medium">Ponto</th>
-                  <th className="px-5 py-3 font-medium">Peso</th>
-                  <th className="hidden px-5 py-3 font-medium sm:table-cell">Material</th>
-                  <th className="px-5 py-3 font-medium">Quando</th>
+                <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                  <th className="px-5 py-[11px]">Ponto</th>
+                  <th className="px-5 py-[11px]">Peso</th>
+                  <th className="hidden px-5 py-[11px] sm:table-cell">Material</th>
+                  <th className="px-5 py-[11px]">Quando</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">

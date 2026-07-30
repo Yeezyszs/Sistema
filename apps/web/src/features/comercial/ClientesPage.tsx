@@ -63,7 +63,7 @@ export function ClientesPage() {
 
   return (
     <>
-      <PageHeader
+      <PageHeader grupo="Comercial"
         title="Clientes"
         subtitle="Cadastro comercial de clientes"
         action={<Button onClick={() => { setEditando(null); setModal(true); }}><IconPlus width={16} height={16} />Novo cliente</Button>}
@@ -72,7 +72,7 @@ export function ClientesPage() {
       <div className="mb-4 relative max-w-sm">
         <IconSearch width={15} height={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
         <input type="search" placeholder="Buscar nome, CNPJ, contato…" value={busca} onChange={(e) => setBusca(e.target.value)}
-          className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+          className="w-full rounded-[7px] border border-slate-300 bg-white py-2 pl-9 pr-3 text-[12.5px] outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
       </div>
 
       {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
@@ -82,12 +82,12 @@ export function ClientesPage() {
         <Card className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
-                <th className="px-5 py-3 font-medium">Cliente</th>
-                <th className="hidden px-5 py-3 font-medium md:table-cell">CNPJ</th>
-                <th className="hidden px-5 py-3 font-medium lg:table-cell">Contato</th>
-                <th className="hidden px-5 py-3 font-medium lg:table-cell">Condição pgto.</th>
-                <th className="px-5 py-3" />
+              <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                <th className="px-5 py-[11px]">Cliente</th>
+                <th className="hidden px-5 py-[11px] md:table-cell">CNPJ</th>
+                <th className="hidden px-5 py-[11px] lg:table-cell">Contato</th>
+                <th className="hidden px-5 py-[11px] lg:table-cell">Condição pgto.</th>
+                <th className="px-5 py-[11px]" />
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">

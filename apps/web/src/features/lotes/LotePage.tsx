@@ -266,7 +266,7 @@ export function LotePage() {
     <>
       <BackLink />
 
-      <PageHeader
+      <PageHeader grupo="Produção"
         title={lote.codigo}
         subtitle={data.produtos.get(lote.produto_id)?.nome}
         action={<StatusChip status={lote.status} />}

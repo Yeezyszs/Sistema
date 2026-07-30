@@ -78,7 +78,7 @@ export function CalibracaoPage() {
 
   return (
     <>
-      <PageHeader
+      <PageHeader grupo="Qualidade"
         title="Calibração"
         subtitle="Instrumentos de medição e controle de validade de calibração"
         action={
@@ -99,12 +99,12 @@ export function CalibracaoPage() {
         <Card className="overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
-                <th className="px-5 py-3 font-medium">Código</th>
-                <th className="px-5 py-3 font-medium">Instrumento</th>
-                <th className="hidden px-5 py-3 font-medium md:table-cell">Última calibração</th>
-                <th className="hidden px-5 py-3 font-medium md:table-cell">Válido até</th>
-                <th className="px-5 py-3 font-medium">Situação</th>
+              <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                <th className="px-5 py-[11px]">Código</th>
+                <th className="px-5 py-[11px]">Instrumento</th>
+                <th className="hidden px-5 py-[11px] md:table-cell">Última calibração</th>
+                <th className="hidden px-5 py-[11px] md:table-cell">Válido até</th>
+                <th className="px-5 py-[11px]">Situação</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">

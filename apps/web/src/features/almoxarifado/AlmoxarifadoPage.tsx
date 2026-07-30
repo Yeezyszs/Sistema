@@ -82,7 +82,7 @@ export function AlmoxarifadoPage() {
 
   return (
     <>
-      <PageHeader
+      <PageHeader grupo="Almoxarifado"
         title="Almoxarifado"
         subtitle="Estoque de consumíveis — peças, limpeza e EPI"
         action={<Button onClick={() => { setEditando(null); setModalItem(true); }}><IconPlus width={16} height={16} />Novo item</Button>}
@@ -98,11 +98,11 @@ export function AlmoxarifadoPage() {
         <div className="relative flex-1 min-w-[180px]">
           <IconSearch width={15} height={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input type="search" placeholder="Buscar item, código, local…" value={busca} onChange={(e) => setBusca(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+            className="w-full rounded-[7px] border border-slate-300 bg-white py-2 pl-9 pr-3 text-[12.5px] outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
         </div>
         {(['todas', ...CATEGORIAS_CONSUMIVEL] as const).map((c) => (
           <button key={c} onClick={() => setCat(c)}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${cat === c ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'}`}>
+            className={`rounded-full border px-3.5 py-[7px] text-[12.5px] font-semibold transition ${cat === c ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'}`}>
             {c === 'todas' ? 'Todas' : CATEGORIA_ALMOX_LABEL[c]}
           </button>
         ))}
@@ -115,14 +115,14 @@ export function AlmoxarifadoPage() {
         <Card className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
-                <th className="px-4 py-3 font-medium">Item</th>
-                <th className="hidden px-4 py-3 font-medium lg:table-cell">Categoria</th>
-                <th className="px-4 py-3 text-right font-medium">Saldo</th>
-                <th className="hidden px-4 py-3 text-right font-medium md:table-cell">Mínimo</th>
-                <th className="hidden px-4 py-3 text-right font-medium lg:table-cell">Custo médio</th>
-                <th className="hidden px-4 py-3 text-right font-medium lg:table-cell">Valor</th>
-                <th className="px-4 py-3" />
+              <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                <th className="px-4 py-[11px]">Item</th>
+                <th className="hidden px-4 py-[11px] lg:table-cell">Categoria</th>
+                <th className="px-4 py-[11px] text-right">Saldo</th>
+                <th className="hidden px-4 py-[11px] text-right md:table-cell">Mínimo</th>
+                <th className="hidden px-4 py-[11px] text-right lg:table-cell">Custo médio</th>
+                <th className="hidden px-4 py-[11px] text-right lg:table-cell">Valor</th>
+                <th className="px-4 py-[11px]" />
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -293,11 +293,11 @@ function ModalExtrato({ item, onClose }: { item: AlmoxItem; onClose: () => void 
         <div className="max-h-[60vh] overflow-y-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
-                <th className="py-2 pr-3 font-medium">Data</th>
-                <th className="py-2 pr-3 font-medium">Tipo</th>
-                <th className="py-2 pr-3 text-right font-medium">Qtd</th>
-                <th className="py-2 font-medium">Detalhe</th>
+              <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                <th className="py-[11px] pr-3">Data</th>
+                <th className="py-[11px] pr-3">Tipo</th>
+                <th className="py-[11px] pr-3 text-right">Qtd</th>
+                <th className="py-[11px]">Detalhe</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">

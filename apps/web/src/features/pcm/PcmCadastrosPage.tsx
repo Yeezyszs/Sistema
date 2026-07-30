@@ -197,7 +197,7 @@ export function PcmCadastrosPage() {
 
   return (
     <>
-      <PageHeader
+      <PageHeader grupo="Manutenção"
         title="PCM — Cadastros"
         subtitle="Base do Planejamento e Controle de Manutenção"
         action={<Button onClick={botoesNovo[aba]}><IconPlus width={16} height={16} />Novo</Button>}
@@ -213,7 +213,7 @@ export function PcmCadastrosPage() {
             ['colaboradores', `Colaboradores (${data?.colaboradores.length ?? 0})`],
           ] as [Aba, string][]).map(([id, label]) => (
             <button key={id} onClick={() => setAba(id)}
-              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${aba === id ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'}`}>
+              className={`rounded-full border px-3.5 py-[7px] text-[12.5px] font-semibold transition ${aba === id ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'}`}>
               {label}
             </button>
           ))}
@@ -221,7 +221,7 @@ export function PcmCadastrosPage() {
         <div className="relative ml-auto min-w-[180px]">
           <IconSearch width={15} height={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input type="search" placeholder="Buscar…" value={busca} onChange={(e) => setBusca(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+            className="w-full rounded-[7px] border border-slate-300 bg-white py-2 pl-9 pr-3 text-[12.5px] outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
         </div>
         {aba === 'equipamentos' && (
           <div className="w-44">
@@ -318,9 +318,9 @@ function TabelaCrud<T extends { id: string }>({ linhas, colunas, onEditar, onExc
     <Card className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
-            {colunas.map(([h]) => <th key={h} className="px-3 py-3 font-medium">{h}</th>)}
-            <th className="px-3 py-3" />
+          <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+            {colunas.map(([h]) => <th key={h} className="px-3 py-[11px]">{h}</th>)}
+            <th className="px-3 py-[11px]" />
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">

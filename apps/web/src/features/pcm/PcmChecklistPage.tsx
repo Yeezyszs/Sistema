@@ -68,7 +68,7 @@ export function PcmChecklistPage() {
 
   return (
     <>
-      <PageHeader
+      <PageHeader grupo="Manutenção"
         title="Checklist de ferramentas"
         subtitle="Verificação diária por colaborador — grade mensal (PCM)"
       />
@@ -122,9 +122,9 @@ export function PcmChecklistPage() {
           <table className="min-w-max text-sm">
             <thead>
               <tr className="border-b border-slate-200 text-xs text-slate-400">
-                <th className="sticky left-0 z-10 bg-white px-3 py-2 text-left font-medium">Ferramenta</th>
+                <th className="sticky left-0 z-10 bg-white px-3 py-[11px] text-left">Ferramenta</th>
                 {Array.from({ length: dias }, (_, i) => i + 1).map((d) => (
-                  <th key={d} className="w-8 px-0 py-2 text-center font-medium">{d}</th>
+                  <th key={d} className="w-8 px-0 py-[11px] text-center">{d}</th>
                 ))}
               </tr>
             </thead>

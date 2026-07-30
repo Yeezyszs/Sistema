@@ -33,7 +33,7 @@ export function PphoPage() {
 
   return (
     <>
-      <PageHeader
+      <PageHeader grupo="Qualidade"
         title="PPHO & Higienização"
         subtitle="Fichas de higienização por equipamento e registro de execução"
         action={
@@ -49,8 +49,8 @@ export function PphoPage() {
           <button
             key={id}
             onClick={() => setAba(id)}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-              aba === id ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'
+            className={`rounded-full border px-3.5 py-[7px] text-[12.5px] font-semibold transition ${
+              aba === id ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
             }`}
           >
             {label}
@@ -98,12 +98,12 @@ function FichasAba({ pphos, equipamentosMap }: { pphos: Ppho[]; equipamentosMap:
     <Card className="overflow-hidden">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
-            <th className="px-5 py-3 font-medium">Código</th>
-            <th className="px-5 py-3 font-medium">Nome</th>
-            <th className="hidden px-5 py-3 font-medium sm:table-cell">Equipamento</th>
-            <th className="hidden px-5 py-3 font-medium md:table-cell">Frequência</th>
-            <th className="hidden px-5 py-3 font-medium md:table-cell">Químico</th>
+          <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+            <th className="px-5 py-[11px]">Código</th>
+            <th className="px-5 py-[11px]">Nome</th>
+            <th className="hidden px-5 py-[11px] sm:table-cell">Equipamento</th>
+            <th className="hidden px-5 py-[11px] md:table-cell">Frequência</th>
+            <th className="hidden px-5 py-[11px] md:table-cell">Químico</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">

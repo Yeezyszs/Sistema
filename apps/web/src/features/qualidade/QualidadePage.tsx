@@ -50,7 +50,7 @@ export function QualidadePage() {
 
   return (
     <>
-      <PageHeader
+      <PageHeader grupo="Qualidade"
         title="Qualidade"
         subtitle="Monitoramentos FSSC 22000 e liberação de lotes"
       />
@@ -106,12 +106,12 @@ export function QualidadePage() {
         </div>
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-100 text-left text-xs uppercase tracking-wide text-slate-400">
-              <th className="px-5 py-3 font-medium">Código</th>
-              <th className="px-5 py-3 font-medium">Nome</th>
-              <th className="hidden px-5 py-3 font-medium sm:table-cell">Tipo</th>
-              <th className="hidden px-5 py-3 font-medium md:table-cell">Parâmetro</th>
-              <th className="hidden px-5 py-3 font-medium md:table-cell">Limite</th>
+            <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+              <th className="px-5 py-[11px]">Código</th>
+              <th className="px-5 py-[11px]">Nome</th>
+              <th className="hidden px-5 py-[11px] sm:table-cell">Tipo</th>
+              <th className="hidden px-5 py-[11px] md:table-cell">Parâmetro</th>
+              <th className="hidden px-5 py-[11px] md:table-cell">Limite</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">

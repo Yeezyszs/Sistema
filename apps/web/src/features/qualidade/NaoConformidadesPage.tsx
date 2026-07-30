@@ -97,7 +97,7 @@ export function NaoConformidadesPage() {
 
   return (
     <>
-      <PageHeader
+      <PageHeader grupo="Qualidade"
         title="Não conformidades"
         subtitle="RNC e notificações de ocorrência (FSSC 22000)"
         action={
@@ -113,8 +113,8 @@ export function NaoConformidadesPage() {
           <button
             key={f}
             onClick={() => setFiltro(f)}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-              filtro === f ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'
+            className={`rounded-full border px-3.5 py-[7px] text-[12.5px] font-semibold transition ${
+              filtro === f ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
             }`}
           >
             {f === 'abertas' ? 'Em aberto' : 'Todas'}

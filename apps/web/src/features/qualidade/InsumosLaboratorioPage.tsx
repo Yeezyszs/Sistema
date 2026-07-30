@@ -32,7 +32,7 @@ export function InsumosLaboratorioPage() {
 
   return (
     <>
-      <PageHeader
+      <PageHeader grupo="Qualidade"
         title="Insumos do Laboratório"
         subtitle={aComprar > 0 ? `${aComprar} insumo(s) precisam de compra` : 'Estoque de insumos do lab'}
         action={<Button onClick={() => setNovo(true)}><IconPlus width={16} height={16} />Novo insumo</Button>}
@@ -47,15 +47,15 @@ export function InsumosLaboratorioPage() {
         <Card className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
-                <th className="px-3 py-3 font-medium">Insumo</th>
-                <th className="hidden px-3 py-3 font-medium md:table-cell">Tipo</th>
-                <th className="hidden px-3 py-3 font-medium lg:table-cell">Especificação</th>
-                <th className="px-3 py-3 font-medium text-right">Necessária</th>
-                <th className="px-3 py-3 font-medium text-right">Em estoque</th>
-                <th className="px-3 py-3 font-medium">Comprar?</th>
-                <th className="px-3 py-3 font-medium">Solicitado?</th>
-                <th className="px-3 py-3" />
+              <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                <th className="px-3 py-[11px]">Insumo</th>
+                <th className="hidden px-3 py-[11px] md:table-cell">Tipo</th>
+                <th className="hidden px-3 py-[11px] lg:table-cell">Especificação</th>
+                <th className="px-3 py-[11px] text-right">Necessária</th>
+                <th className="px-3 py-[11px] text-right">Em estoque</th>
+                <th className="px-3 py-[11px]">Comprar?</th>
+                <th className="px-3 py-[11px]">Solicitado?</th>
+                <th className="px-3 py-[11px]" />
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">

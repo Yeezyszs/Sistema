@@ -134,7 +134,7 @@ export function OrdensPage() {
 
   return (
     <>
-      <PageHeader
+      <PageHeader grupo="Produção"
         title="Ordens de produção"
         subtitle="Programação de produção (planilha de acompanhamento)"
         action={
@@ -176,14 +176,14 @@ export function OrdensPage() {
         <Card className="overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
-                <th className="px-5 py-3 font-medium">Nº</th>
-                <th className="px-5 py-3 font-medium">Cliente</th>
-                <th className="px-5 py-3 font-medium">Produto</th>
-                <th className="hidden px-5 py-3 font-medium md:table-cell">Quantidade</th>
-                <th className="hidden px-5 py-3 font-medium sm:table-cell">Data</th>
-                <th className="px-5 py-3 font-medium">Status</th>
-                <th className="px-5 py-3" />
+              <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                <th className="px-5 py-[11px]">Nº</th>
+                <th className="px-5 py-[11px]">Cliente</th>
+                <th className="px-5 py-[11px]">Produto</th>
+                <th className="hidden px-5 py-[11px] md:table-cell">Quantidade</th>
+                <th className="hidden px-5 py-[11px] sm:table-cell">Data</th>
+                <th className="px-5 py-[11px]">Status</th>
+                <th className="px-5 py-[11px]" />
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">

@@ -82,6 +82,55 @@ export function CardTitle({ children, sub }: { children: ReactNode; sub?: string
   );
 }
 
+// ── Pílula de filtro / aba ─────────────────────────────────────
+export function Pill({
+  ativo,
+  onClick,
+  children,
+}: {
+  ativo: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`rounded-full border px-3.5 py-[7px] text-[12.5px] font-semibold transition ${
+        ativo
+          ? 'border-slate-900 bg-slate-900 text-white'
+          : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+// ── Badge (estado) ─────────────────────────────────────────────
+// Cores semânticas, independentes do acento da marca.
+export type BadgeTom = 'neutro' | 'info' | 'sucesso' | 'alerta' | 'erro';
+
+const BADGE_TOM: Record<BadgeTom, string> = {
+  neutro: 'bg-slate-100 text-slate-600',
+  info: 'bg-indigo-100 text-indigo-800',
+  sucesso: 'bg-emerald-100 text-emerald-800',
+  alerta: 'bg-amber-100 text-amber-800',
+  erro: 'bg-red-100 text-red-800',
+};
+
+export function Badge({ tom = 'neutro', children }: { tom?: BadgeTom; children: ReactNode }) {
+  return (
+    <span className={`inline-flex items-center rounded-md px-2.5 py-1 text-[11.5px] font-semibold ${BADGE_TOM[tom]}`}>
+      {children}
+    </span>
+  );
+}
+
+// ── Cabeçalho de tabela ────────────────────────────────────────
+// Use em <thead>: <tr className={LINHA_CABECALHO}> com <th className="px-4 py-[11px]">
+export const LINHA_CABECALHO =
+  'border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500';
+
 // ── Spinner ────────────────────────────────────────────────────
 export function Spinner({ className = 'h-5 w-5' }: { className?: string }) {
   return (

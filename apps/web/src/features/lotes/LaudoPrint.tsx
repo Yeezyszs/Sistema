@@ -95,11 +95,11 @@ export function LaudoPrint() {
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="border-y border-slate-300 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
-              <th className="px-3 py-2 font-medium">Ensaio</th>
-              <th className="px-3 py-2 font-medium">Resultado</th>
-              {!isVisual && <th className="px-3 py-2 font-medium">Unidade</th>}
-              <th className="px-3 py-2 font-medium">Valor de referência</th>
-              <th className="px-3 py-2 font-medium">Status</th>
+              <th className="px-3 py-[11px]">Ensaio</th>
+              <th className="px-3 py-[11px]">Resultado</th>
+              {!isVisual && <th className="px-3 py-[11px]">Unidade</th>}
+              <th className="px-3 py-[11px]">Valor de referência</th>
+              <th className="px-3 py-[11px]">Status</th>
             </tr>
           </thead>
           <tbody>

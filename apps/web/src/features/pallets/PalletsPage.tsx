@@ -47,7 +47,7 @@ export function PalletsPage() {
 
   return (
     <>
-      <PageHeader
+      <PageHeader grupo="Almoxarifado"
         title="Pallets"
         subtitle="Saldo e reconciliação (CHEP · PBR · próprios)"
         action={<Button onClick={() => setMov(true)}><IconPlus width={16} height={16} />Movimentar</Button>}
@@ -80,12 +80,12 @@ export function PalletsPage() {
         <Card className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
-                <th className="px-3 py-3 font-medium">Data</th>
-                <th className="px-3 py-3 font-medium">Tipo pallet</th>
-                <th className="px-3 py-3 font-medium">Movimento</th>
-                <th className="px-3 py-3 font-medium text-right">Qtd</th>
-                <th className="hidden px-3 py-3 font-medium md:table-cell">Parceiro</th>
+              <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                <th className="px-3 py-[11px]">Data</th>
+                <th className="px-3 py-[11px]">Tipo pallet</th>
+                <th className="px-3 py-[11px]">Movimento</th>
+                <th className="px-3 py-[11px] text-right">Qtd</th>
+                <th className="hidden px-3 py-[11px] md:table-cell">Parceiro</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">

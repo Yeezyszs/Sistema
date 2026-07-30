@@ -110,7 +110,7 @@ export function ProgramacaoPage() {
 
   return (
     <>
-      <PageHeader title="Programação de Produção" subtitle="Quadro semanal — segunda a sábado, linhas × turnos (PCP)" />
+      <PageHeader grupo="Produção" title="Programação de Produção" subtitle="Quadro semanal — segunda a sábado, linhas × turnos (PCP)" />
 
       {/* Navegação de semana + totais */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -138,10 +138,10 @@ export function ProgramacaoPage() {
         <Card className="overflow-x-auto">
           <table className="w-full min-w-[900px] text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
-                <th className="px-3 py-3 font-medium">Linha</th>
+              <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                <th className="px-3 py-[11px]">Linha</th>
                 {dias.map((dia, i) => (
-                  <th key={dia} className="px-2 py-3 text-center font-medium">
+                  <th key={dia} className="px-2 py-[11px] text-center">
                     {DIA_LABEL[i]}<br /><span className="font-normal text-slate-300">{dia.slice(8, 10)}/{dia.slice(5, 7)}</span>
                   </th>
                 ))}

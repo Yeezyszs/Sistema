@@ -22,7 +22,7 @@ export function ProdutosPage() {
 
   return (
     <>
-      <PageHeader
+      <PageHeader grupo="Produção"
         title="Produtos"
         subtitle="Catálogo de produto acabado — código e apelido (nome curto)"
       />
@@ -31,7 +31,7 @@ export function ProdutosPage() {
         <div className="relative flex-1 min-w-[180px]">
           <IconSearch width={15} height={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input type="search" placeholder="Buscar código, apelido, nome…" value={busca} onChange={(e) => setBusca(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+            className="w-full rounded-[7px] border border-slate-300 bg-white py-2 pl-9 pr-3 text-[12.5px] outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
         </div>
       </div>
 
@@ -42,12 +42,12 @@ export function ProdutosPage() {
         <Card className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
-                <th className="px-3 py-3 font-medium">Código</th>
-                <th className="px-3 py-3 font-medium">Apelido (nome curto)</th>
-                <th className="px-3 py-3 font-medium">Nome completo</th>
-                <th className="hidden px-3 py-3 font-medium text-right md:table-cell">Peso unit.</th>
-                <th className="px-3 py-3" />
+              <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                <th className="px-3 py-[11px]">Código</th>
+                <th className="px-3 py-[11px]">Apelido (nome curto)</th>
+                <th className="px-3 py-[11px]">Nome completo</th>
+                <th className="hidden px-3 py-[11px] text-right md:table-cell">Peso unit.</th>
+                <th className="px-3 py-[11px]" />
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">

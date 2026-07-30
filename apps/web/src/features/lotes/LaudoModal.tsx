@@ -191,12 +191,12 @@ export function LaudoModal({
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
-                  <th className="pb-2 pr-2 font-medium">Ensaio</th>
-                  <th className="pb-2 px-2 font-medium">Resultado</th>
-                  <th className="pb-2 px-2 font-medium">Unidade</th>
-                  <th className="pb-2 px-2 font-medium">Referência</th>
-                  <th className="pb-2 pl-2 font-medium">Status</th>
+                <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                  <th className="pb-2 pr-2">Ensaio</th>
+                  <th className="pb-2 px-2">Resultado</th>
+                  <th className="pb-2 px-2">Unidade</th>
+                  <th className="pb-2 px-2">Referência</th>
+                  <th className="pb-2 pl-2">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -241,10 +241,10 @@ export function LaudoModal({
           <div className="space-y-4">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
-                  <th className="pb-2 pr-2 font-medium">Contaminante</th>
-                  <th className="pb-2 px-2 font-medium">Resultado</th>
-                  <th className="pb-2 pl-2 font-medium">Referência</th>
+                <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                  <th className="pb-2 pr-2">Contaminante</th>
+                  <th className="pb-2 px-2">Resultado</th>
+                  <th className="pb-2 pl-2">Referência</th>
                 </tr>
               </thead>
               <tbody>

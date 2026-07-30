@@ -47,7 +47,7 @@ export function PcmIndicadoresPage() {
 
   return (
     <>
-      <PageHeader title="Indicadores de Manutenção" subtitle="Disponibilidade · MTTR · MTBF (PCM)" />
+      <PageHeader grupo="Manutenção" title="Indicadores de Manutenção" subtitle="Disponibilidade · MTTR · MTBF (PCM)" />
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <div className="flex gap-2">
@@ -56,7 +56,7 @@ export function PcmIndicadoresPage() {
             ['producao', 'Produção (horas)'], ['custos', `Custos (${data?.custos.length ?? 0})`],
           ] as [Aba, string][]).map(([id, label]) => (
             <button key={id} onClick={() => setAba(id)}
-              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${aba === id ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'}`}>
+              className={`rounded-full border px-3.5 py-[7px] text-[12.5px] font-semibold transition ${aba === id ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'}`}>
               {label}
             </button>
           ))}
@@ -198,14 +198,14 @@ function AbaParadas({ data, rec, sucesso, erro }: { data: DataShape; rec: () => 
         <Card className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
-                <th className="px-3 py-3 font-medium">Data</th>
-                <th className="px-3 py-3 font-medium">Tipo</th>
-                <th className="hidden px-3 py-3 font-medium md:table-cell">Setor</th>
-                <th className="hidden px-3 py-3 font-medium sm:table-cell">Turno</th>
-                <th className="px-3 py-3 font-medium text-right">Horas</th>
-                <th className="hidden px-3 py-3 font-medium lg:table-cell">Motivo</th>
-                <th className="px-3 py-3" />
+              <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                <th className="px-3 py-[11px]">Data</th>
+                <th className="px-3 py-[11px]">Tipo</th>
+                <th className="hidden px-3 py-[11px] md:table-cell">Setor</th>
+                <th className="hidden px-3 py-[11px] sm:table-cell">Turno</th>
+                <th className="px-3 py-[11px] text-right">Horas</th>
+                <th className="hidden px-3 py-[11px] lg:table-cell">Motivo</th>
+                <th className="px-3 py-[11px]" />
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -340,11 +340,11 @@ function AbaProducao({ producao, rec, sucesso, erro }: { producao: ProducaoHoras
         <Card className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
-                <th className="px-3 py-3 font-medium">Mês</th>
-                <th className="px-3 py-3 font-medium">Ano</th>
-                <th className="px-3 py-3 font-medium text-right">Horas planejadas</th>
-                <th className="px-3 py-3" />
+              <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                <th className="px-3 py-[11px]">Mês</th>
+                <th className="px-3 py-[11px]">Ano</th>
+                <th className="px-3 py-[11px] text-right">Horas planejadas</th>
+                <th className="px-3 py-[11px]" />
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -423,12 +423,12 @@ function AbaCustos({ custos, rec, sucesso, erro }: { custos: CustoManut[]; rec: 
         <Card className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
-                <th className="px-3 py-3 font-medium">Data</th>
-                <th className="px-3 py-3 font-medium">Categoria</th>
-                <th className="px-3 py-3 font-medium">Descrição</th>
-                <th className="px-3 py-3 font-medium text-right">Valor</th>
-                <th className="px-3 py-3" />
+              <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                <th className="px-3 py-[11px]">Data</th>
+                <th className="px-3 py-[11px]">Categoria</th>
+                <th className="px-3 py-[11px]">Descrição</th>
+                <th className="px-3 py-[11px] text-right">Valor</th>
+                <th className="px-3 py-[11px]" />
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">

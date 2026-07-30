@@ -72,7 +72,7 @@ export function AuditoriaPage() {
 
   return (
     <>
-      <PageHeader
+      <PageHeader grupo="Qualidade"
         title="Auditoria & PPR"
         subtitle="Auditoria interna FSSC 22000 e verificação de PPRs"
         action={
@@ -85,7 +85,7 @@ export function AuditoriaPage() {
       <div className="mb-5 flex gap-2">
         {([['auditorias', 'Auditorias'], ['ppr', 'Verificação de PPR']] as const).map(([id, label]) => (
           <button key={id} onClick={() => setAba(id)}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${aba === id ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'}`}>
+            className={`rounded-full border px-3.5 py-[7px] text-[12.5px] font-semibold transition ${aba === id ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'}`}>
             {label}
           </button>
         ))}
@@ -112,12 +112,12 @@ export function AuditoriaPage() {
           <Card className="overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
-                  <th className="px-5 py-3 font-medium">Programa</th>
-                  <th className="hidden px-5 py-3 font-medium sm:table-cell">Registro</th>
-                  <th className="hidden px-5 py-3 font-medium md:table-cell">Frequência</th>
-                  <th className="px-5 py-3 font-medium">Quando</th>
-                  <th className="px-5 py-3 font-medium">Situação</th>
+                <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                  <th className="px-5 py-[11px]">Programa</th>
+                  <th className="hidden px-5 py-[11px] sm:table-cell">Registro</th>
+                  <th className="hidden px-5 py-[11px] md:table-cell">Frequência</th>
+                  <th className="px-5 py-[11px]">Quando</th>
+                  <th className="px-5 py-[11px]">Situação</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">

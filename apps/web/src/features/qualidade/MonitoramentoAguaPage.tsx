@@ -65,7 +65,7 @@ export function MonitoramentoAguaPage() {
 
   return (
     <>
-      <PageHeader
+      <PageHeader grupo="Qualidade"
         title="Monitoramento de Cloro & pH"
         subtitle={`Água — cloro ${AGUA_CLORO_MIN}–${AGUA_CLORO_MAX} ppm · pH ${AGUA_PH_MIN}–${AGUA_PH_MAX} · 1x ao dia`}
         action={<Button onClick={abrir}><IconPlus width={16} height={16} />Nova medição</Button>}
@@ -80,16 +80,16 @@ export function MonitoramentoAguaPage() {
         <Card className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
-                <th className="px-3 py-3 font-medium">Data</th>
-                <th className="hidden px-3 py-3 font-medium sm:table-cell">Hora</th>
-                <th className="px-3 py-3 font-medium">Ponto</th>
-                <th className="px-3 py-3 font-medium text-right">Cloro (ppm)</th>
-                <th className="px-3 py-3 font-medium text-right">pH</th>
-                <th className="hidden px-3 py-3 font-medium md:table-cell">Aspecto</th>
-                <th className="px-3 py-3 font-medium">Status</th>
-                <th className="hidden px-3 py-3 font-medium lg:table-cell">Validação QA</th>
-                <th className="px-3 py-3" />
+              <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                <th className="px-3 py-[11px]">Data</th>
+                <th className="hidden px-3 py-[11px] sm:table-cell">Hora</th>
+                <th className="px-3 py-[11px]">Ponto</th>
+                <th className="px-3 py-[11px] text-right">Cloro (ppm)</th>
+                <th className="px-3 py-[11px] text-right">pH</th>
+                <th className="hidden px-3 py-[11px] md:table-cell">Aspecto</th>
+                <th className="px-3 py-[11px]">Status</th>
+                <th className="hidden px-3 py-[11px] lg:table-cell">Validação QA</th>
+                <th className="px-3 py-[11px]" />
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">

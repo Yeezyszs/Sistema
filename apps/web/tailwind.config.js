@@ -18,6 +18,13 @@ export default {
           800: '#00095e',
           900: '#000640',
         },
+        // Rail de navegação (barra escura de ícones à esquerda).
+        rail: {
+          DEFAULT: '#1c2431',
+          hover: '#2b3444',
+          active: '#293345',
+          icon: '#9ca3af',
+        },
       },
     },
   },

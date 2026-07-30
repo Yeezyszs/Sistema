@@ -36,29 +36,48 @@ export function Button({
 // ── Card ───────────────────────────────────────────────────────
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`rounded-xl border border-slate-200 bg-white shadow-sm ${className}`}>
+    <div className={`rounded-[10px] border border-slate-200 bg-white ${className}`}>
       {children}
     </div>
   );
 }
 
 // ── Cabeçalho de página ────────────────────────────────────────
+// `grupo` é o rótulo do módulo (breadcrumb); `meta` é a informação à direita.
 export function PageHeader({
   title,
   subtitle,
+  grupo,
+  meta,
   action,
 }: {
   title: string;
   subtitle?: string;
+  grupo?: string;
+  meta?: ReactNode;
   action?: ReactNode;
 }) {
   return (
-    <div className="mb-6 flex items-end justify-between gap-4">
+    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{title}</h1>
-        {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
+        {grupo && <p className="mb-0.5 text-xs text-slate-400">{grupo}</p>}
+        <h1 className="text-xl font-bold tracking-tight text-slate-900">{title}</h1>
+        {subtitle && <p className="mt-0.5 text-[12.5px] text-slate-500">{subtitle}</p>}
       </div>
-      {action}
+      <div className="flex items-center gap-3">
+        {meta && <span className="text-xs text-slate-400">{meta}</span>}
+        {action}
+      </div>
+    </div>
+  );
+}
+
+// ── Cabeçalho de card ──────────────────────────────────────────
+export function CardTitle({ children, sub }: { children: ReactNode; sub?: string }) {
+  return (
+    <div className={sub ? 'mb-3.5' : 'mb-3.5'}>
+      <h2 className="text-sm font-bold text-slate-900">{children}</h2>
+      {sub && <p className="mt-0.5 text-xs text-slate-500">{sub}</p>}
     </div>
   );
 }
@@ -88,7 +107,7 @@ export function EmptyState({
   description?: string;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
+    <div className="flex flex-col items-center justify-center rounded-[10px] border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
       {icon && <div className="mb-3 text-slate-300">{icon}</div>}
       <p className="text-sm font-medium text-slate-700">{title}</p>
       {description && <p className="mt-1 max-w-sm text-sm text-slate-400">{description}</p>}

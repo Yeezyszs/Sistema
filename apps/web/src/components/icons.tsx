@@ -137,3 +137,40 @@ export const IconClipboard = (p: IconProps) => (
     <path d="M9 12h6M9 16h4" />
   </svg>
 );
+
+// ── Ícones do rail de navegação ────────────────────────────────
+export const IconGrid = (p: IconProps) => (
+  <svg {...base} {...p}>
+    <rect x="3" y="3" width="8" height="8" rx="1.5" />
+    <rect x="13" y="3" width="8" height="5" rx="1.5" />
+    <rect x="13" y="11" width="8" height="10" rx="1.5" />
+    <rect x="3" y="14" width="8" height="7" rx="1.5" />
+  </svg>
+);
+
+export const IconFactory = (p: IconProps) => (
+  <svg {...base} {...p}>
+    <path d="M3 21V11l5 3.5V11l5 3.5V11l5 3.5V21H3Z" />
+    <path d="M7 21v-4M12 21v-4M17 21v-4" />
+  </svg>
+);
+
+export const IconWrench = (p: IconProps) => (
+  <svg {...base} {...p}>
+    <path d="M14 6a4 4 0 0 0-5 5l-6 6 3 3 6-6a4 4 0 0 0 5-5l-2 2-2-.5-.5-2 1.5-2.5Z" />
+  </svg>
+);
+
+export const IconUser = (p: IconProps) => (
+  <svg {...base} {...p}>
+    <circle cx="12" cy="8" r="4" />
+    <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
+  </svg>
+);
+
+export const IconLock = (p: IconProps) => (
+  <svg {...base} {...p}>
+    <rect x="5" y="11" width="14" height="10" rx="2" />
+    <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+  </svg>
+);

@@ -5,23 +5,23 @@ import {
   listCalibracoes, listPedidos, listCarregamentos, mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
-import { formatarQuantidade, hojeLocalISO } from '../../lib/format';
+import { formatarData, formatarQuantidade, hojeLocalISO } from '../../lib/format';
 import {
   calcularRendimento, ncEstaAberta, situacaoCalibracao,
   STATUS_LOTE, STATUS_LOTE_LABEL,
 } from '@sistema/domain';
 import type { StatusLote } from '@sistema/domain';
-import { PageHeader, Card, Spinner } from '../../components/ui';
+import { PageHeader, Card, CardTitle, Spinner } from '../../components/ui';
+import { IconClock } from '../../components/icons';
 import { useAuth } from '../../lib/auth';
 
-function reais(n: number): string {
-  return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-}
+const reais = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const kg = (n: number) => formatarQuantidade(n);
 
 // Semana corrente: segunda a sábado.
 function semanaAtual(): { de: string; ate: string } {
   const d = new Date();
-  const dow = (d.getDay() + 6) % 7; // 0 = segunda
+  const dow = (d.getDay() + 6) % 7;
   const seg = new Date(d); seg.setDate(d.getDate() - dow);
   const sab = new Date(seg); sab.setDate(seg.getDate() + 5);
   const iso = (x: Date) => {
@@ -31,13 +31,14 @@ function semanaAtual(): { de: string; ate: string } {
   return { de: iso(seg), ate: iso(sab) };
 }
 
-const TOM_STATUS: Record<StatusLote, string> = {
-  em_processo: 'bg-sky-400',
-  aguardando_liberacao: 'bg-amber-400',
-  liberado: 'bg-emerald-500',
-  bloqueado: 'bg-red-500',
-  expedido: 'bg-slate-400',
-  cancelado: 'bg-slate-300',
+// Cor da faixa de status do lote (semântica, independente do acento da marca).
+const COR_STATUS: Record<StatusLote, string> = {
+  em_processo: '#6366f1',
+  aguardando_liberacao: '#f59e0b',
+  liberado: '#10b981',
+  bloqueado: '#ef4444',
+  expedido: '#94a3b8',
+  cancelado: '#cbd5e1',
 };
 
 export function PainelPage() {
@@ -49,23 +50,11 @@ export function PainelPage() {
   const { data, loading } = useAsync(async () => {
     const [apontSemana, linhas, recebimentos, prog, lotes, ops, ncs, osPcm, paradas, calibracoes, pedidos, cargas] =
       await Promise.all([
-        listApontamentos(de, ate),
-        listLinhas(),
-        listRecebimentos(),
-        listProgramacao(de, ate),
-        listLotes(),
-        listOrdensProducao(),
-        listNaoConformidades(),
-        listOrdensPcm(),
-        listParadas(),
-        listCalibracoes(),
-        listPedidos(),
-        listCarregamentos(),
+        listApontamentos(de, ate), listLinhas(), listRecebimentos(), listProgramacao(de, ate),
+        listLotes(), listOrdensProducao(), listNaoConformidades(), listOrdensPcm(),
+        listParadas(), listCalibracoes(), listPedidos(), listCarregamentos(),
       ]);
-    return {
-      apontSemana, recebimentos, prog, lotes, ops, ncs, osPcm, paradas, calibracoes, pedidos, cargas,
-      linhas, linhasMap: mapBy(linhas, 'id'),
-    };
+    return { apontSemana, recebimentos, prog, lotes, ops, ncs, osPcm, paradas, calibracoes, pedidos, cargas, linhas, linhasMap: mapBy(linhas, 'id') };
   }, [de, ate]);
 
   if (loading || !data) {
@@ -77,31 +66,33 @@ export function PainelPage() {
     );
   }
 
-  const { apontSemana, recebimentos, prog, lotes, ops, ncs, osPcm, paradas, calibracoes, pedidos, cargas, linhas, linhasMap } = data;
+  const { apontSemana, recebimentos, prog, lotes, ops, ncs, osPcm, paradas, calibracoes, pedidos, cargas, linhas } = data;
 
-  // ── Zona 1: pulso do dia ──
-  const prodHoje = apontSemana.filter((a) => a.data === hoje).reduce((s, a) => s + (a.quantidade_kg ?? 0), 0);
+  // ── Pulso do dia ──
+  const apontHoje = apontSemana.filter((a) => a.data === hoje);
+  const prodHoje = apontHoje.reduce((s, a) => s + (a.quantidade_kg ?? 0), 0);
   const descargasHoje = recebimentos.filter((r) => r.recebido_em.slice(0, 10) === hoje);
   const raizHoje = descargasHoje.reduce((s, r) => s + (r.quantidade ?? 0), 0);
   const rendHoje = calcularRendimento(prodHoje || null, raizHoje || null);
+  const metaHoje = prog.filter((p) => p.data === hoje).reduce((s, p) => s + (p.meta_kg ?? 0), 0);
   const metaSemana = prog.reduce((s, p) => s + (p.meta_kg ?? 0), 0);
   const realSemana = apontSemana.reduce((s, a) => s + (a.quantidade_kg ?? 0), 0);
   const pctSemana = metaSemana > 0 ? (realSemana / metaSemana) * 100 : null;
 
-  // ── Zona 2: fluxo da produção ──
-  const apontHoje = apontSemana.filter((a) => a.data === hoje);
-  const porLinha = linhas
-    .map((l) => ({ codigo: l.codigo, kg: apontHoje.filter((a) => a.linha_id === l.id).reduce((s, a) => s + (a.quantidade_kg ?? 0), 0) }))
-    .filter((x) => x.kg > 0);
+  // ── Produção por linha (hoje), com meta da programação ──
+  const porLinha = linhas.map((l) => {
+    const feito = apontHoje.filter((a) => a.linha_id === l.id).reduce((s, a) => s + (a.quantidade_kg ?? 0), 0);
+    const meta = prog.filter((p) => p.data === hoje && p.linha_id === l.id).reduce((s, p) => s + (p.meta_kg ?? 0), 0);
+    const pct = meta > 0 ? Math.min(100, Math.round((feito / meta) * 100)) : null;
+    return { codigo: l.codigo, nome: l.nome, feito, meta, pct };
+  });
   const semLinha = apontHoje.filter((a) => !a.linha_id).reduce((s, a) => s + (a.quantidade_kg ?? 0), 0);
-  if (semLinha > 0) porLinha.push({ codigo: 'Sem linha', kg: semLinha });
-  const maxLinha = Math.max(1, ...porLinha.map((x) => x.kg));
 
+  // ── Lotes por status ──
   const porStatus = STATUS_LOTE.map((st) => ({ st, n: lotes.filter((l) => l.status === st).length })).filter((x) => x.n > 0);
   const totalLotes = lotes.length;
-  const emProcesso = lotes.filter((l) => l.status === 'em_processo').length;
 
-  // ── Zona 3: fila de ação ──
+  // ── Fila de ação ──
   const aguardando = lotes.filter((l) => l.status === 'aguardando_liberacao').length;
   const bloqueados = lotes.filter((l) => l.status === 'bloqueado').length;
   const opsAbertas = ops.filter((o) => o.status !== 'concluida').length;
@@ -110,164 +101,181 @@ export function PainelPage() {
   const paradasHoje = paradas.filter((p) => p.data === hoje);
   const horasParadasHoje = paradasHoje.reduce((s, p) => s + (p.horas ?? 0), 0);
   const calibVencendo = calibracoes.filter((c) => ['a_vencer', 'vencida'].includes(situacaoCalibracao(c.valido_ate))).length;
-  const carteiraAberta = pedidos.filter((p) => p.status === 'aprovado' && p.situacao !== 'carregado');
-  const pedidosAExpedir = carteiraAberta.length;
+  const carteira = pedidos.filter((p) => p.status === 'aprovado' && p.situacao !== 'carregado');
   const cargasHoje = cargas.filter((c) => c.data === hoje).length;
 
-  // ── Comercial (só para quem acessa o módulo) ──
-  const kgAExpedir = carteiraAberta.reduce((s, p) => s + (p.peso_carga_kg ?? 0), 0);
-  const rsEmAberto = carteiraAberta.reduce((s, p) => s + (p.valor_total_rs ?? 0), 0);
+  // ── Comercial ──
+  const kgAExpedir = carteira.reduce((s, p) => s + (p.peso_carga_kg ?? 0), 0);
+  const rsEmAberto = carteira.reduce((s, p) => s + (p.valor_total_rs ?? 0), 0);
   const mesIni = `${hoje.slice(0, 7)}-01`;
-  const faturamentoMes = pedidos
-    .filter((p) => p.status !== 'cancelado' && p.data >= mesIni)
+  const faturamentoMes = pedidos.filter((p) => p.status !== 'cancelado' && p.data >= mesIni)
     .reduce((s, p) => s + (p.valor_total_rs ?? 0), 0);
 
   return (
     <>
-      <PageHeader title="Painel" subtitle="Operação da fábrica — dia e semana" />
+      <PageHeader
+        title="Painel"
+        subtitle="Operação da fábrica — dia e semana"
+        meta={formatarData(hoje)}
+      />
 
-      {/* Zona 1 — Pulso do dia */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Kpi titulo="Produção hoje" valor={fmt(prodHoje)} unidade="kg" />
-        <Kpi titulo="Rendimento hoje" valor={rendHoje != null ? rendHoje.toFixed(1) : '—'} unidade={rendHoje != null ? '%' : ''}
-          tom={rendHoje != null && rendHoje > 0 ? 'ok' : 'neutro'} />
-        <Kpi titulo="Raiz recebida hoje" valor={fmt(raizHoje)} unidade="kg"
-          rodape={`${descargasHoje.length} descarga(s)`} />
-        <Kpi titulo="Real / meta da semana" valor={pctSemana != null ? pctSemana.toFixed(0) : '—'} unidade={pctSemana != null ? '%' : ''}
-          rodape={`${fmt(realSemana)} de ${fmt(metaSemana)} kg`}
-          tom={pctSemana == null ? 'neutro' : pctSemana >= 100 ? 'ok' : 'alerta'} />
+      {/* Pulso do dia */}
+      <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+        <Kpi label="Produção hoje" valor={`${kg(prodHoje)} kg`}
+          sub={metaHoje > 0 ? `Meta do dia: ${kg(metaHoje)} kg` : 'Sem meta programada hoje'} />
+        <Kpi label="Rendimento hoje" valor={rendHoje != null ? `${rendHoje.toFixed(1)}%` : '—'}
+          sub="produzido ÷ raiz descarregada" />
+        <Kpi label="Raiz recebida hoje" valor={`${kg(raizHoje)} kg`}
+          sub={`${descargasHoje.length} descarga(s)`} />
+        <Kpi label="Real / meta semana" valor={pctSemana != null ? `${pctSemana.toFixed(0)}%` : '—'}
+          sub={`${kg(realSemana)} / ${kg(metaSemana)} kg`} />
       </div>
 
-      {/* Zona 2 — Fluxo da produção */}
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <Card className="p-6">
-          <div className="mb-4 flex items-baseline justify-between">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Produção por linha — hoje</h2>
-            <span className="text-xs text-slate-400">{emProcesso} lote(s) em processo</span>
+      {/* Fluxo: linhas + status */}
+      <div className="mt-3.5 grid gap-3.5 lg:grid-cols-[1.3fr_1fr]">
+        <Card className="p-[18px]">
+          <CardTitle>Produção por linha — hoje</CardTitle>
+          <div className="flex flex-col gap-2.5">
+            {porLinha.length === 0 && <p className="text-slate-400">Nenhuma linha cadastrada.</p>}
+            {porLinha.map((l) => (
+              l.feito === 0 ? (
+                <div key={l.codigo} className="flex items-center gap-3 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3.5 py-3">
+                  <IconClock width={18} height={18} className="shrink-0 text-slate-400" />
+                  <div>
+                    <p className="text-[13.5px] font-semibold text-slate-700">{l.codigo} — sem apontamentos hoje</p>
+                    <p className="mt-0.5 text-xs text-slate-400">
+                      {l.meta > 0 ? `Meta do dia: ${kg(l.meta)} kg · verificar parada` : 'Sem meta programada · verificar parada'}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div key={l.codigo} className="rounded-lg bg-slate-50 px-3.5 py-3">
+                  <div className="mb-[7px] flex items-baseline justify-between gap-3">
+                    <span className="text-[13.5px] font-semibold text-slate-900">
+                      {l.codigo}{l.nome && <span className="ml-1.5 font-normal text-slate-400">{l.nome}</span>}
+                    </span>
+                    <span className="text-xs tabular-nums text-slate-500">
+                      {kg(l.feito)} kg{l.meta > 0 && <span className="text-slate-400"> / meta {kg(l.meta)} kg</span>}
+                    </span>
+                  </div>
+                  <div className="h-[7px] overflow-hidden rounded bg-slate-200">
+                    <div className="h-full rounded transition-[width]"
+                      style={{
+                        width: `${l.pct ?? 100}%`,
+                        background: l.pct == null ? '#6366f1' : l.pct >= 95 ? '#059669' : l.pct >= 75 ? '#2563eb' : '#d97706',
+                      }} />
+                  </div>
+                </div>
+              )
+            ))}
+            {semLinha > 0 && (
+              <p className="text-xs text-slate-400">+ {kg(semLinha)} kg apontados sem linha definida.</p>
+            )}
           </div>
-          {porLinha.length === 0 ? (
-            <p className="text-sm text-slate-400">Sem apontamentos hoje.</p>
-          ) : (
-            <div className="space-y-2.5">
-              {porLinha.map((l) => (
-                <div key={l.codigo} className="flex items-center gap-3">
-                  <span className="w-24 shrink-0 text-sm font-medium text-slate-600">{l.codigo}</span>
-                  <div className="h-5 flex-1 overflow-hidden rounded bg-slate-100">
-                    <div className="h-full rounded bg-brand-500" style={{ width: `${(l.kg / maxLinha) * 100}%` }} />
-                  </div>
-                  <span className="w-20 shrink-0 text-right text-sm font-semibold tabular-nums text-slate-700">{fmt(l.kg)} kg</span>
-                </div>
-              ))}
-            </div>
-          )}
         </Card>
 
-        <Card className="p-6">
-          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-400">Lotes por status</h2>
-          {porStatus.length === 0 ? (
-            <p className="text-sm text-slate-400">Nenhum lote cadastrado.</p>
+        <Card className="p-[18px]">
+          <CardTitle sub={`${totalLotes} lote(s) no total`}>Lotes por status</CardTitle>
+          {totalLotes === 0 ? (
+            <p className="text-slate-400">Nenhum lote cadastrado.</p>
           ) : (
-            <div className="space-y-2.5">
-              {porStatus.map(({ st, n }) => (
-                <div key={st} className="flex items-center gap-3">
-                  <span className="w-40 shrink-0 text-sm text-slate-600">{STATUS_LOTE_LABEL[st]}</span>
-                  <div className="h-5 flex-1 overflow-hidden rounded bg-slate-100">
-                    <div className={`h-full rounded ${TOM_STATUS[st]}`} style={{ width: `${(n / totalLotes) * 100}%` }} />
+            <>
+              <div className="mb-3.5 flex h-3 overflow-hidden rounded-md">
+                {porStatus.map(({ st, n }) => (
+                  <div key={st} title={STATUS_LOTE_LABEL[st]}
+                    style={{ width: `${(n / totalLotes) * 100}%`, background: COR_STATUS[st] }} />
+                ))}
+              </div>
+              <div className="flex flex-col gap-2.5">
+                {porStatus.map(({ st, n }) => (
+                  <div key={st} className="flex items-center justify-between text-[12.5px]">
+                    <span className="flex items-center gap-2 text-slate-700">
+                      <span className="h-2.5 w-2.5 rounded-sm" style={{ background: COR_STATUS[st] }} />
+                      {STATUS_LOTE_LABEL[st]}
+                    </span>
+                    <span className="tabular-nums text-slate-500">{n} de {totalLotes}</span>
                   </div>
-                  <span className="w-8 shrink-0 text-right text-sm font-semibold text-slate-700">{n}</span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </>
           )}
-          <Link to="/lotes" className="mt-4 inline-block text-xs font-medium text-brand-600 hover:text-brand-700">Ver lotes →</Link>
+          <Link to="/lotes" className="mt-4 inline-block text-xs font-semibold text-brand-700 hover:underline">Ver lotes →</Link>
         </Card>
       </div>
 
-      {/* Zona 3 — Precisa de ação */}
-      <div className="mt-6">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">Precisa de ação</h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <Acao rotulo="Lotes aguardando liberação" valor={aguardando} to="/lotes" tom={aguardando > 0 ? 'alerta' : 'ok'} />
-          <Acao rotulo="Lotes bloqueados" valor={bloqueados} to="/lotes" tom={bloqueados > 0 ? 'critico' : 'ok'} />
-          <Acao rotulo="Não conformidades abertas" valor={ncsAbertas} to="/nao-conformidades" tom={ncsAbertas > 0 ? 'critico' : 'ok'} />
-          <Acao rotulo="O.S. de manutenção abertas" valor={osAbertas} to="/manutencao" tom={osAbertas > 0 ? 'alerta' : 'ok'} />
-          <Acao rotulo="Paradas de hoje" valor={horasParadasHoje > 0 ? `${horasParadasHoje.toFixed(1)} h` : 0}
-            sub={`${paradasHoje.length} evento(s)`} to="/pcm-indicadores" tom={horasParadasHoje > 0 ? 'alerta' : 'ok'} />
-          <Acao rotulo="Calibração vencendo / vencida" valor={calibVencendo} to="/calibracao" tom={calibVencendo > 0 ? 'alerta' : 'ok'} />
-          <Acao rotulo="Ordens de produção em aberto" valor={opsAbertas} to="/ordens" tom="info" />
-          <Acao rotulo="Pedidos a expedir" valor={pedidosAExpedir} to="/pedidos" tom={pedidosAExpedir > 0 ? 'info' : 'ok'} />
-          <Acao rotulo="Cargas de hoje" valor={cargasHoje} to="/expedicao" tom="info" />
+      {/* Precisa de ação */}
+      <Card className="mt-3.5 p-[18px]">
+        <CardTitle>Precisa de ação</CardTitle>
+        <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+          <Acao n={aguardando} label="Lotes aguardando liberação" to="/lotes" tom="alerta" />
+          <Acao n={bloqueados} label="Lotes bloqueados" to="/lotes" tom="critico" />
+          <Acao n={ncsAbertas} label="Não conformidades abertas" to="/nao-conformidades" tom="critico" />
+          <Acao n={osAbertas} label="O.S. de manutenção abertas" to="/manutencao" tom="alerta" />
+          <Acao n={horasParadasHoje > 0 ? `${horasParadasHoje.toFixed(1)} h` : 0}
+            label={`Paradas de hoje${paradasHoje.length ? ` · ${paradasHoje.length} evento(s)` : ''}`}
+            to="/pcm-indicadores" tom="alerta" />
+          <Acao n={calibVencendo} label="Calibração vencendo / vencida" to="/calibracao" tom="alerta" />
+          <Acao n={opsAbertas} label="Ordens de produção em aberto" to="/ordens" tom="info" />
+          <Acao n={carteira.length} label="Pedidos a expedir" to="/pedidos" tom="info" />
+          <Acao n={cargasHoje} label="Cargas de hoje" to="/expedicao" tom="info" />
         </div>
-      </div>
+      </Card>
 
       {/* Comercial — só para quem acessa o módulo */}
       {veComercial && (
-        <div className="mt-6">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">Comercial</h2>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <KpiLink titulo="Faturamento do mês" valor={reais(faturamentoMes)} to="/analise-vendas" tom="destaque" />
-            <KpiLink titulo="Valor em aberto" valor={reais(rsEmAberto)} sub="carteira não entregue" to="/carteira" />
-            <KpiLink titulo="Volume a expedir" valor={`${fmt(kgAExpedir)} kg`} to="/carteira" />
-            <KpiLink titulo="Pedidos em aberto" valor={String(pedidosAExpedir)} to="/carteira" />
-          </div>
+        <div className="mt-3.5 grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+          <KpiLink label="Faturamento do mês" valor={reais(faturamentoMes)} to="/analise-vendas" destaque />
+          <KpiLink label="Valor em aberto" valor={reais(rsEmAberto)} sub="carteira não entregue" to="/carteira" />
+          <KpiLink label="Volume a expedir" valor={`${kg(kgAExpedir)} kg`} to="/carteira" />
+          <KpiLink label="Pedidos em aberto" valor={String(carteira.length)} to="/carteira" />
         </div>
       )}
     </>
   );
 }
 
-function fmt(n: number): string {
-  return formatarQuantidade(n);
-}
-
-type Tom = 'neutro' | 'ok' | 'info' | 'alerta' | 'critico';
-
-function Kpi({ titulo, valor, unidade, rodape, tom = 'neutro' }: {
-  titulo: string; valor: string; unidade?: string; rodape?: string; tom?: Tom;
-}) {
-  const barra = tom === 'critico' ? 'bg-red-500' : tom === 'alerta' ? 'bg-amber-500' : tom === 'ok' ? 'bg-emerald-500' : 'bg-brand-600';
+function Kpi({ label, valor, sub }: { label: string; valor: string; sub?: string }) {
   return (
-    <Card className="relative overflow-hidden p-5">
-      <span className={`absolute inset-y-0 left-0 w-1 ${barra}`} />
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{titulo}</p>
-      <p className="mt-1 text-2xl font-bold tabular-nums text-slate-900">
-        {valor}{unidade && <span className="ml-1 text-sm font-semibold text-slate-400">{unidade}</span>}
-      </p>
-      {rodape && <p className="mt-0.5 text-xs text-slate-400">{rodape}</p>}
+    <Card className="px-[18px] py-4">
+      <p className="text-[11.5px] font-semibold uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="mt-2 text-2xl font-bold leading-none tabular-nums text-slate-900">{valor}</p>
+      {sub && <p className="mt-1.5 text-xs text-slate-500">{sub}</p>}
     </Card>
   );
 }
 
-function KpiLink({ titulo, valor, sub, to, tom }: {
-  titulo: string; valor: string; sub?: string; to: string; tom?: 'destaque';
+function KpiLink({ label, valor, sub, to, destaque }: {
+  label: string; valor: string; sub?: string; to: string; destaque?: boolean;
 }) {
   return (
-    <Link to={to} className="relative block overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-brand-300 hover:bg-slate-50">
-      <span className={`absolute inset-y-0 left-0 w-1 ${tom === 'destaque' ? 'bg-brand-600' : 'bg-slate-300'}`} />
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{titulo}</p>
-      <p className="mt-1 text-2xl font-bold tabular-nums text-slate-900">{valor}</p>
-      {sub && <p className="mt-0.5 text-xs text-slate-400">{sub}</p>}
+    <Link to={to}
+      className={`block rounded-[10px] border bg-white px-[18px] py-4 transition hover:border-brand-300 ${
+        destaque ? 'border-brand-200' : 'border-slate-200'
+      }`}>
+      <p className="text-[11.5px] font-semibold uppercase tracking-wide text-slate-500">{label}</p>
+      <p className={`mt-2 text-2xl font-bold leading-none tabular-nums ${destaque ? 'text-brand-700' : 'text-slate-900'}`}>{valor}</p>
+      {sub && <p className="mt-1.5 text-xs text-slate-500">{sub}</p>}
     </Link>
   );
 }
 
-function Acao({ rotulo, valor, sub, to, tom }: {
-  rotulo: string; valor: number | string; sub?: string; to: string; tom: Tom;
+// Tile de ação: cor por severidade; zero fica apagado (nada a fazer).
+function Acao({ n, label, to, tom }: {
+  n: number | string; label: string; to: string; tom: 'critico' | 'alerta' | 'info';
 }) {
-  const zero = valor === 0 || valor === '0';
-  const badge = zero
-    ? 'bg-slate-100 text-slate-400'
-    : tom === 'critico' ? 'bg-red-100 text-red-700'
-    : tom === 'alerta' ? 'bg-amber-100 text-amber-700'
-    : tom === 'ok' ? 'bg-emerald-100 text-emerald-700'
-    : 'bg-sky-100 text-sky-700';
+  const zero = n === 0 || n === '0';
+  const estilo = zero
+    ? 'border-slate-200 bg-slate-50 text-slate-400'
+    : tom === 'critico' ? 'border-red-200 bg-red-50 text-red-600'
+    : tom === 'alerta' ? 'border-amber-200 bg-amber-50 text-amber-600'
+    : 'border-brand-100 bg-brand-50 text-brand-700';
+  const corRotulo = zero
+    ? 'text-slate-400'
+    : tom === 'critico' ? 'text-red-900' : tom === 'alerta' ? 'text-amber-900' : 'text-brand-900';
   return (
-    <Link to={to} className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm transition hover:border-brand-300 hover:bg-slate-50">
-      <div>
-        <p className="text-sm font-medium text-slate-700">{rotulo}</p>
-        {sub && <p className="text-xs text-slate-400">{sub}</p>}
-      </div>
-      <span className={`min-w-8 shrink-0 rounded-full px-2.5 py-1 text-center text-sm font-bold tabular-nums ${badge}`}>{valor}</span>
+    <Link to={to} className={`flex items-center gap-3 rounded-[9px] border px-3.5 py-3 transition hover:brightness-[0.98] ${estilo}`}>
+      <span className="min-w-7 text-xl font-extrabold tabular-nums">{n}</span>
+      <span className={`text-[12.5px] leading-tight ${corRotulo}`}>{label}</span>
     </Link>
   );
 }

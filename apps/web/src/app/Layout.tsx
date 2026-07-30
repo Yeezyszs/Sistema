@@ -1,29 +1,12 @@
 import { NavLink, Link, Outlet, useLocation } from 'react-router-dom';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useAuth } from '../lib/auth';
 import type { Modulo } from '@sistema/domain';
 import {
   IconLotes, IconRecebimento, IconLogout, IconLeaf, IconShield, IconClipboard, IconDoc,
-  IconFlask, IconBox, IconCheck, IconClock, IconChevronRight, IconTruck, IconArrowLeft,
+  IconFlask, IconBox, IconCheck, IconClock, IconTruck, IconArrowLeft,
+  IconGrid, IconFactory, IconWrench, IconUser, IconLock,
 } from '../components/icons';
-
-function NavItem({ to, icon, label }: { to: string; icon: ReactNode; label: string }) {
-  return (
-    <NavLink
-      to={to}
-      className={({ isActive }) =>
-        `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
-          isActive
-            ? 'bg-brand-50 text-brand-700'
-            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-        }`
-      }
-    >
-      {icon}
-      {label}
-    </NavLink>
-  );
-}
 
 interface SubItem {
   to: string;
@@ -32,206 +15,263 @@ interface SubItem {
   modulo: Modulo;
 }
 
-function NavGroup({ icon, label, items }: { icon: ReactNode; label: string; items: SubItem[] }) {
-  const location = useLocation();
-  const algumAtivo = items.some((i) => location.pathname.startsWith(i.to));
-  const [aberto, setAberto] = useState(algumAtivo);
-
-  if (items.length === 0) return null;
-
-  return (
-    <div>
-      <button
-        onClick={() => setAberto((v) => !v)}
-        className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
-          algumAtivo && !aberto
-            ? 'bg-brand-50 text-brand-700'
-            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-        }`}
-      >
-        {icon}
-        <span className="flex-1 text-left">{label}</span>
-        <IconChevronRight
-          width={14}
-          height={14}
-          className={`shrink-0 transition-transform ${aberto ? 'rotate-90' : ''}`}
-        />
-      </button>
-      {aberto && (
-        <div className="mt-1 space-y-1 border-l border-slate-200 pl-3">
-          {items.map((item) => (
-            <NavItem key={item.to} to={item.to} icon={item.icon} label={item.label} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-const ITENS_TOPO: SubItem[] = [
-  { to: '/painel', icon: <IconShield width={18} height={18} />, label: 'Painel', modulo: 'painel' },
-];
-
-// Produção (PCP) — o fluxo do chão de fábrica.
+// ── Itens por grupo ────────────────────────────────────────────
 const ITENS_PRODUCAO: SubItem[] = [
-  { to: '/lotes', icon: <IconLotes width={18} height={18} />, label: 'Lotes', modulo: 'lotes' },
-  { to: '/programacao', icon: <IconClipboard width={18} height={18} />, label: 'Programação', modulo: 'pcp' },
-  { to: '/apontamento', icon: <IconCheck width={18} height={18} />, label: 'Apontamento', modulo: 'pcp' },
-  { to: '/ordens', icon: <IconClipboard width={18} height={18} />, label: 'Ordens de produção', modulo: 'ordens' },
-  { to: '/produtos', icon: <IconBox width={18} height={18} />, label: 'Produtos', modulo: 'produtos' },
+  { to: '/lotes', icon: <IconLotes width={16} height={16} />, label: 'Lotes', modulo: 'lotes' },
+  { to: '/programacao', icon: <IconClipboard width={16} height={16} />, label: 'Programação', modulo: 'pcp' },
+  { to: '/apontamento', icon: <IconCheck width={16} height={16} />, label: 'Apontamento', modulo: 'pcp' },
+  { to: '/ordens', icon: <IconClipboard width={16} height={16} />, label: 'Ordens de produção', modulo: 'ordens' },
+  { to: '/produtos', icon: <IconBox width={16} height={16} />, label: 'Produtos', modulo: 'produtos' },
 ];
 
-// Almoxarifado — consumíveis e materiais de apoio.
 const ITENS_ALMOX: SubItem[] = [
-  { to: '/almoxarifado', icon: <IconBox width={18} height={18} />, label: 'Consumíveis', modulo: 'almoxarifado' },
-  { to: '/embalagens', icon: <IconBox width={18} height={18} />, label: 'Embalagens', modulo: 'almoxarifado' },
-  { to: '/pallets', icon: <IconBox width={18} height={18} />, label: 'Pallets', modulo: 'pallets' },
+  { to: '/almoxarifado', icon: <IconBox width={16} height={16} />, label: 'Consumíveis', modulo: 'almoxarifado' },
+  { to: '/embalagens', icon: <IconBox width={16} height={16} />, label: 'Embalagens', modulo: 'almoxarifado' },
+  { to: '/pallets', icon: <IconBox width={16} height={16} />, label: 'Pallets', modulo: 'pallets' },
 ];
 
-// Logística — controle de estoque de produto acabado e despacho.
 const ITENS_LOGISTICA: SubItem[] = [
-  { to: '/estoque', icon: <IconBox width={18} height={18} />, label: 'Estoque', modulo: 'estoque' },
-  { to: '/expedicao', icon: <IconTruck width={18} height={18} />, label: 'Expedição', modulo: 'expedicao' },
+  { to: '/estoque', icon: <IconBox width={16} height={16} />, label: 'Estoque', modulo: 'estoque' },
+  { to: '/expedicao', icon: <IconTruck width={16} height={16} />, label: 'Expedição', modulo: 'expedicao' },
 ];
 
-// Suprimentos — entrada de matéria-prima e fornecedores.
 const ITENS_SUPRIMENTOS: SubItem[] = [
-  { to: '/recebimentos', icon: <IconRecebimento />, label: 'Recebimentos', modulo: 'recebimentos' },
-  { to: '/fornecedores', icon: <IconRecebimento />, label: 'Fornecedores & QA', modulo: 'fornecedores' },
+  { to: '/recebimentos', icon: <IconRecebimento width={16} height={16} />, label: 'Recebimentos', modulo: 'recebimentos' },
+  { to: '/fornecedores', icon: <IconUser width={16} height={16} />, label: 'Fornecedores & QA', modulo: 'fornecedores' },
 ];
 
-// Comercial — clientes e carteira de pedidos.
 const ITENS_COMERCIAL: SubItem[] = [
-  { to: '/carteira', icon: <IconDoc width={18} height={18} />, label: 'Carteira de pedidos', modulo: 'comercial' },
-  { to: '/pedidos', icon: <IconDoc width={18} height={18} />, label: 'Pedidos', modulo: 'pedidos' },
-  { to: '/analise-vendas', icon: <IconShield width={18} height={18} />, label: 'Análise de vendas', modulo: 'comercial' },
-  { to: '/clientes', icon: <IconRecebimento />, label: 'Clientes', modulo: 'comercial' },
+  { to: '/carteira', icon: <IconDoc width={16} height={16} />, label: 'Carteira de pedidos', modulo: 'comercial' },
+  { to: '/pedidos', icon: <IconDoc width={16} height={16} />, label: 'Pedidos', modulo: 'pedidos' },
+  { to: '/analise-vendas', icon: <IconGrid width={16} height={16} />, label: 'Análise de vendas', modulo: 'comercial' },
+  { to: '/clientes', icon: <IconUser width={16} height={16} />, label: 'Clientes', modulo: 'comercial' },
 ];
 
 const ITENS_QUALIDADE: SubItem[] = [
-  { to: '/qualidade', icon: <IconShield width={18} height={18} />, label: 'Qualidade', modulo: 'qualidade' },
-  { to: '/acompanhamento', icon: <IconFlask width={18} height={18} />, label: 'Acomp. de Processo', modulo: 'acompanhamento' },
-  { to: '/monitoramento-agua', icon: <IconFlask width={18} height={18} />, label: 'Cloro & pH (água)', modulo: 'monitoramento_agua' },
-  { to: '/pcc-fisico', icon: <IconBox width={18} height={18} />, label: 'PCC Físico', modulo: 'pcc_fisico' },
-  { to: '/ppho', icon: <IconCheck width={18} height={18} />, label: 'PPHO & Higiene', modulo: 'ppho' },
-  { to: '/especificacoes', icon: <IconFlask width={18} height={18} />, label: 'Especificações', modulo: 'especificacoes' },
-  { to: '/calibracao', icon: <IconClock width={18} height={18} />, label: 'Calibração', modulo: 'calibracao' },
-  { to: '/calibracao-phmetro', icon: <IconFlask width={18} height={18} />, label: 'Calibração pHmetro', modulo: 'calibracao' },
-  { to: '/insumos-lab', icon: <IconBox width={18} height={18} />, label: 'Insumos do Lab', modulo: 'insumos_lab' },
-  { to: '/contraprovas', icon: <IconBox width={18} height={18} />, label: 'Contraprovas', modulo: 'contraprovas' },
-  { to: '/analise-risco', icon: <IconShield width={18} height={18} />, label: 'Análise de risco', modulo: 'analise_risco' },
-  { to: '/auditoria', icon: <IconCheck width={18} height={18} />, label: 'Auditoria & PPR', modulo: 'auditoria' },
-  { to: '/ambiental', icon: <IconLeaf width={18} height={18} />, label: 'Ambiental & Pragas', modulo: 'ambiental' },
-  { to: '/nao-conformidades', icon: <IconDoc width={18} height={18} />, label: 'Não conformidades', modulo: 'nao_conformidades' },
-  { to: '/reprocesso', icon: <IconClock width={18} height={18} />, label: 'Retidos', modulo: 'reprocesso' },
+  { to: '/qualidade', icon: <IconShield width={16} height={16} />, label: 'Qualidade', modulo: 'qualidade' },
+  { to: '/acompanhamento', icon: <IconFlask width={16} height={16} />, label: 'Acomp. de Processo', modulo: 'acompanhamento' },
+  { to: '/monitoramento-agua', icon: <IconFlask width={16} height={16} />, label: 'Cloro & pH (água)', modulo: 'monitoramento_agua' },
+  { to: '/pcc-fisico', icon: <IconBox width={16} height={16} />, label: 'PCC Físico', modulo: 'pcc_fisico' },
+  { to: '/ppho', icon: <IconCheck width={16} height={16} />, label: 'PPHO & Higiene', modulo: 'ppho' },
+  { to: '/especificacoes', icon: <IconFlask width={16} height={16} />, label: 'Especificações', modulo: 'especificacoes' },
+  { to: '/calibracao', icon: <IconClock width={16} height={16} />, label: 'Calibração', modulo: 'calibracao' },
+  { to: '/calibracao-phmetro', icon: <IconFlask width={16} height={16} />, label: 'Calibração pHmetro', modulo: 'calibracao' },
+  { to: '/insumos-lab', icon: <IconBox width={16} height={16} />, label: 'Insumos do Lab', modulo: 'insumos_lab' },
+  { to: '/contraprovas', icon: <IconBox width={16} height={16} />, label: 'Contraprovas', modulo: 'contraprovas' },
+  { to: '/analise-risco', icon: <IconShield width={16} height={16} />, label: 'Análise de risco', modulo: 'analise_risco' },
+  { to: '/auditoria', icon: <IconCheck width={16} height={16} />, label: 'Auditoria & PPR', modulo: 'auditoria' },
+  { to: '/ambiental', icon: <IconLeaf width={16} height={16} />, label: 'Ambiental & Pragas', modulo: 'ambiental' },
+  { to: '/nao-conformidades', icon: <IconDoc width={16} height={16} />, label: 'Não conformidades', modulo: 'nao_conformidades' },
+  { to: '/reprocesso', icon: <IconClock width={16} height={16} />, label: 'Retidos', modulo: 'reprocesso' },
 ];
 
-// Administração — gestão de acessos.
-const ITENS_ADMIN: SubItem[] = [
-  { to: '/usuarios', icon: <IconShield width={18} height={18} />, label: 'Usuários & perfis', modulo: 'usuarios' },
-];
-
-// Tudo de manutenção vive aqui (PCM portado).
 const ITENS_MANUTENCAO: SubItem[] = [
-  { to: '/manutencao', icon: <IconClipboard width={18} height={18} />, label: 'Ordens de Serviço', modulo: 'manutencao' },
-  { to: '/preventiva', icon: <IconCheck width={18} height={18} />, label: 'Preventiva', modulo: 'manutencao' },
-  { to: '/lubrificacao', icon: <IconClock width={18} height={18} />, label: 'Lubrificação', modulo: 'manutencao' },
-  { to: '/pcm-indicadores', icon: <IconShield width={18} height={18} />, label: 'Indicadores', modulo: 'manutencao' },
-  { to: '/pcm-checklist', icon: <IconCheck width={18} height={18} />, label: 'Checklist de ferramentas', modulo: 'manutencao' },
-  { to: '/pcm-cadastros', icon: <IconBox width={18} height={18} />, label: 'Cadastros (PCM)', modulo: 'manutencao' },
+  { to: '/manutencao', icon: <IconClipboard width={16} height={16} />, label: 'Ordens de Serviço', modulo: 'manutencao' },
+  { to: '/preventiva', icon: <IconCheck width={16} height={16} />, label: 'Preventiva', modulo: 'manutencao' },
+  { to: '/lubrificacao', icon: <IconClock width={16} height={16} />, label: 'Lubrificação', modulo: 'manutencao' },
+  { to: '/pcm-indicadores', icon: <IconGrid width={16} height={16} />, label: 'Indicadores', modulo: 'manutencao' },
+  { to: '/pcm-checklist', icon: <IconCheck width={16} height={16} />, label: 'Checklist de ferramentas', modulo: 'manutencao' },
+  { to: '/pcm-cadastros', icon: <IconBox width={16} height={16} />, label: 'Cadastros (PCM)', modulo: 'manutencao' },
+];
+
+const ITENS_ADMIN: SubItem[] = [
+  { to: '/usuarios', icon: <IconUser width={16} height={16} />, label: 'Usuários & perfis', modulo: 'usuarios' },
+];
+
+interface Grupo {
+  key: string;
+  label: string;
+  icon: ReactNode;
+  itens: SubItem[];
+  restrito?: boolean; // exibe cadeado (área de time específico)
+}
+
+const GRUPOS: Grupo[] = [
+  { key: 'producao', label: 'Produção', icon: <IconFactory width={19} height={19} />, itens: ITENS_PRODUCAO },
+  { key: 'almoxarifado', label: 'Almoxarifado', icon: <IconBox width={19} height={19} />, itens: ITENS_ALMOX },
+  { key: 'logistica', label: 'Logística', icon: <IconTruck width={19} height={19} />, itens: ITENS_LOGISTICA },
+  { key: 'suprimentos', label: 'Suprimentos', icon: <IconRecebimento width={19} height={19} />, itens: ITENS_SUPRIMENTOS },
+  { key: 'comercial', label: 'Comercial', icon: <IconDoc width={19} height={19} />, itens: ITENS_COMERCIAL },
+  { key: 'qualidade', label: 'Qualidade', icon: <IconShield width={19} height={19} />, itens: ITENS_QUALIDADE, restrito: true },
+  { key: 'manutencao', label: 'Manutenção', icon: <IconWrench width={19} height={19} />, itens: ITENS_MANUTENCAO },
+  { key: 'admin', label: 'Administração', icon: <IconUser width={19} height={19} />, itens: ITENS_ADMIN, restrito: true },
 ];
 
 export function Layout() {
   const { session, signOut, podeAcessarModulo, perfis } = useAuth();
   const email = session?.user.email ?? '';
   const location = useLocation();
-  // "Voltar ao painel" aparece em qualquer módulo (menos no próprio painel).
-  const mostrarVoltarPainel = podeAcessarModulo('painel') && location.pathname !== '/painel';
+  const [aberto, setAberto] = useState<string | null>(null);
 
-  const itensTopo = ITENS_TOPO.filter((i) => podeAcessarModulo(i.modulo));
-  const itensProducao = ITENS_PRODUCAO.filter((i) => podeAcessarModulo(i.modulo));
-  const itensAlmox = ITENS_ALMOX.filter((i) => podeAcessarModulo(i.modulo));
-  const itensLogistica = ITENS_LOGISTICA.filter((i) => podeAcessarModulo(i.modulo));
-  const itensSuprimentos = ITENS_SUPRIMENTOS.filter((i) => podeAcessarModulo(i.modulo));
-  const itensComercial = ITENS_COMERCIAL.filter((i) => podeAcessarModulo(i.modulo));
-  const itensQualidade = ITENS_QUALIDADE.filter((i) => podeAcessarModulo(i.modulo));
-  const itensManutencao = ITENS_MANUTENCAO.filter((i) => podeAcessarModulo(i.modulo));
-  const itensAdmin = ITENS_ADMIN.filter((i) => podeAcessarModulo(i.modulo));
+  // Fecha o flyout ao navegar, no Escape e no clique fora.
+  useEffect(() => setAberto(null), [location.pathname]);
+  useEffect(() => {
+    if (!aberto) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setAberto(null); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [aberto]);
+
+  const grupos = GRUPOS
+    .map((g) => ({ ...g, itens: g.itens.filter((i) => podeAcessarModulo(i.modulo)) }))
+    .filter((g) => g.itens.length > 0);
+
+  const veePainel = podeAcessarModulo('painel');
+  const mostrarVoltarPainel = veePainel && location.pathname !== '/painel';
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Sidebar */}
-      <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col border-r border-slate-200 bg-white md:flex">
-        <div className="flex items-center gap-2.5 px-6 py-5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-white">
-            <IconLeaf width={20} height={20} />
-          </span>
-          <div>
-            <p className="text-sm font-semibold leading-tight text-slate-900">Sumaré</p>
-            <p className="text-xs text-slate-400">MES · Rastreabilidade</p>
-          </div>
-        </div>
+    <div className="min-h-screen bg-slate-100 text-[13px] text-slate-900">
+      {/* Camada que captura o clique fora do flyout */}
+      {aberto && <div className="fixed inset-0 z-20" onClick={() => setAberto(null)} />}
 
-        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-2">
-          {itensTopo.map((item) => (
-            <NavItem key={item.to} to={item.to} icon={item.icon} label={item.label} />
-          ))}
-          <NavGroup icon={<IconClipboard />} label="Produção" items={itensProducao} />
-          <NavGroup icon={<IconBox />} label="Almoxarifado" items={itensAlmox} />
-          <NavGroup icon={<IconTruck />} label="Logística" items={itensLogistica} />
-          <NavGroup icon={<IconRecebimento />} label="Suprimentos" items={itensSuprimentos} />
-          <NavGroup icon={<IconDoc />} label="Comercial" items={itensComercial} />
-          <NavGroup icon={<IconShield />} label="Qualidade" items={itensQualidade} />
-          <NavGroup icon={<IconBox />} label="Manutenção" items={itensManutencao} />
-          <NavGroup icon={<IconShield />} label="Administração" items={itensAdmin} />
-        </nav>
+      {/* ── RAIL ── */}
+      <nav className="fixed inset-y-0 left-0 z-30 flex w-14 flex-col items-center gap-1 bg-rail py-3.5">
+        <Link to={veePainel ? '/painel' : '/lotes'}
+          className="mb-4 flex h-[34px] w-[34px] items-center justify-center rounded-lg bg-rail-hover text-emerald-300"
+          title="Sumaré — MES">
+          <IconLeaf width={19} height={19} />
+        </Link>
 
-        <div className="border-t border-slate-200 p-3">
-          <div className="px-3 py-2">
-            <p className="truncate text-xs text-slate-400">Conectado como</p>
-            <p className="truncate text-sm font-medium text-slate-700">{email}</p>
-            {perfis.length > 0 && (
-              <p className="truncate text-xs text-brand-600">{perfis.join(', ')}</p>
-            )}
-          </div>
+        {/* Painel (link direto) */}
+        {veePainel && (
+          <RailLink to="/painel" label="Painel" ativo={location.pathname === '/painel'}>
+            <IconGrid width={19} height={19} />
+          </RailLink>
+        )}
+
+        {/* Grupos (abrem flyout) */}
+        {grupos.map((g) => {
+          const ativo = g.itens.some((i) => location.pathname.startsWith(i.to));
+          const estaAberto = aberto === g.key;
+          return (
+            <div key={g.key} className="relative">
+              <button
+                onClick={(e) => { e.stopPropagation(); setAberto(estaAberto ? null : g.key); }}
+                aria-label={g.label}
+                aria-expanded={estaAberto}
+                className={`peer relative flex h-10 w-10 items-center justify-center rounded-lg transition ${
+                  ativo || estaAberto ? 'bg-rail-active text-white' : 'text-rail-icon hover:bg-rail-hover hover:text-slate-100'
+                }`}
+              >
+                {g.icon}
+                {g.restrito && (
+                  <IconLock width={10} height={10} strokeWidth={2.6} className="absolute bottom-0.5 right-0.5 text-slate-400" />
+                )}
+              </button>
+
+              {/* Tooltip (só quando o flyout está fechado) */}
+              {!estaAberto && (
+                <span className="pointer-events-none absolute left-full top-1/2 z-40 ml-2 -translate-y-1/2 whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-[11px] text-white opacity-0 transition-opacity peer-hover:opacity-100">
+                  {g.label}{g.restrito ? ' · acesso restrito' : ''}
+                </span>
+              )}
+
+              {/* Flyout */}
+              {estaAberto && (
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute left-full top-0 z-40 ml-2 min-w-[210px] rounded-[10px] border border-slate-200 bg-white p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.14)]"
+                >
+                  <p className="px-2.5 pb-1.5 pt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                    {g.label}
+                  </p>
+                  {g.itens.map((i) => (
+                    <NavLink
+                      key={i.to}
+                      to={i.to}
+                      onClick={() => setAberto(null)}
+                      className={({ isActive }) =>
+                        `flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13.5px] transition ${
+                          isActive ? 'bg-brand-50 font-semibold text-brand-700' : 'text-slate-800 hover:bg-slate-100'
+                        }`
+                      }
+                    >
+                      <span className="shrink-0 text-slate-400">{i.icon}</span>
+                      {i.label}
+                    </NavLink>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {/* Usuário / sair */}
+        <div className="relative mt-auto">
           <button
-            onClick={() => void signOut()}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100"
+            onClick={(e) => { e.stopPropagation(); setAberto(aberto === 'usuario' ? null : 'usuario'); }}
+            aria-label="Conta"
+            className={`peer flex h-10 w-10 items-center justify-center rounded-lg transition ${
+              aberto === 'usuario' ? 'bg-rail-active text-white' : 'text-rail-icon hover:bg-rail-hover hover:text-slate-100'
+            }`}
           >
-            <IconLogout />
-            Sair
+            <IconUser width={19} height={19} />
           </button>
+          {aberto !== 'usuario' && (
+            <span className="pointer-events-none absolute bottom-1/2 left-full z-40 ml-2 translate-y-1/2 whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-[11px] text-white opacity-0 transition-opacity peer-hover:opacity-100">
+              Conta
+            </span>
+          )}
+          {aberto === 'usuario' && (
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="absolute bottom-0 left-full z-40 ml-2 min-w-[220px] rounded-[10px] border border-slate-200 bg-white p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.14)]"
+            >
+              <div className="px-2.5 py-2">
+                <p className="truncate text-[13px] font-medium text-slate-800">{email}</p>
+                {perfis.length > 0 && (
+                  <p className="mt-0.5 truncate text-[11.5px] capitalize text-brand-700">{perfis.join(' · ')}</p>
+                )}
+              </div>
+              <button
+                onClick={() => void signOut()}
+                className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-[13.5px] text-slate-700 transition hover:bg-slate-100"
+              >
+                <IconLogout width={16} height={16} className="text-slate-400" />
+                Sair
+              </button>
+            </div>
+          )}
         </div>
-      </aside>
+      </nav>
 
-      {/* Topbar (mobile) */}
-      <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 md:hidden">
-        <div className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white">
-            <IconLeaf width={18} height={18} />
-          </span>
-          <span className="font-semibold text-slate-900">Sumaré</span>
-        </div>
-        <button onClick={() => void signOut()} className="text-slate-500" aria-label="Sair">
-          <IconLogout />
-        </button>
-      </header>
-
-      {/* Conteúdo */}
-      <main className="px-4 py-6 md:ml-64 md:px-10 md:py-8">
-        <div className="mx-auto max-w-5xl">
+      {/* ── CONTEÚDO ── */}
+      <main className="ml-14 px-5 pb-14 pt-6 sm:px-8">
+        <div className="mx-auto max-w-[1440px]">
           {mostrarVoltarPainel && (
             <Link
               to="/painel"
-              className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition hover:text-brand-600"
+              className="mb-4 inline-flex items-center gap-1.5 text-[12.5px] font-medium text-slate-500 transition hover:text-brand-700"
             >
-              <IconArrowLeft width={16} height={16} />
+              <IconArrowLeft width={15} height={15} />
               Voltar ao painel
             </Link>
           )}
           <Outlet />
         </div>
       </main>
+    </div>
+  );
+}
+
+// Item do rail que é um link direto (sem flyout).
+function RailLink({ to, label, ativo, children }: {
+  to: string; label: string; ativo: boolean; children: ReactNode;
+}) {
+  return (
+    <div className="relative">
+      <Link
+        to={to}
+        aria-label={label}
+        className={`peer flex h-10 w-10 items-center justify-center rounded-lg transition ${
+          ativo ? 'bg-rail-active text-white' : 'text-rail-icon hover:bg-rail-hover hover:text-slate-100'
+        }`}
+      >
+        {children}
+      </Link>
+      <span className="pointer-events-none absolute left-full top-1/2 z-40 ml-2 -translate-y-1/2 whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-[11px] text-white opacity-0 transition-opacity peer-hover:opacity-100">
+        {label}
+      </span>
     </div>
   );
 }

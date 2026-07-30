@@ -2,33 +2,49 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { listLotes, listProdutos, mapBy } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
-import { formatarData } from '../../lib/format';
+import { formatarData, formatarQuantidade } from '../../lib/format';
+import { STATUS_LOTE, STATUS_LOTE_LABEL } from '@sistema/domain';
+import type { StatusLote } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button } from '../../components/ui';
-import { StatusChip } from '../../components/StatusChip';
-import { IconBox, IconChevronRight, IconPlus, IconSearch } from '../../components/icons';
+import { IconBox, IconPlus, IconSearch } from '../../components/icons';
+
+// Badge de status no padrão do novo desenho: pastel + texto escuro.
+const TOM_STATUS: Record<StatusLote, string> = {
+  em_processo: 'bg-indigo-100 text-indigo-800',
+  aguardando_liberacao: 'bg-amber-100 text-amber-800',
+  liberado: 'bg-emerald-100 text-emerald-800',
+  bloqueado: 'bg-red-100 text-red-800',
+  expedido: 'bg-slate-100 text-slate-600',
+  cancelado: 'bg-slate-100 text-slate-500',
+};
 
 export function LotesPage() {
   const [busca, setBusca] = useState('');
+  const [filtro, setFiltro] = useState<'todos' | StatusLote>('todos');
   const navigate = useNavigate();
 
-  const { data, loading, error } = useAsync(
-    async () => {
-      const [lotes, produtos] = await Promise.all([listLotes(), listProdutos()]);
-      return { lotes, produtos: mapBy(produtos, 'id'), produtosList: produtos };
-    },
-    [],
-  );
+  const { data, loading, error } = useAsync(async () => {
+    const [lotes, produtos] = await Promise.all([listLotes(), listProdutos()]);
+    return { lotes, produtos: mapBy(produtos, 'id') };
+  }, []);
 
-  const lotesFiltrados = (data?.lotes ?? []).filter((l) => {
+  const lotes = data?.lotes ?? [];
+  // Só oferece filtro dos status que existem hoje.
+  const statusPresentes = STATUS_LOTE.filter((st) => lotes.some((l) => l.status === st));
+
+  const filtrados = lotes.filter((l) => {
+    if (filtro !== 'todos' && l.status !== filtro) return false;
     if (!busca.trim()) return true;
     const q = busca.toLowerCase();
-    const nomeProduto = data?.produtos.get(l.produto_id)?.nome?.toLowerCase() ?? '';
-    return l.codigo.toLowerCase().includes(q) || nomeProduto.includes(q);
+    const produto = data?.produtos.get(l.produto_id);
+    return [l.codigo, produto?.nome, produto?.nome_curto, produto?.codigo]
+      .some((v) => (v ?? '').toLowerCase().includes(q));
   });
 
   return (
     <>
       <PageHeader
+        grupo="Produção"
         title="Lotes"
         subtitle="Produção e rastreabilidade dos lotes"
         action={
@@ -39,26 +55,28 @@ export function LotesPage() {
         }
       />
 
-      <div className="mb-4 relative">
-        <IconSearch width={16} height={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-        <input
-          type="search"
-          placeholder="Buscar por código ou produto…"
-          value={busca}
-          onChange={(e) => setBusca(e.target.value)}
-          className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 sm:max-w-xs"
-        />
+      {/* Filtros em pílula + busca */}
+      <div className="mb-3.5 flex flex-wrap items-center gap-2.5">
+        <Pill ativo={filtro === 'todos'} onClick={() => setFiltro('todos')}>Todos</Pill>
+        {statusPresentes.map((st) => (
+          <Pill key={st} ativo={filtro === st} onClick={() => setFiltro(st)}>{STATUS_LOTE_LABEL[st]}</Pill>
+        ))}
+        <div className="relative ml-auto">
+          <IconSearch width={15} height={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="search"
+            placeholder="Buscar lote ou produto…"
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            className="w-56 rounded-[7px] border border-slate-300 bg-white py-2 pl-9 pr-3 text-[12.5px] outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+          />
+        </div>
       </div>
 
-      {loading && (
-        <div className="flex justify-center py-20">
-          <Spinner className="h-7 w-7 text-brand-600" />
-        </div>
-      )}
+      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
+      {error && <Card className="p-4 text-red-600">Erro ao carregar lotes: {error}</Card>}
 
-      {error && <Card className="p-4 text-sm text-red-600">Erro ao carregar lotes: {error}</Card>}
-
-      {data && lotesFiltrados.length === 0 && !busca && (
+      {data && lotes.length === 0 && (
         <EmptyState
           icon={<IconBox width={40} height={40} />}
           title="Nenhum lote ainda"
@@ -66,54 +84,67 @@ export function LotesPage() {
         />
       )}
 
-      {data && lotesFiltrados.length === 0 && busca && (
-        <EmptyState title="Nenhum resultado" description={`Nenhum lote encontrado para "${busca}".`} />
-      )}
-
-      {data && lotesFiltrados.length > 0 && (
+      {data && lotes.length > 0 && (
         <Card className="overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
-                <th className="px-5 py-3 font-medium">Lote</th>
-                <th className="px-5 py-3 font-medium">Produto</th>
-                <th className="hidden px-5 py-3 font-medium sm:table-cell">Produção</th>
-                <th className="px-5 py-3 font-medium">Status</th>
-                <th className="px-5 py-3" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {lotesFiltrados.map((lote) => (
-                <tr key={lote.id} className="group transition hover:bg-slate-50">
-                  <td className="px-5 py-3.5">
-                    <Link to={`/lotes/${lote.id}`} className="font-medium text-slate-900">
-                      {lote.codigo}
-                    </Link>
-                  </td>
-                  <td className="px-5 py-3.5 text-slate-600">
-                    {data.produtos.get(lote.produto_id)?.nome ?? '—'}
-                  </td>
-                  <td className="hidden px-5 py-3.5 text-slate-500 sm:table-cell">
-                    {formatarData(lote.data_producao)}
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <StatusChip status={lote.status} />
-                  </td>
-                  <td className="px-5 py-3.5 text-right">
-                    <Link
-                      to={`/lotes/${lote.id}`}
-                      className="inline-flex text-slate-300 transition group-hover:text-brand-600"
-                      aria-label={`Abrir lote ${lote.codigo}`}
-                    >
-                      <IconChevronRight />
-                    </Link>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[720px]">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                  <th className="px-4 py-[11px]">Lote</th>
+                  <th className="px-4 py-[11px]">Produto</th>
+                  <th className="px-4 py-[11px]">Status</th>
+                  <th className="px-4 py-[11px]">Produção</th>
+                  <th className="px-4 py-[11px] text-right">Quantidade</th>
+                  <th className="px-4 py-[11px] text-right">Ação</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filtrados.map((l) => {
+                  const p = data.produtos.get(l.produto_id);
+                  return (
+                    <tr key={l.id} className="border-b border-slate-100 transition last:border-0 hover:bg-slate-50">
+                      <td className="px-4 py-3 font-semibold text-slate-900">{l.codigo}</td>
+                      <td className="px-4 py-3 text-slate-600">{p?.nome_curto || p?.nome || '—'}</td>
+                      <td className="px-4 py-3">
+                        <span className={`rounded-md px-2.5 py-1 text-[11.5px] font-semibold ${TOM_STATUS[l.status]}`}>
+                          {STATUS_LOTE_LABEL[l.status]}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-slate-500">{formatarData(l.data_producao)}</td>
+                      <td className="px-4 py-3 text-right tabular-nums text-slate-600">
+                        {l.quantidade != null ? `${formatarQuantidade(l.quantidade)} kg` : l.volume_texto || '—'}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <Link to={`/lotes/${l.id}`} className="text-[12.5px] font-semibold text-brand-700 hover:underline">
+                          Detalhes
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          {filtrados.length === 0 && (
+            <p className="px-4 py-8 text-center text-slate-400">Nenhum lote encontrado para este filtro.</p>
+          )}
         </Card>
       )}
     </>
+  );
+}
+
+function Pill({ ativo, onClick, children }: { ativo: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`rounded-full border px-3.5 py-[7px] text-[12.5px] font-semibold transition ${
+        ativo
+          ? 'border-slate-900 bg-slate-900 text-white'
+          : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+      }`}
+    >
+      {children}
+    </button>
   );
 }

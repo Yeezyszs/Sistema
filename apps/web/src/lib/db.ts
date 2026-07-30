@@ -1665,3 +1665,35 @@ export async function criarAlmoxMovimento(payload: NovoAlmoxMovimento): Promise<
   const res = await producao().from('almox_movimentos').insert(payload);
   if (res.error) throw new Error(res.error.message);
 }
+
+// ── Administração de usuários e perfis ─────────────────────────
+export interface PerfilRow { id: string; nome: string }
+export interface UsuarioAdmin {
+  id: string; nome: string; email: string; ativo: boolean;
+  usuario_perfis: { perfil_id: string }[];
+}
+
+export async function listPerfisCatalogo(): Promise<PerfilRow[]> {
+  return unwrap<PerfilRow[]>(await core().from('perfis').select('id, nome').order('nome'));
+}
+
+export async function listUsuarios(): Promise<UsuarioAdmin[]> {
+  return unwrap<UsuarioAdmin[]>(
+    await core().from('usuarios').select('id, nome, email, ativo, usuario_perfis(perfil_id)').order('nome'),
+  );
+}
+
+export async function atribuirPerfil(usuarioId: string, perfilId: string): Promise<void> {
+  const res = await core().from('usuario_perfis').insert({ usuario_id: usuarioId, perfil_id: perfilId });
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function removerPerfil(usuarioId: string, perfilId: string): Promise<void> {
+  const res = await core().from('usuario_perfis').delete().eq('usuario_id', usuarioId).eq('perfil_id', perfilId);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function atualizarUsuarioAtivo(id: string, ativo: boolean): Promise<void> {
+  const res = await core().from('usuarios').update({ ativo }).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}

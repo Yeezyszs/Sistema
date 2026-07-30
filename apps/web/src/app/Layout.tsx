@@ -126,6 +126,11 @@ const ITENS_QUALIDADE: SubItem[] = [
   { to: '/reprocesso', icon: <IconClock width={18} height={18} />, label: 'Retidos', modulo: 'reprocesso' },
 ];
 
+// Administração — gestão de acessos.
+const ITENS_ADMIN: SubItem[] = [
+  { to: '/usuarios', icon: <IconShield width={18} height={18} />, label: 'Usuários & perfis', modulo: 'usuarios' },
+];
+
 // Tudo de manutenção vive aqui (PCM portado).
 const ITENS_MANUTENCAO: SubItem[] = [
   { to: '/manutencao', icon: <IconClipboard width={18} height={18} />, label: 'Ordens de Serviço', modulo: 'manutencao' },
@@ -151,6 +156,7 @@ export function Layout() {
   const itensComercial = ITENS_COMERCIAL.filter((i) => podeAcessarModulo(i.modulo));
   const itensQualidade = ITENS_QUALIDADE.filter((i) => podeAcessarModulo(i.modulo));
   const itensManutencao = ITENS_MANUTENCAO.filter((i) => podeAcessarModulo(i.modulo));
+  const itensAdmin = ITENS_ADMIN.filter((i) => podeAcessarModulo(i.modulo));
 
   return (
     <div className="min-h-screen bg-white">
@@ -177,6 +183,7 @@ export function Layout() {
           <NavGroup icon={<IconDoc />} label="Comercial" items={itensComercial} />
           <NavGroup icon={<IconShield />} label="Qualidade" items={itensQualidade} />
           <NavGroup icon={<IconBox />} label="Manutenção" items={itensManutencao} />
+          <NavGroup icon={<IconShield />} label="Administração" items={itensAdmin} />
         </nav>
 
         <div className="border-t border-slate-200 p-3">

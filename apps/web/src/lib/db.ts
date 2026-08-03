@@ -9,6 +9,15 @@ import type {
   Fornecedor,
   DocumentoFornecedor,
   NovoDocumentoFornecedor,
+  SegmentoFornecedor,
+  NovoSegmentoFornecedor,
+  FornecedorSegmento,
+  DocumentoExigido,
+  NovoDocumentoExigido,
+  SegmentoDocumento,
+  Exigencia,
+  ItemChecklistFornecedor,
+  StatusDocumentalFornecedor,
   EtapaLote,
   Etapa,
   Recebimento,
@@ -1115,6 +1124,135 @@ export async function atualizarResultadoDocumento(
     .update({ resultado })
     .eq('id', documentoId);
   if (res.error) throw new Error(res.error.message);
+}
+
+// ── Homologação: catálogo do checklist documental ──────────────
+export async function listSegmentosFornecedor(): Promise<SegmentoFornecedor[]> {
+  return unwrap<SegmentoFornecedor[]>(
+    await qualidade().from('segmentos_fornecedor').select('*').order('nome'),
+  );
+}
+
+export async function criarSegmentoFornecedor(payload: NovoSegmentoFornecedor): Promise<void> {
+  const res = await qualidade().from('segmentos_fornecedor').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function atualizarSegmentoFornecedor(
+  id: string,
+  patch: Partial<NovoSegmentoFornecedor>,
+): Promise<void> {
+  const res = await qualidade().from('segmentos_fornecedor').update(patch).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function listDocumentosExigidos(): Promise<DocumentoExigido[]> {
+  return unwrap<DocumentoExigido[]>(
+    await qualidade().from('documentos_exigidos').select('*').order('nome'),
+  );
+}
+
+export async function criarDocumentoExigido(payload: NovoDocumentoExigido): Promise<void> {
+  const res = await qualidade().from('documentos_exigidos').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function atualizarDocumentoExigido(
+  id: string,
+  patch: Partial<NovoDocumentoExigido>,
+): Promise<void> {
+  const res = await qualidade().from('documentos_exigidos').update(patch).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// Checklist do segmento (quais documentos ele exige).
+export async function listSegmentoDocumentos(): Promise<SegmentoDocumento[]> {
+  return unwrap<SegmentoDocumento[]>(
+    await qualidade().from('segmento_documentos').select('*'),
+  );
+}
+
+export async function vincularDocumentoAoSegmento(
+  segmento_id: string,
+  documento_exigido_id: string,
+  exigencia: Exigencia,
+): Promise<void> {
+  const res = await qualidade()
+    .from('segmento_documentos')
+    .upsert({ segmento_id, documento_exigido_id, exigencia }, { onConflict: 'segmento_id,documento_exigido_id' });
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function desvincularDocumentoDoSegmento(id: string): Promise<void> {
+  const res = await qualidade().from('segmento_documentos').delete().eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// Segmentos de um fornecedor (o que carrega o checklist dele).
+export async function listFornecedorSegmentos(): Promise<FornecedorSegmento[]> {
+  return unwrap<FornecedorSegmento[]>(
+    await qualidade().from('fornecedor_segmentos').select('*'),
+  );
+}
+
+export async function vincularSegmentoAoFornecedor(
+  fornecedor_id: string,
+  segmento_id: string,
+): Promise<void> {
+  const res = await qualidade()
+    .from('fornecedor_segmentos')
+    .upsert({ fornecedor_id, segmento_id }, { onConflict: 'fornecedor_id,segmento_id' });
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function desvincularSegmentoDoFornecedor(id: string): Promise<void> {
+  const res = await qualidade().from('fornecedor_segmentos').delete().eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// ── Homologação: checklist calculado no banco ──────────────────
+// O estado de cada item é regra de negócio e mora no Postgres. Aqui só se lê.
+export async function getChecklistFornecedor(
+  fornecedorId: string,
+): Promise<ItemChecklistFornecedor[]> {
+  const { data, error } = await qualidade().rpc('checklist_fornecedor', {
+    p_fornecedor_id: fornecedorId,
+  });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as ItemChecklistFornecedor[];
+}
+
+export async function getStatusDocumentalGeral(): Promise<StatusDocumentalFornecedor[]> {
+  const { data, error } = await qualidade().rpc('status_documental_geral');
+  if (error) throw new Error(error.message);
+  return (data ?? []) as StatusDocumentalFornecedor[];
+}
+
+// Soft delete: o registro permanece no banco, o motivo é obrigatório.
+export async function excluirDocumentoFornecedor(
+  documentoId: string,
+  motivo: string,
+): Promise<void> {
+  const { error } = await qualidade().rpc('excluir_documento_fornecedor', {
+    p_documento_id: documentoId,
+    p_motivo: motivo,
+  });
+  if (error) throw new Error(error.message);
+}
+
+// Histórico completo de um item (inclui versões arquivadas e excluídas).
+export async function getHistoricoDocumento(
+  fornecedorId: string,
+  documentoExigidoId: string,
+): Promise<DocumentoFornecedor[]> {
+  return unwrap<DocumentoFornecedor[]>(
+    await qualidade()
+      .from('documentos_fornecedor')
+      .select('*')
+      .eq('fornecedor_id', fornecedorId)
+      .eq('documento_exigido_id', documentoExigidoId)
+      .order('created_at', { ascending: false }),
+  );
 }
 
 // URL temporária (bucket privado) para visualizar/baixar o laudo.

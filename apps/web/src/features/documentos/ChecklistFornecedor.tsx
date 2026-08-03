@@ -1,174 +1,44 @@
-// Gestão de Documentos — o checklist documental de cada fornecedor.
+// Checklist documental de um fornecedor.
 // O estado de cada item é calculado no banco (qualidade.checklist_fornecedor);
 // aqui só se exibe e se age: enviar, substituir, ver, excluir, histórico.
 import { useState, type FormEvent } from 'react';
 import {
-  listFornecedores, listSegmentosFornecedor, listFornecedorSegmentos,
-  vincularSegmentoAoFornecedor, desvincularSegmentoDoFornecedor,
-  getStatusDocumentalGeral, getChecklistFornecedor, getHistoricoDocumento,
+  getChecklistFornecedor, getHistoricoDocumento,
   enviarDocumentoFornecedor, excluirDocumentoFornecedor, urlAssinadaDocumento,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { formatarData, formatarDataHora } from '../../lib/format';
-import {
-  ESTADO_ITEM_LABEL, EXIGENCIA_LABEL, STATUS_DOCUMENTAL_LABEL, CATEGORIA_SEGMENTO_LABEL,
-} from '@sistema/domain';
+import { ESTADO_ITEM_LABEL, EXIGENCIA_LABEL } from '@sistema/domain';
 import type {
-  Fornecedor, ItemChecklistFornecedor, ArquivoChecklist,
-  EstadoItemChecklist, StatusDocumental, DocumentoFornecedor,
+  Fornecedor, ItemChecklistFornecedor, ArquivoChecklist, DocumentoFornecedor,
 } from '@sistema/domain';
-import {
-  Card, CardTitle, Spinner, EmptyState, Button, Field, TextInput, Modal,
-} from '../../components/ui';
+import { Card, Spinner, EmptyState, Button, Field, TextInput, Modal } from '../../components/ui';
 import { IconDoc, IconDownload } from '../../components/icons';
 import { useToast } from '../../components/Toast';
+import { ErroCard, ESTADO_CLASS, corVencimento } from './comum';
 
-const ESTADO_CLASS: Record<EstadoItemChecklist, string> = {
-  ok: 'bg-emerald-100 text-emerald-800',
-  faltando: 'bg-red-100 text-red-700',
-  vencido: 'bg-red-100 text-red-700',
-  aguardando: 'bg-amber-100 text-amber-700',
-};
+const TIPOS_ACEITOS = 'application/pdf,image/jpeg,image/png';
+const TAMANHO_MAXIMO = 10 * 1024 * 1024; // 10MB
 
-const STATUS_CLASS: Record<StatusDocumental, string> = {
-  ok: 'bg-emerald-100 text-emerald-800',
-  pendente: 'bg-red-100 text-red-700',
-  sem_documentos: 'bg-slate-100 text-slate-600',
-};
-
-function ErroCard({ mensagem }: { mensagem: string }) {
-  // Consulta falhou: não dá para afirmar que está tudo em dia.
-  return (
-    <Card className="p-5">
-      <p className="text-sm font-semibold text-red-700">Não foi possível carregar a situação documental.</p>
-      <p className="mt-1 text-sm text-slate-500">{mensagem}</p>
-    </Card>
-  );
+function nomeArquivo(a: ArquivoChecklist): string {
+  if (a.arquivo_nome) return a.arquivo_nome;
+  const base = (a.arquivo_path ?? '').split('/').pop() ?? 'Documento';
+  return base.replace(/^\d+-/, '');
 }
 
-export function GestaoDocumentos() {
-  const [recarregar, setRecarregar] = useState(0);
-  const [selecionado, setSelecionado] = useState<string | null>(null);
-
-  const { data, loading, error } = useAsync(async () => {
-    const [fornecedores, status, segmentos, vinculos] = await Promise.all([
-      listFornecedores(), getStatusDocumentalGeral(), listSegmentosFornecedor(), listFornecedorSegmentos(),
-    ]);
-    return { fornecedores, statusMap: new Map(status.map((s) => [s.fornecedor_id, s])), segmentos, vinculos };
-  }, [recarregar]);
-
-  const rec = () => setRecarregar((n) => n + 1);
-
-  if (error) return <ErroCard mensagem={error} />;
-  if (loading || !data) return <div className="flex justify-center py-16"><Spinner className="h-7 w-7 text-brand-600" /></div>;
-  if (data.fornecedores.length === 0) return <EmptyState title="Nenhum fornecedor cadastrado" />;
-
-  const forn = data.fornecedores.find((f) => f.id === selecionado) ?? data.fornecedores[0]!;
-  const segsDoForn = data.vinculos.filter((v) => v.fornecedor_id === forn.id);
-
-  return (
-    <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
-      <Card className="overflow-hidden">
-        <ul className="divide-y divide-slate-100">
-          {data.fornecedores.map((f) => {
-            const st = data.statusMap.get(f.id);
-            return (
-              <li key={f.id}>
-                <button onClick={() => setSelecionado(f.id)}
-                  className={`w-full px-4 py-2.5 text-left text-sm transition ${forn.id === f.id ? 'bg-brand-50 font-semibold text-brand-700' : 'text-slate-700 hover:bg-slate-50'}`}>
-                  <span className="block truncate">{f.razao_social}</span>
-                  <span className="mt-1 flex items-center gap-1.5">
-                    <span className={`rounded-full px-1.5 py-0.5 text-[10.5px] font-semibold ${STATUS_CLASS[st?.status_documental ?? 'sem_documentos']}`}>
-                      {STATUS_DOCUMENTAL_LABEL[st?.status_documental ?? 'sem_documentos']}
-                    </span>
-                    {st && st.itens_pendentes > 0 && (
-                      <span className="text-[11px] font-normal text-slate-400">{st.itens_pendentes} pend.</span>
-                    )}
-                  </span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </Card>
-
-      <div className="space-y-4">
-        <SegmentosDoFornecedor
-          fornecedor={forn}
-          segmentos={data.segmentos}
-          vinculos={segsDoForn}
-          onChange={rec}
-        />
-        <ChecklistDoFornecedor fornecedor={forn} recarregarPai={rec} />
-      </div>
-    </div>
-  );
+// `proxima_validade` só traz data ainda no prazo. Quando tudo já venceu ela
+// vem nula — dizer "sem data de validade" aí seria mentira.
+function legenda(it: ItemChecklistFornecedor): string {
+  if (it.arquivos.length === 0) return 'Nenhum arquivo enviado';
+  if (it.permite_multiplos) return `${it.arquivos.length} arquivo(s) vigente(s) · aceita vários`;
+  if (it.proxima_validade) return `Válido até ${formatarData(it.proxima_validade)}`;
+  if (!it.tem_validade) return 'Enviado';
+  const datas = it.arquivos.map((a) => a.validade).filter((v): v is string => Boolean(v));
+  if (datas.length === 0) return 'Enviado · sem data de validade';
+  return `Venceu em ${formatarData(datas.sort().at(-1)!)}`;
 }
 
-// ── Segmentos: é o que define o checklist ──────────────────────
-function SegmentosDoFornecedor({
-  fornecedor, segmentos, vinculos, onChange,
-}: {
-  fornecedor: Fornecedor;
-  segmentos: { id: string; nome: string; categoria: keyof typeof CATEGORIA_SEGMENTO_LABEL; ativo: boolean }[];
-  vinculos: { id: string; segmento_id: string }[];
-  onChange: () => void;
-}) {
-  const [abrir, setAbrir] = useState(false);
-  const { erro } = useToast();
-  const ligados = new Set(vinculos.map((v) => v.segmento_id));
-
-  async function alternar(segId: string) {
-    try {
-      const v = vinculos.find((x) => x.segmento_id === segId);
-      if (v) await desvincularSegmentoDoFornecedor(v.id);
-      else await vincularSegmentoAoFornecedor(fornecedor.id, segId);
-      onChange();
-    } catch (err) { erro(err instanceof Error ? err.message : 'Falha.'); }
-  }
-
-  return (
-    <Card className="p-5">
-      <div className="flex items-start justify-between gap-3">
-        <CardTitle sub="O segmento é o que define quais documentos são exigidos.">
-          Segmentos — {fornecedor.razao_social}
-        </CardTitle>
-        <button onClick={() => setAbrir(true)} className="shrink-0 text-xs font-semibold text-brand-700 hover:underline">Editar</button>
-      </div>
-      {vinculos.length === 0 ? (
-        <p className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          Sem segmento definido — o checklist fica vazio até que um seja associado.
-        </p>
-      ) : (
-        <div className="flex flex-wrap gap-1.5">
-          {vinculos.map((v) => {
-            const s = segmentos.find((x) => x.id === v.segmento_id);
-            return (
-              <span key={v.id} className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
-                {s?.nome ?? '—'}
-              </span>
-            );
-          })}
-        </div>
-      )}
-
-      <Modal open={abrir} onClose={() => setAbrir(false)} title={`Segmentos — ${fornecedor.razao_social}`}>
-        <div className="max-h-[60vh] space-y-1 overflow-y-auto">
-          {segmentos.filter((s) => s.ativo || ligados.has(s.id)).map((s) => (
-            <label key={s.id} className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm text-slate-700 hover:bg-slate-50">
-              <input type="checkbox" checked={ligados.has(s.id)} onChange={() => void alternar(s.id)} className="h-4 w-4 rounded border-slate-300" />
-              <span>{s.nome}<span className="ml-1.5 text-xs text-slate-400">{CATEGORIA_SEGMENTO_LABEL[s.categoria]}</span></span>
-            </label>
-          ))}
-        </div>
-        <div className="mt-4 flex justify-end"><Button onClick={() => setAbrir(false)}>Fechar</Button></div>
-      </Modal>
-    </Card>
-  );
-}
-
-// ── Checklist ──────────────────────────────────────────────────
-function ChecklistDoFornecedor({
+export function ChecklistDoFornecedor({
   fornecedor, recarregarPai,
 }: { fornecedor: Fornecedor; recarregarPai: () => void }) {
   const [recarregar, setRecarregar] = useState(0);
@@ -197,7 +67,7 @@ function ChecklistDoFornecedor({
   if (error) return <ErroCard mensagem={error} />;
   if (loading || !itens) return <div className="flex justify-center py-10"><Spinner className="h-6 w-6 text-brand-600" /></div>;
   if (itens.length === 0) {
-    return <EmptyState title="Checklist vazio" description="Associe um segmento ao fornecedor para carregar os documentos exigidos." />;
+    return <EmptyState title="Checklist vazio" description="Vincule um segmento ao fornecedor para carregar os documentos exigidos." />;
   }
 
   return (
@@ -215,15 +85,14 @@ function ChecklistDoFornecedor({
                     </span>
                     <span className="text-[11px] font-medium text-slate-400">{EXIGENCIA_LABEL[it.exigencia]}</span>
                   </div>
-                  <p className="mt-0.5 text-xs text-slate-400">
-                    {it.tem_validade
-                      ? it.proxima_validade ? `Válido até ${formatarData(it.proxima_validade)}` : 'Controla vencimento'
-                      : 'Sem controle de vencimento'}
-                    {it.permite_multiplos ? ' · aceita vários arquivos' : ''}
-                  </p>
+                  <p className="mt-0.5 text-xs text-slate-400">{legenda(it)}</p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                  <button onClick={() => setHistoricoDe(it)} className="text-xs font-medium text-slate-400 hover:text-slate-700">Histórico</button>
+                  {it.arquivos.length > 0 && (
+                    <button onClick={() => setHistoricoDe(it)} className="text-xs font-medium text-slate-400 hover:text-slate-700">
+                      Histórico
+                    </button>
+                  )}
                   <Button variant="outline" onClick={() => setEnviarPara(it)}>
                     {it.arquivos.length === 0 ? 'Enviar' : it.permite_multiplos ? '+ Adicionar' : 'Substituir'}
                   </Button>
@@ -238,13 +107,17 @@ function ChecklistDoFornecedor({
                         <IconDoc width={14} height={14} />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-[13px] text-slate-700">{a.arquivo_nome ?? 'Documento'}</p>
+                        <p className="truncate text-[13px] text-slate-700">{nomeArquivo(a)}</p>
                         <p className="truncate text-[11px] text-slate-400">
-                          {[a.validade ? `validade ${formatarData(a.validade)}` : null,
-                            a.emitido_em ? `emitido ${formatarData(a.emitido_em)}` : null,
+                          {[a.emitido_em ? `emitido ${formatarData(a.emitido_em)}` : null,
                             a.numero_laudo ? `nº ${a.numero_laudo}` : null].filter(Boolean).join(' · ') || '—'}
                         </p>
                       </div>
+                      {it.tem_validade && (
+                        <span className={`shrink-0 text-[12px] ${corVencimento(a.validade)}`}>
+                          {a.validade ? `vence ${formatarData(a.validade)}` : 'sem validade'}
+                        </span>
+                      )}
                       <button onClick={() => void abrirArquivo(a)} disabled={abrindo === a.id || !a.arquivo_path}
                         title="Abrir arquivo"
                         className="shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-40">
@@ -266,6 +139,7 @@ function ChecklistDoFornecedor({
       )}
       {excluir && (
         <ModalExclusao arquivo={excluir.arquivo} documento={excluir.item.documento}
+          permiteMultiplos={excluir.item.permite_multiplos}
           onClose={() => setExcluir(null)} onSaved={rec} />
       )}
       {historicoDe && (
@@ -279,14 +153,23 @@ function ChecklistDoFornecedor({
 function ModalEnvio({
   fornecedorId, item, onClose, onSaved,
 }: { fornecedorId: string; item: ItemChecklistFornecedor; onClose: () => void; onSaved: () => void }) {
+  const [arquivo, setArquivo] = useState<File | null>(null);
+  const [sobre, setSobre] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const { sucesso, erro } = useToast();
 
+  // Valida aqui para o usuário saber na hora, não depois do upload falhar.
+  function escolher(f: File | null | undefined) {
+    if (!f) return;
+    if (!TIPOS_ACEITOS.split(',').includes(f.type)) { erro('Formato não aceito — use PDF, JPG ou PNG.'); return; }
+    if (f.size > TAMANHO_MAXIMO) { erro('Arquivo maior que 10MB.'); return; }
+    setArquivo(f);
+  }
+
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!arquivo) { erro('Selecione um arquivo.'); return; }
     const f = new FormData(e.currentTarget);
-    const arquivo = f.get('arquivo') as File | null;
-    if (!arquivo || arquivo.size === 0) { erro('Selecione um arquivo.'); return; }
     setEnviando(true);
     try {
       await enviarDocumentoFornecedor({
@@ -307,16 +190,35 @@ function ModalEnvio({
     finally { setEnviando(false); }
   }
 
+  const inputId = `arquivo-${item.documento_exigido_id}`;
+
   return (
     <Modal open onClose={onClose} title={item.documento} size="lg">
       <form onSubmit={onSubmit} className="space-y-4">
-        {!item.permite_multiplos && item.arquivos.length > 0 && (
-          <p className="rounded-lg bg-amber-50 px-4 py-2.5 text-sm text-amber-800">
-            Já existe um arquivo vigente. Enviar um novo arquiva o anterior — nada é apagado.
-          </p>
-        )}
-        <input name="arquivo" type="file" accept=".pdf,.doc,.docx,image/*" required
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 file:mr-3 file:rounded-md file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-brand-700" />
+        <div
+          onDragOver={(e) => { e.preventDefault(); setSobre(true); }}
+          onDragLeave={() => setSobre(false)}
+          onDrop={(e) => { e.preventDefault(); setSobre(false); escolher(e.dataTransfer.files?.[0]); }}
+          className={`rounded-[10px] border-2 border-dashed p-6 text-center transition-colors ${
+            sobre ? 'border-brand-600 bg-brand-50' : 'border-slate-300 bg-slate-50'
+          }`}
+        >
+          {arquivo ? (
+            <p className="text-[13.5px] font-semibold text-slate-700">{arquivo.name}</p>
+          ) : (
+            <>
+              <p className="text-[13.5px] font-semibold text-slate-700">Arraste o arquivo aqui</p>
+              <p className="mt-1 text-xs text-slate-500">PDF, JPG ou PNG até 10MB</p>
+            </>
+          )}
+          <input id={inputId} type="file" accept={TIPOS_ACEITOS} className="hidden"
+            onChange={(e) => escolher(e.target.files?.[0])} />
+          <label htmlFor={inputId}
+            className="mt-3 inline-block cursor-pointer rounded-lg bg-brand-700 px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-600">
+            {arquivo ? 'Trocar arquivo' : 'Selecionar arquivo'}
+          </label>
+        </div>
+
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <Field label="Emitido em"><TextInput name="emitido_em" type="date" /></Field>
           <Field label={item.tem_validade ? 'Validade (obrigatória)' : 'Validade'}>
@@ -325,9 +227,16 @@ function ModalEnvio({
           <Field label="Nº do documento"><TextInput name="numero_laudo" placeholder="—" /></Field>
         </div>
         <Field label="Observação"><TextInput name="observacao" placeholder="—" /></Field>
+
+        {!item.permite_multiplos && item.arquivos.length > 0 && (
+          <p className="text-xs text-slate-500">
+            A versão atual será arquivada no histórico — nada é apagado.
+          </p>
+        )}
+
         <div className="flex justify-end gap-3">
           <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button type="submit" loading={enviando}>Enviar</Button>
+          <Button type="submit" loading={enviando} disabled={!arquivo}>Enviar documento</Button>
         </div>
       </form>
     </Modal>
@@ -336,8 +245,11 @@ function ModalEnvio({
 
 // ── Exclusão (soft delete com motivo) ──────────────────────────
 function ModalExclusao({
-  arquivo, documento, onClose, onSaved,
-}: { arquivo: ArquivoChecklist; documento: string; onClose: () => void; onSaved: () => void }) {
+  arquivo, documento, permiteMultiplos, onClose, onSaved,
+}: {
+  arquivo: ArquivoChecklist; documento: string; permiteMultiplos: boolean;
+  onClose: () => void; onSaved: () => void;
+}) {
   const [motivo, setMotivo] = useState('');
   const [salvando, setSalvando] = useState(false);
   const { sucesso, erro } = useToast();
@@ -353,20 +265,26 @@ function ModalExclusao({
   }
 
   return (
-    <Modal open onClose={onClose} title={`Excluir — ${documento}`}>
-      <p className="text-sm text-slate-600">
-        {arquivo.arquivo_nome ?? 'Documento'} sai do checklist, mas continua registrado no
-        histórico com o motivo. Rastreabilidade é requisito da FSSC 22000.
+    <Modal open onClose={onClose} title="Excluir documento">
+      <p className="text-[13.5px] text-slate-600">
+        Excluir <strong className="font-semibold text-slate-900">{nomeArquivo(arquivo)}</strong> de{' '}
+        <strong className="font-semibold text-slate-900">{documento}</strong>?
+      </p>
+      <p className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
+        O arquivo sai da tela e do cálculo de status, mas o registro permanece no banco com autor,
+        data e motivo — a rastreabilidade da auditoria é preservada.
+        {!permiteMultiplos && ' Se houver uma versão anterior, ela volta a ser a vigente.'}
       </p>
       <div className="mt-4">
         <Field label="Motivo da exclusão">
-          <TextInput value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="Lançado no fornecedor errado" required />
+          <TextInput value={motivo} onChange={(e) => setMotivo(e.target.value)}
+            placeholder="Ex.: documento divergente, lançado no fornecedor errado…" required autoFocus />
         </Field>
       </div>
       <div className="mt-4 flex justify-end gap-3">
         <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
         <Button onClick={() => void confirmar()} loading={salvando} disabled={!motivo.trim()}
-          className="!bg-red-600 hover:!bg-red-700">Excluir</Button>
+          className="!bg-red-600 hover:!bg-red-700">Excluir documento</Button>
       </div>
     </Modal>
   );

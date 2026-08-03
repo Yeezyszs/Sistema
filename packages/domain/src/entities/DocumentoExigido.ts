@@ -127,6 +127,20 @@ export interface DocumentoVencendo {
   estado: 'vencido' | 'proximo_vencimento';
 }
 
+// Uma linha de qualidade.checklist_geral() — o checklist de TODOS os
+// fornecedores, item a item. Alimenta dashboard e relatórios numa consulta.
+export interface ItemChecklistGeral {
+  fornecedor_id: string;
+  fornecedor: string;
+  status_documental: StatusDocumental;
+  documento_exigido_id: string;
+  documento: string;
+  exigencia: Exigencia;
+  tem_validade: boolean;
+  estado: EstadoItemChecklist;
+  proxima_validade: string | null;
+}
+
 // Uma linha de qualidade.status_documental_geral().
 export interface StatusDocumentalFornecedor {
   fornecedor_id: string;

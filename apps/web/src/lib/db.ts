@@ -19,6 +19,9 @@ import type {
   ItemChecklistFornecedor,
   StatusDocumentalFornecedor,
   DocumentoVencendo,
+  ItemChecklistGeral,
+  NovoFornecedor,
+  AtualizacaoFornecedor,
   EtapaLote,
   Etapa,
   Recebimento,
@@ -1227,6 +1230,58 @@ export async function getStatusDocumentalGeral(): Promise<StatusDocumentalFornec
   const { data, error } = await qualidade().rpc('status_documental_geral');
   if (error) throw new Error(error.message);
   return (data ?? []) as StatusDocumentalFornecedor[];
+}
+
+// Checklist de todos os fornecedores, item a item (dashboard e relatórios).
+export async function getChecklistGeral(): Promise<ItemChecklistGeral[]> {
+  const { data, error } = await qualidade().rpc('checklist_geral');
+  if (error) throw new Error(error.message);
+  return (data ?? []) as ItemChecklistGeral[];
+}
+
+// ── Cadastro de fornecedor ─────────────────────────────────────
+export async function getFornecedor(id: string): Promise<Fornecedor | null> {
+  const res = await core().from('fornecedores').select('*').eq('id', id).maybeSingle();
+  if (res.error) throw new Error(res.error.message);
+  return (res.data as Fornecedor | null) ?? null;
+}
+
+export async function criarFornecedor(payload: NovoFornecedor): Promise<Fornecedor> {
+  const res = await core().from('fornecedores').insert(payload).select('*').single();
+  if (res.error) throw new Error(res.error.message);
+  return res.data as Fornecedor;
+}
+
+export async function atualizarFornecedor(
+  id: string,
+  patch: AtualizacaoFornecedor,
+): Promise<void> {
+  const res = await core().from('fornecedores').update(patch).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// Substitui os segmentos do fornecedor de uma vez (o formulário edita a lista
+// inteira). O status documental é recalculado pelo trigger.
+export async function definirSegmentosDoFornecedor(
+  fornecedorId: string,
+  segmentoIds: string[],
+): Promise<void> {
+  const atuais = unwrap<{ id: string; segmento_id: string }[]>(
+    await qualidade().from('fornecedor_segmentos').select('id, segmento_id').eq('fornecedor_id', fornecedorId),
+  );
+  const manter = new Set(segmentoIds);
+  const remover = atuais.filter((v) => !manter.has(v.segmento_id)).map((v) => v.id);
+  const novos = segmentoIds.filter((id) => !atuais.some((v) => v.segmento_id === id));
+
+  if (remover.length > 0) {
+    const res = await qualidade().from('fornecedor_segmentos').delete().in('id', remover);
+    if (res.error) throw new Error(res.error.message);
+  }
+  if (novos.length > 0) {
+    const res = await qualidade().from('fornecedor_segmentos')
+      .insert(novos.map((segmento_id) => ({ fornecedor_id: fornecedorId, segmento_id })));
+    if (res.error) throw new Error(res.error.message);
+  }
 }
 
 // Documentos vencidos / a vencer — mesma regra que a rotina de alerta usa.

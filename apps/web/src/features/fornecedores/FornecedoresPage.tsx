@@ -19,9 +19,6 @@ import type {
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
 import { IconPlus, IconDoc, IconDownload } from '../../components/icons';
 import { useToast } from '../../components/Toast';
-import { useAuth } from '../../lib/auth';
-import { CatalogoFornecedores } from './CatalogoFornecedores';
-import { GestaoDocumentos } from './ChecklistFornecedor';
 
 function catLabelDoc(c: string | null): string {
   if (!c) return 'Documento';
@@ -36,10 +33,7 @@ const TOM_CLASS: Record<string, string> = {
 };
 
 export function FornecedoresPage() {
-  const { perfis } = useAuth();
-  // O catálogo define a régua documental de toda a homologação: só gestão mexe.
-  const podeCatalogo = perfis.includes('gestao');
-  const [aba, setAba] = useState<'inspecoes' | 'homologacao' | 'documentos' | 'catalogo'>('inspecoes');
+  const [aba, setAba] = useState<'inspecoes' | 'homologacao'>('inspecoes');
   const [recarregar, setRecarregar] = useState(0);
   const [modalInsp, setModalInsp] = useState(false);
   const [modalHom, setModalHom] = useState(false);
@@ -66,21 +60,14 @@ export function FornecedoresPage() {
         title="Fornecedores & Recebimento"
         subtitle="Inspeção de matéria-prima e homologação de fornecedores"
         action={
-          aba === 'catalogo' || aba === 'documentos' ? undefined : (
-            <Button onClick={() => (aba === 'inspecoes' ? setModalInsp(true) : setModalHom(true))}>
-              <IconPlus width={16} height={16} />{aba === 'inspecoes' ? 'Nova inspeção' : 'Nova homologação'}
-            </Button>
-          )
+          <Button onClick={() => (aba === 'inspecoes' ? setModalInsp(true) : setModalHom(true))}>
+            <IconPlus width={16} height={16} />{aba === 'inspecoes' ? 'Nova inspeção' : 'Nova homologação'}
+          </Button>
         }
       />
 
-      <div className="mb-5 flex flex-wrap gap-2">
-        {([
-          ['inspecoes', 'Inspeções de recebimento'],
-          ['homologacao', 'Homologação'],
-          ['documentos', 'Gestão de Documentos'],
-          ...(podeCatalogo ? [['catalogo', 'Catálogo'] as const] : []),
-        ] as const).map(([id, label]) => (
+      <div className="mb-5 flex gap-2">
+        {([['inspecoes', 'Inspeções de recebimento'], ['homologacao', 'Homologação']] as const).map(([id, label]) => (
           <button key={id} onClick={() => setAba(id)}
             className={`rounded-full border px-3.5 py-[7px] text-[12.5px] font-semibold transition ${aba === id ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'}`}>
             {label}
@@ -88,10 +75,7 @@ export function FornecedoresPage() {
         ))}
       </div>
 
-      {aba === 'catalogo' && podeCatalogo && <CatalogoFornecedores />}
-      {aba === 'documentos' && <GestaoDocumentos />}
-
-      {aba !== 'catalogo' && aba !== 'documentos' && loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
+      {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
 
       {data && aba === 'inspecoes' && (
         data.inspecoes.length === 0 ? (

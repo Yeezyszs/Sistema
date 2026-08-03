@@ -223,7 +223,7 @@ export function PainelPage() {
 
       {/* Documentos de fornecedor — bloco próprio: se a consulta falhar, o
           painel não pode dizer que está tudo em dia. */}
-      {podeAcessarModulo('fornecedores') && <BlocoDocumentos />}
+      {podeAcessarModulo('documentos') && <BlocoDocumentos />}
 
       {/* Comercial — só para quem acessa o módulo */}
       {veComercial && (
@@ -282,7 +282,7 @@ function BlocoDocumentos() {
           {vencidos.length > 0 ? `${vencidos.length} já vencido(s)` : 'Nenhum vencido'}
           {data.length > 8 ? ` · +${data.length - 8} não exibido(s)` : ''}
         </span>
-        <Link to="/fornecedores" className="text-xs font-semibold text-brand-700 hover:underline">Gestão de documentos →</Link>
+        <Link to="/gestao-documentos" className="text-xs font-semibold text-brand-700 hover:underline">Gestão de Documentos →</Link>
       </div>
     </Card>
   );

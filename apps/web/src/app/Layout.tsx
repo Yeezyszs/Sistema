@@ -47,6 +47,12 @@ const ITENS_COMERCIAL: SubItem[] = [
   { to: '/clientes', icon: <IconUser width={16} height={16} />, label: 'Clientes', modulo: 'comercial' },
 ];
 
+// Gestão de Documentos — homologação documental do fornecedor. Nada a ver com
+// os laudos de matéria-prima, que ficam em Fornecedores & Recebimento.
+const ITENS_DOCUMENTOS: SubItem[] = [
+  { to: '/gestao-documentos', icon: <IconDoc width={16} height={16} />, label: 'Documentos de fornecedores', modulo: 'documentos' },
+];
+
 const ITENS_QUALIDADE: SubItem[] = [
   { to: '/qualidade', icon: <IconShield width={16} height={16} />, label: 'Qualidade', modulo: 'qualidade' },
   { to: '/acompanhamento', icon: <IconFlask width={16} height={16} />, label: 'Acomp. de Processo', modulo: 'acompanhamento' },
@@ -92,6 +98,7 @@ const GRUPOS: Grupo[] = [
   { key: 'logistica', label: 'Logística', icon: <IconTruck width={19} height={19} />, itens: ITENS_LOGISTICA },
   { key: 'suprimentos', label: 'Suprimentos', icon: <IconRecebimento width={19} height={19} />, itens: ITENS_SUPRIMENTOS },
   { key: 'comercial', label: 'Comercial', icon: <IconDoc width={19} height={19} />, itens: ITENS_COMERCIAL },
+  { key: 'documentos', label: 'Gestão de Documentos', icon: <IconClipboard width={19} height={19} />, itens: ITENS_DOCUMENTOS },
   { key: 'qualidade', label: 'Qualidade', icon: <IconShield width={19} height={19} />, itens: ITENS_QUALIDADE, restrito: true },
   { key: 'manutencao', label: 'Manutenção', icon: <IconWrench width={19} height={19} />, itens: ITENS_MANUTENCAO },
   { key: 'admin', label: 'Administração', icon: <IconUser width={19} height={19} />, itens: ITENS_ADMIN, restrito: true },

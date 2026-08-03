@@ -16,7 +16,7 @@ export const MODULO = [
   'ordens', 'lotes', 'recebimentos', 'fornecedores',
   'qualidade', 'acompanhamento', 'monitoramento_agua', 'insumos_lab', 'contraprovas', 'pcc_fisico', 'ppho', 'especificacoes', 'calibracao',
   'analise_risco', 'auditoria', 'ambiental', 'nao_conformidades',
-  'manutencao', 'comercial', 'almoxarifado', 'usuarios',
+  'manutencao', 'comercial', 'almoxarifado', 'documentos', 'usuarios',
 ] as const;
 export type Modulo = (typeof MODULO)[number];
 
@@ -32,7 +32,7 @@ export const MODULOS_POR_PERFIL: Record<Perfil, Modulo[]> = {
     'painel',
     'lotes', 'recebimentos', 'fornecedores', 'qualidade', 'acompanhamento', 'monitoramento_agua', 'insumos_lab', 'contraprovas', 'pcc_fisico', 'ppho',
     'especificacoes', 'calibracao', 'analise_risco', 'auditoria', 'ambiental',
-    'nao_conformidades', 'reprocesso',
+    'nao_conformidades', 'reprocesso', 'documentos',
   ],
   manutencao: ['painel', 'manutencao', 'calibracao', 'pcc_fisico', 'almoxarifado'],
 };

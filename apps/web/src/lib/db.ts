@@ -18,6 +18,7 @@ import type {
   Exigencia,
   ItemChecklistFornecedor,
   StatusDocumentalFornecedor,
+  DocumentoVencendo,
   EtapaLote,
   Etapa,
   Recebimento,
@@ -1226,6 +1227,13 @@ export async function getStatusDocumentalGeral(): Promise<StatusDocumentalFornec
   const { data, error } = await qualidade().rpc('status_documental_geral');
   if (error) throw new Error(error.message);
   return (data ?? []) as StatusDocumentalFornecedor[];
+}
+
+// Documentos vencidos / a vencer — mesma regra que a rotina de alerta usa.
+export async function getDocumentosVencendo(dias = 30): Promise<DocumentoVencendo[]> {
+  const { data, error } = await qualidade().rpc('documentos_vencendo', { p_dias: dias });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as DocumentoVencendo[];
 }
 
 // Soft delete: o registro permanece no banco, o motivo é obrigatório.

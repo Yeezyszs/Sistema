@@ -116,6 +116,17 @@ export const STATUS_DOCUMENTAL_TOM: Record<StatusDocumental, string> = {
   sem_documentos: 'neutro',
 };
 
+// Uma linha de qualidade.documentos_vencendo() — alimenta o painel e o alerta.
+export interface DocumentoVencendo {
+  documento_id: string;
+  fornecedor_id: string;
+  fornecedor: string;
+  documento: string;
+  validade: string;
+  dias: number;
+  estado: 'vencido' | 'proximo_vencimento';
+}
+
 // Uma linha de qualidade.status_documental_geral().
 export interface StatusDocumentalFornecedor {
   fornecedor_id: string;

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import {
   listApontamentos, listLinhas, listRecebimentos, listProgramacao, listLotes,
   listOrdensProducao, listNaoConformidades, listOrdensPcm, listParadas,
-  listCalibracoes, listPedidos, listCarregamentos, mapBy,
+  listCalibracoes, listPedidos, listCarregamentos, getDocumentosVencendo, mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { formatarData, formatarQuantidade, hojeLocalISO } from '../../lib/format';
@@ -221,6 +221,10 @@ export function PainelPage() {
         </div>
       </Card>
 
+      {/* Documentos de fornecedor — bloco próprio: se a consulta falhar, o
+          painel não pode dizer que está tudo em dia. */}
+      {podeAcessarModulo('fornecedores') && <BlocoDocumentos />}
+
       {/* Comercial — só para quem acessa o módulo */}
       {veComercial && (
         <div className="mt-3.5 grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
@@ -231,6 +235,56 @@ export function PainelPage() {
         </div>
       )}
     </>
+  );
+}
+
+// Documentos de fornecedor vencidos / a vencer em 30 dias.
+function BlocoDocumentos() {
+  const { data, loading, error } = useAsync(() => getDocumentosVencendo(30), []);
+
+  if (loading) return null;
+
+  if (error) {
+    return (
+      <Card className="mt-3.5 p-[18px]">
+        <CardTitle>Documentos de fornecedor</CardTitle>
+        <p className="text-sm font-semibold text-red-700">Não foi possível verificar a situação documental.</p>
+        <p className="mt-1 text-sm text-slate-500">{error}</p>
+      </Card>
+    );
+  }
+  if (!data || data.length === 0) return null;
+
+  const vencidos = data.filter((d) => d.estado === 'vencido');
+
+  return (
+    <Card className="mt-3.5 p-[18px]">
+      <CardTitle sub="Vencidos ou a vencer nos próximos 30 dias.">Documentos de fornecedor</CardTitle>
+      <ul className="divide-y divide-slate-100">
+        {data.slice(0, 8).map((d) => (
+          <li key={d.documento_id} className="flex items-center justify-between gap-3 py-2">
+            <span className="min-w-0">
+              <span className="block truncate text-sm text-slate-800">{d.documento}</span>
+              <span className="block truncate text-xs text-slate-400">{d.fornecedor}</span>
+            </span>
+            <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+              d.estado === 'vencido' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
+            }`}>
+              {d.estado === 'vencido'
+                ? `Vencido em ${formatarData(d.validade)}`
+                : `Vence em ${d.dias} dia${d.dias === 1 ? '' : 's'}`}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <div className="mt-3 flex items-center justify-between">
+        <span className="text-xs text-slate-500">
+          {vencidos.length > 0 ? `${vencidos.length} já vencido(s)` : 'Nenhum vencido'}
+          {data.length > 8 ? ` · +${data.length - 8} não exibido(s)` : ''}
+        </span>
+        <Link to="/fornecedores" className="text-xs font-semibold text-brand-700 hover:underline">Gestão de documentos →</Link>
+      </div>
+    </Card>
   );
 }
 

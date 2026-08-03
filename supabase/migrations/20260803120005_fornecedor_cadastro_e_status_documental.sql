@@ -172,7 +172,9 @@ as $$
   left join vigentes v
     on v.fornecedor_id = e.fornecedor_id
    and v.documento_exigido_id = e.documento_exigido_id
-  where f.org_id = core.current_org();
+  where f.org_id = core.current_org()
+    -- Produtor rural não entra na homologação documental (ver documentos_vencendo).
+    and f.tipo <> 'produtor_rural';
 $$;
 
 revoke execute on function qualidade.checklist_geral() from anon;

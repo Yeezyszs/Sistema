@@ -3,7 +3,7 @@
 // aqui são o que define o checklist de cada um.
 import { useMemo, useState, type FormEvent } from 'react';
 import {
-  listFornecedores, listSegmentosFornecedor, listFornecedorSegmentos, getChecklistGeral,
+  listFornecedoresDocumentais, listSegmentosFornecedor, listFornecedorSegmentos, getChecklistGeral,
   criarFornecedor, atualizarFornecedor, definirSegmentosDoFornecedor,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
@@ -35,7 +35,7 @@ export function FornecedoresDocumentos() {
 
   const { data, loading, error } = useAsync(async () => {
     const [fornecedores, segmentos, vinculos] = await Promise.all([
-      listFornecedores(), listSegmentosFornecedor(), listFornecedorSegmentos(),
+      listFornecedoresDocumentais(), listSegmentosFornecedor(), listFornecedorSegmentos(),
     ]);
     // O checklist é secundário aqui: se falhar, a lista ainda serve.
     let checklist: ItemChecklistGeral[] = [];

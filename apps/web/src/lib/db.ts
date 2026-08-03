@@ -1239,6 +1239,15 @@ export async function getChecklistGeral(): Promise<ItemChecklistGeral[]> {
   return (data ?? []) as ItemChecklistGeral[];
 }
 
+// Fornecedores sujeitos à homologação documental.
+// Produtor rural fica de fora: quem entrega raiz é acompanhado pela inspeção
+// de recebimento, em Fornecedores & Recebimento — não por alvará e licença.
+export async function listFornecedoresDocumentais(): Promise<Fornecedor[]> {
+  return unwrap<Fornecedor[]>(
+    await core().from('fornecedores').select('*').neq('tipo', 'produtor_rural').order('razao_social'),
+  );
+}
+
 // ── Cadastro de fornecedor ─────────────────────────────────────
 export async function getFornecedor(id: string): Promise<Fornecedor | null> {
   const res = await core().from('fornecedores').select('*').eq('id', id).maybeSingle();

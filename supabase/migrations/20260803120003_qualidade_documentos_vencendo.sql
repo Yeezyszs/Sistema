@@ -39,6 +39,9 @@ as $$
     and de.ativo
     and d.validade is not null
     and d.validade <= current_date + p_dias
+    -- Produtor rural fica fora da homologação documental: quem entrega raiz é
+    -- acompanhado pela inspeção de recebimento, não por alvará e licença.
+    and f.tipo <> 'produtor_rural'
     and exists (
       select 1
         from qualidade.fornecedor_segmentos fs

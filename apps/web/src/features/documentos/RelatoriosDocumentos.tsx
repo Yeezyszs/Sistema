@@ -1,7 +1,7 @@
 // Relatórios da homologação documental: para onde o vencimento está indo,
 // como cada segmento está, e a exportação para quem precisa levar em planilha.
 import { useMemo } from 'react';
-import { listFornecedores, listSegmentosFornecedor, listFornecedorSegmentos, getChecklistGeral } from '../../lib/db';
+import { listFornecedoresDocumentais, listSegmentosFornecedor, listFornecedorSegmentos, getChecklistGeral } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { formatarData, hojeLocalISO } from '../../lib/format';
 import { STATUS_DOCUMENTAL_LABEL, CLASSIFICACAO_RISCO_LABEL } from '@sistema/domain';
@@ -27,7 +27,7 @@ function paraCSV(linhas: Fornecedor[]): string {
 export function RelatoriosDocumentos() {
   const { data, loading, error } = useAsync(async () => {
     const [fornecedores, segmentos, vinculos] = await Promise.all([
-      listFornecedores(), listSegmentosFornecedor(), listFornecedorSegmentos(),
+      listFornecedoresDocumentais(), listSegmentosFornecedor(), listFornecedorSegmentos(),
     ]);
     let checklist: ItemChecklistGeral[] = [];
     let indisponivel = false;

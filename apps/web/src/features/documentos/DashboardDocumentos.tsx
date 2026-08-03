@@ -1,6 +1,6 @@
 // Visão geral da homologação documental: onde a Qualidade olha primeiro.
 import { useMemo } from 'react';
-import { listFornecedores, listSegmentosFornecedor, listFornecedorSegmentos, getChecklistGeral } from '../../lib/db';
+import { listFornecedoresDocumentais, listSegmentosFornecedor, listFornecedorSegmentos, getChecklistGeral } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { formatarData } from '../../lib/format';
 import { STATUS_DOCUMENTAL_LABEL, CLASSIFICACAO_RISCO_LABEL, CLASSIFICACAO_RISCO_COR } from '@sistema/domain';
@@ -22,7 +22,7 @@ interface Alerta {
 export function DashboardDocumentos({ onAbrirFornecedores }: { onAbrirFornecedores: () => void }) {
   const { data, loading, error } = useAsync(async () => {
     const [fornecedores, segmentos, vinculos] = await Promise.all([
-      listFornecedores(), listSegmentosFornecedor(), listFornecedorSegmentos(),
+      listFornecedoresDocumentais(), listSegmentosFornecedor(), listFornecedorSegmentos(),
     ]);
     // O checklist é o coração do painel: se falhar, dizemos isso em vez de
     // mostrar zero e passar a impressão de que está tudo em dia.

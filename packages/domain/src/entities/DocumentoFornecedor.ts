@@ -56,10 +56,22 @@ export interface DocumentoFornecedor {
   observacao: string | null;
   created_at: string;
   created_by: string | null;
+  // Checklist de homologação. Nulo nos laudos antigos, que não pertencem a
+  // nenhum item exigido e continuam válidos como estão.
+  documento_exigido_id: string | null;
+  // Versionamento: substituir arquiva a versão anterior, nunca apaga.
+  is_atual: boolean;
+  // Soft delete — o registro permanece no banco (rastreabilidade FSSC 22000).
+  excluido_em: string | null;
+  excluido_por: string | null;
+  motivo_exclusao: string | null;
 }
 
 export interface NovoDocumentoFornecedor {
   fornecedor_id: string;
+  documento_exigido_id?: string | null;
+  emitido_em?: string | null;
+  validade?: string | null;
   homologacao_id?: string | null;
   tipo?: string;
   categoria_analise?: string | null;

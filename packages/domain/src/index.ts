@@ -21,6 +21,8 @@ export * from './entities/RegistroEtapa';
 export * from './entities/Produto';
 export * from './entities/Fornecedor';
 export * from './entities/DocumentoFornecedor';
+export * from './entities/SegmentoFornecedor';
+export * from './entities/DocumentoExigido';
 export * from './entities/PontoControle';
 export * from './entities/Monitoramento';
 export * from './entities/Cliente';

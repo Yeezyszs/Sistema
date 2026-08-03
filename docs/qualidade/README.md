@@ -34,6 +34,7 @@ Princípio que guiou a compilação (conforme pedido):
 | `03-pessoas-auditoria-fooddefense.md` | Treinamento/cultura/BPF pessoal, auditoria interna & verificação de PPR, food defense & food fraud. |
 | `04-ambiental-pcc-manutencao.md` | Monitoramento ambiental & pragas, PCC físico (detector de metais/imãs/vidros), manutenção & calibração. |
 | `05-mudancas-documentacao-indicadores-expedicao.md` | Gestão de mudanças, controle documental, indicadores/APPCC, expedição & especificações de produto. |
+| `06-homologacao-fornecedores.md` | **Brief de implementação** do checklist documental de homologação (FOR-10) dentro do ERP: catálogo de segmentos e documentos exigidos, status documental calculado, múltiplos arquivos, exclusão com motivo e alertas de vencimento. |
 
 ---
 

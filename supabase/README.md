@@ -6,6 +6,10 @@ Camada de dados versionada em SQL.
   `qualidade.liberar_lote`). Cada arquivo é imutável e numerado por timestamp.
 - `seed/` — dados de base: `etapas`, `pontos_controle`, `perfis`,
   `documentos_obrigatorios`.
+- `functions/` — Edge Functions. Hoje só `alertas-documentos` (alerta diário de
+  documento de fornecedor vencendo). O agendamento precisa da service role key
+  e por isso **não** vai em migration: as instruções estão no README da própria
+  função.
 
 ## Como aplicar (Fase 1)
 

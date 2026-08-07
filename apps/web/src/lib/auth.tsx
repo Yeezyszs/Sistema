@@ -40,9 +40,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
       if (s) {
-        void carregarPerfis().then(setPerfis);
+        // `loading` volta a true até os perfis chegarem. Sem isso há uma janela
+        // em que a sessão já existe e `perfis` ainda é [], e qualquer guarda de
+        // módulo consultada nesse intervalo nega acesso a tudo.
+        setLoading(true);
+        void carregarPerfis()
+          .then(setPerfis)
+          .finally(() => setLoading(false));
       } else {
         setPerfis([]);
+        setLoading(false);
       }
     });
     return () => sub.subscription.unsubscribe();

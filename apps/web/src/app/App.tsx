@@ -64,15 +64,44 @@ function Protected({ children }: { children: JSX.Element }) {
   return children;
 }
 
+// Última parada quando o usuário não tem nenhum módulo para onde ir. Uma tela
+// em branco faria o usuário achar que o sistema quebrou; o problema é de
+// permissão e quem resolve é o administrador.
+function SemAcesso() {
+  const { perfis, signOut } = useAuth();
+  return (
+    <div className="mx-auto max-w-md py-20 text-center">
+      <h1 className="text-xl font-bold text-slate-900">Sem acesso a este módulo</h1>
+      <p className="mt-2 text-sm text-slate-600">
+        {perfis.length === 0
+          ? 'Seu usuário ainda não tem nenhum perfil atribuído.'
+          : `Seu perfil (${perfis.join(', ')}) não cobre este módulo.`}{' '}
+        Fale com o administrador do sistema.
+      </p>
+      <button
+        onClick={() => void signOut()}
+        className="mt-5 rounded-lg border border-slate-300 px-3.5 py-2 text-[13px] font-semibold text-slate-700 hover:bg-slate-50"
+      >
+        Sair
+      </button>
+    </div>
+  );
+}
+
 // Bloqueia acesso a um módulo cujo perfil do usuário não cobre.
 // Complementa (não substitui) o RLS do banco, que é a defesa real.
 function ModuloGuard({ modulo, children }: { modulo: Modulo; children: ReactNode }) {
   const { podeAcessarModulo, loading } = useAuth();
   if (loading) return null;
-  // Volta para o painel, não para uma tela específica: perfis restritos (ex.
-  // compras) não acessam /lotes, e mandar para lá causaria loop de redirect.
-  if (!podeAcessarModulo(modulo)) return <Navigate to="/painel" replace />;
-  return children;
+  if (podeAcessarModulo(modulo)) return children;
+
+  // Redirecionar só é seguro se o destino for acessível — senão o destino nega
+  // de novo e a navegação entra em laço, que o React derruba deixando a tela
+  // em branco. Quando não há para onde mandar, explique.
+  if (modulo !== 'painel' && podeAcessarModulo('painel')) {
+    return <Navigate to="/painel" replace />;
+  }
+  return <SemAcesso />;
 }
 
 export default function App() {

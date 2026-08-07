@@ -13,6 +13,7 @@ const TOM_PERFIL: Record<Perfil, string> = {
   qualidade: 'bg-emerald-600 text-white',
   operador: 'bg-sky-600 text-white',
   manutencao: 'bg-amber-600 text-white',
+  compras: 'bg-violet-600 text-white',
 };
 
 export function UsuariosPage() {

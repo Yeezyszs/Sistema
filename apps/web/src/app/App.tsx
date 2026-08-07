@@ -69,7 +69,9 @@ function Protected({ children }: { children: JSX.Element }) {
 function ModuloGuard({ modulo, children }: { modulo: Modulo; children: ReactNode }) {
   const { podeAcessarModulo, loading } = useAuth();
   if (loading) return null;
-  if (!podeAcessarModulo(modulo)) return <Navigate to="/lotes" replace />;
+  // Volta para o painel, não para uma tela específica: perfis restritos (ex.
+  // compras) não acessam /lotes, e mandar para lá causaria loop de redirect.
+  if (!podeAcessarModulo(modulo)) return <Navigate to="/painel" replace />;
   return children;
 }
 

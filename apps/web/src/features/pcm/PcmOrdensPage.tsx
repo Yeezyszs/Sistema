@@ -6,8 +6,8 @@ import {
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { formatarData, hojeLocalISO } from '../../lib/format';
-import { TIPO_OS_PCM, NATUREZA_OS, PRIORIDADE_OS_PCM, PRIORIDADE_OS_PCM_TOM } from '@sistema/domain';
-import type { OrdemPcm, NovaOsExecucao, ColaboradorPcm } from '@sistema/domain';
+import { TIPO_OS_PCM, NATUREZA_OS, PRIORIDADE_OS_PCM, PRIORIDADE_OS_PCM_TOM, SETORES_PCM } from '@sistema/domain';
+import type { OrdemPcm, NovaOsExecucao, ColaboradorPcm, SetorPcm } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
 import { IconPlus, IconSearch, IconDoc } from '../../components/icons';
 import { useToast } from '../../components/Toast';
@@ -25,7 +25,12 @@ export function PcmOrdensPage() {
     const [ordens, equipamentos, colaboradores] = await Promise.all([
       listOrdensPcm(), listEquipamentosPcm(), listColaboradoresPcm(),
     ]);
-    const setores = [...new Set(equipamentos.map((e) => e.setor))].sort();
+    // Lista fixa das áreas da fábrica, na ordem do fluxo, mais qualquer setor
+    // que já exista nos equipamentos e não esteja nela.
+    const extras = [...new Set(equipamentos.map((e) => e.setor))]
+      .filter((s) => s && !SETORES_PCM.includes(s as SetorPcm))
+      .sort();
+    const setores = [...SETORES_PCM, ...extras];
     return { ordens, setores, colaboradores };
   }, [recarregar]);
   const rec = () => setRecarregar((n) => n + 1);

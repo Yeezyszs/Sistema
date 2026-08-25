@@ -2,6 +2,38 @@
 // F1: cadastros — colaboradores, equipamentos + componentes, planos LU/PRM/IRM,
 // pontos de lubrificação e ferramentas.
 
+// Áreas da fábrica, na ordem do fluxo produtivo (recebimento → expedição) e
+// depois as de apoio. É a lista que a manutenção usa para abrir O.S.
+//
+// Setores de equipamentos já cadastrados que não estejam aqui continuam
+// aparecendo na tela — a lista soma, não substitui, para não deixar registro
+// antigo com um valor impossível de selecionar.
+export const SETORES_PCM = [
+  'ADMINISTRATIVO',
+  'BALANÇA',
+  'DESCARGA',
+  'BIOGAS',
+  'EXTRAÇÃO',
+  'FORNO',
+  'CALDEIRA',
+  'ENSAQUE 01',
+  'ENSAQUE 02',
+  'ENSAQUE 03',
+  'ARMAZEM 1',
+  'ARMAZEM 2',
+  'ARMAZEM 3',
+  'VESTIARIO',
+  'QUALIDADE',
+  'LABORATORIO',
+  'REFEITORIO',
+  'MANUTENÇÃO',
+  'DIESEL',
+  'ALMOXARIFADO',
+  'AREA EXTERNA',
+] as const;
+
+export type SetorPcm = (typeof SETORES_PCM)[number];
+
 export interface ColaboradorPcm {
   id: string;
   org_id: string;

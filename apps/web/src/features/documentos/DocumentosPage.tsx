@@ -15,8 +15,10 @@ type Aba = 'painel' | 'fornecedores' | 'relatorios' | 'catalogo';
 
 export function DocumentosPage() {
   const { perfis } = useAuth();
-  // O catálogo é a régua documental de toda a homologação: só gestão mexe.
-  const podeCatalogo = perfis.includes('gestao');
+  // O catálogo define a régua documental da homologação. Quem opera o módulo
+  // no dia a dia (compras) precisa dele para cadastrar o que cada segmento
+  // exige; a qualidade continua fora por enquanto, a pedido.
+  const podeCatalogo = perfis.includes('gestao') || perfis.includes('compras');
   const [aba, setAba] = useState<Aba>('painel');
 
   const abas: [Aba, string][] = [

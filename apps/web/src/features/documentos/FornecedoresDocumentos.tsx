@@ -73,19 +73,35 @@ export function FornecedoresDocumentos() {
   if (error) return <ErroCard mensagem={error} />;
   if (loading || !data) return <div className="flex justify-center py-16"><Spinner className="h-7 w-7 text-brand-600" /></div>;
 
+  // O modal fica numa variável em vez de só no fim do JSX: o detalhe abaixo
+  // retorna cedo, e antes disso o "Editar" de lá setava o estado sem nada
+  // aparecer na tela.
+  const modalCadastro = (novoAberto || editando) && (
+    <ModalFornecedor
+      fornecedor={editando}
+      segmentos={data.segmentos}
+      segmentosAtuais={editando ? data.vinculos.filter((v) => v.fornecedor_id === editando.id).map((v) => v.segmento_id) : []}
+      onClose={() => { setNovoAberto(false); setEditando(null); }}
+      onSaved={rec}
+    />
+  );
+
   // Detalhe ocupa a tela inteira do módulo, como no sistema de origem.
   if (aberto) {
     const f = data.fornecedores.find((x) => x.id === aberto);
     if (f) {
       return (
-        <FornecedorDetalhe
-          fornecedor={f}
-          segmentos={data.segmentos}
-          vinculos={data.vinculos.filter((v) => v.fornecedor_id === f.id)}
-          onVoltar={() => setAberto(null)}
-          onEditar={() => setEditando(f)}
-          onMudou={rec}
-        />
+        <>
+          <FornecedorDetalhe
+            fornecedor={f}
+            segmentos={data.segmentos}
+            vinculos={data.vinculos.filter((v) => v.fornecedor_id === f.id)}
+            onVoltar={() => setAberto(null)}
+            onEditar={() => setEditando(f)}
+            onMudou={rec}
+          />
+          {modalCadastro}
+        </>
       );
     }
   }
@@ -188,15 +204,7 @@ export function FornecedoresDocumentos() {
         </Card>
       )}
 
-      {(novoAberto || editando) && (
-        <ModalFornecedor
-          fornecedor={editando}
-          segmentos={data.segmentos}
-          segmentosAtuais={editando ? data.vinculos.filter((v) => v.fornecedor_id === editando.id).map((v) => v.segmento_id) : []}
-          onClose={() => { setNovoAberto(false); setEditando(null); }}
-          onSaved={rec}
-        />
-      )}
+      {modalCadastro}
     </>
   );
 }

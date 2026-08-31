@@ -12,7 +12,7 @@ import {
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { formatarHora } from '../../lib/format';
-import { TIPO_PCC_LABEL, limiteLabel, valorConforme } from '@sistema/domain';
+import { TIPO_PCC_LABEL, limiteLabel } from '@sistema/domain';
 import type { PontoControle } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, Select, TextInput, TextArea, ErroCarregamento } from '../../components/ui';
 import { StatusChip } from '../../components/StatusChip';
@@ -21,7 +21,6 @@ import { useToast } from '../../components/Toast';
 
 export function QualidadePage() {
   const [recarregar, setRecarregar] = useState(0);
-  const { sucesso, erro } = useToast();
 
   const { data, loading, error } = useAsync(async () => {
     const [pendentes, pontosControle, lotes, produtos] = await Promise.all([

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { listPedidos, listClientes, listProdutos, mapBy } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
-import { formatarData, formatarQuantidade } from '../../lib/format';
+import { formatarQuantidade } from '../../lib/format';
 import { SITUACAO_PEDIDO_LABEL } from '@sistema/domain';
 import type { SituacaoPedido } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Select, Field, ErroCarregamento } from '../../components/ui';

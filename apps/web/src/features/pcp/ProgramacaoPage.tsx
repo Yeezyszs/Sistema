@@ -6,7 +6,7 @@ import {
 import { useAsync } from '../../lib/useAsync';
 import { formatarData, formatarQuantidade } from '../../lib/format';
 import { TURNO_PROD, TURNO_PROD_LABEL, calcularMeta } from '@sistema/domain';
-import type { TurnoProd, Linha, Produto, Programacao, Apontamento } from '@sistema/domain';
+import type { TurnoProd, Linha, Produto, Programacao } from '@sistema/domain';
 import { PageHeader, Card, Spinner, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconArrowLeft, IconChevronRight, IconX } from '../../components/icons';
 import { useToast } from '../../components/Toast';

@@ -181,7 +181,10 @@ function ModalNovaAnalise({
       .catch(() => { if (!cancelado) { setParametros([]); setEspId(null); } })
       .finally(() => { if (!cancelado) setCarregandoEsp(false); });
     return () => { cancelado = true; };
-  }, [produtoId, clienteId]);
+    // `editando` entra na lista: trocar a análise em edição sem mudar produto
+    // ou cliente precisa recarregar os valores gravados, senão a tela mostra
+    // os da análise anterior.
+  }, [produtoId, clienteId, editando]);
 
   // Pré-avaliação de conformidade ao vivo.
   const preAvaliacao = useMemo(() => {
@@ -334,6 +337,7 @@ function DetalheModal({ analise, onClose }: { analise: AnaliseProcesso | null; o
   );
   return (
     <Modal open={!!analise} onClose={onClose} title={analise ? `Análise #${analise.numero}` : ''} size="lg">
+      {error && <ErroCarregamento mensagem={error} />}
       {analise && (
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">

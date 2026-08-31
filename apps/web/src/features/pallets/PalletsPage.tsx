@@ -5,7 +5,7 @@ import { formatarData, formatarQuantidade, hojeLocalISO } from '../../lib/format
 import {
   TIPO_PALLET_LABEL, MOV_PALLET, MOV_PALLET_LABEL, palletsEmTerceiros,
 } from '@sistema/domain';
-import type { Pallet, TipoMovPallet } from '@sistema/domain';
+import type { TipoMovPallet } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus } from '../../components/icons';
 import { useToast } from '../../components/Toast';

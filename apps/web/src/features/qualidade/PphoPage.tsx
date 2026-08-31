@@ -13,7 +13,7 @@ import { useAsync } from '../../lib/useAsync';
 import { formatarDataHora } from '../../lib/format';
 import { FREQUENCIA_PPHO, RESPOSTA_CHECKLIST_LABEL, execucaoConforme } from '@sistema/domain';
 import type { Ppho, ChecklistItem, RespostaChecklist } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, TextArea, Select, Modal, ErroCarregamento } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus, IconCheck } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
@@ -222,13 +222,14 @@ function HigienizacaoAba({
   const [pphoId, setPphoId] = useState('');
   const ppho = pphos.find((p) => p.id === pphoId);
 
+  const checklistId = ppho?.checklist_id ?? '';
   const { data: itens, error: erroItens } = useAsync(
     async () => (ppho ? getItensDoChecklist(ppho.checklist_id) : null),
-    [ppho?.checklist_id ?? ''],
+    [checklistId],
   );
   const { data: execucoes, error: erroExec } = useAsync(
     async () => (ppho ? getExecucoesDoChecklist(ppho.checklist_id) : null),
-    [ppho?.checklist_id ?? '', pphoId],
+    [checklistId, pphoId],
   );
 
   if (erroItens || erroExec) return <ErroCarregamento mensagem={erroItens ?? erroExec} />;

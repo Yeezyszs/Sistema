@@ -357,6 +357,7 @@ function ModalLaudos({
 
   return (
     <Modal open onClose={onClose} title={`Laudos — ${fornecedor.razao_social}`} size="lg">
+      {error && <ErroCarregamento mensagem={error} />}
       {loading && <div className="flex justify-center py-8"><Spinner className="h-6 w-6 text-brand-600" /></div>}
 
       {docs && docs.length === 0 && (

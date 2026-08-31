@@ -14,14 +14,22 @@
     "dev:api": "pnpm --filter @sistema/api dev",
     "dev:web": "pnpm --filter @sistema/web dev",
     "build": "pnpm -r --if-present build",
-    "lint": "pnpm -r --if-present lint",
+    "lint": "eslint .",
     "typecheck": "pnpm -r --if-present typecheck",
-    "test": "pnpm -r --if-present test"
+    "test": "pnpm -r --if-present test",
+    "lint:fix": "eslint . --fix"
   },
   "devDependencies": {
-    "typescript": "^5.6.3"
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.9.1",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.11.0",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.69.0"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild"]
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }

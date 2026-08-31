@@ -6,10 +6,10 @@ import {
 import { useAsync } from '../../lib/useAsync';
 import { formatarData, formatarDataHora, hojeLocalISO } from '../../lib/format';
 import {
-  STATUS_AUDITORIA_LABEL, STATUS_AUDITORIA_TOM, CLASSIFICACAO_ITEM, CLASSIFICACAO_ITEM_LABEL, itemEhNaoConforme,
+  STATUS_AUDITORIA_LABEL, STATUS_AUDITORIA_TOM, CLASSIFICACAO_ITEM, CLASSIFICACAO_ITEM_LABEL,
 } from '@sistema/domain';
 import type { Auditoria, StatusAuditoria, ClassificacaoItem } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, TextArea, Select, Modal, ErroCarregamento } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus, IconChevronRight } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 

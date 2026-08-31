@@ -114,6 +114,9 @@ export function LaudoModal({
       { faixa: '21/24', resultado: 'Conforme' },
     ]);
     setAmostragem(AMOSTRAGEM_VISUAL_PADRAO);
+    // Só `open`: este efeito preenche o formulário na abertura. Reagir a
+    // produtoId/clienteId reescreveria o laudo por cima do que já foi digitado.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const fqConformeGeral = linhasFQ.filter((l) => l.resultado.trim() !== '').every(fqConforme);

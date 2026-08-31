@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { listFornecedoresDocumentais, listSegmentosFornecedor, listFornecedorSegmentos, getChecklistGeral } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
-import { formatarData, hojeLocalISO } from '../../lib/format';
+import { hojeLocalISO } from '../../lib/format';
 import { STATUS_DOCUMENTAL_LABEL, CLASSIFICACAO_RISCO_LABEL } from '@sistema/domain';
 import type { Fornecedor, ItemChecklistGeral } from '@sistema/domain';
 import { Card, CardTitle, Spinner, Button, EmptyState, LINHA_CABECALHO } from '../../components/ui';

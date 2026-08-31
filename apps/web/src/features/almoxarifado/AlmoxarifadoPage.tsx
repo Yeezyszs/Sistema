@@ -288,6 +288,7 @@ function ModalExtrato({ item, onClose }: { item: AlmoxItem; onClose: () => void 
   const sinal = (t: AlmoxMovimento['tipo']) => t === 'entrada' ? '+' : t === 'saida' ? '−' : '±';
   return (
     <Modal open onClose={onClose} title={`Extrato — ${item.nome}`} size="lg">
+      {error && <ErroCarregamento mensagem={error} />}
       {loading && <div className="flex justify-center py-8"><Spinner className="h-6 w-6 text-brand-600" /></div>}
       {data && data.length === 0 && <p className="py-6 text-center text-sm text-slate-400">Nenhum movimento.</p>}
       {data && data.length > 0 && (

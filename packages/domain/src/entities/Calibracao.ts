@@ -63,9 +63,15 @@ export type SituacaoCalibracao = 'vigente' | 'a_vencer' | 'vencida' | 'sem_regis
 
 export function situacaoCalibracao(validoAte: string | null, hoje = new Date()): SituacaoCalibracao {
   if (!validoAte) return 'sem_registro';
-  const v = new Date(validoAte);
-  if (Number.isNaN(v.getTime())) return 'sem_registro';
-  const dias = Math.floor((v.getTime() - hoje.getTime()) / 86400000);
+  // Compara data com data. `new Date('2026-07-16')` é meia-noite UTC; medido
+  // contra um horário local, o resultado dependia da hora em que a tela era
+  // aberta e antecipava o alerta em um dia. Mesma armadilha de fuso que já
+  // jogou apontamento de produção para o dia anterior.
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(validoAte);
+  if (!m) return 'sem_registro';
+  const vencimento = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  const base = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+  const dias = Math.round((vencimento.getTime() - base.getTime()) / 86400000);
   if (dias < 0) return 'vencida';
   if (dias <= 30) return 'a_vencer';
   return 'vigente';

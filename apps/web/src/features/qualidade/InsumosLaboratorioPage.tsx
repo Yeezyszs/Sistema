@@ -5,7 +5,7 @@ import {
 import { useAsync } from '../../lib/useAsync';
 import { formatarQuantidade } from '../../lib/format';
 import type { InsumoLaboratorio } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Modal } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
@@ -15,7 +15,7 @@ export function InsumosLaboratorioPage() {
   const [novo, setNovo] = useState(false);
   const { sucesso, erro } = useToast();
 
-  const { data, loading } = useAsync(() => listInsumosLaboratorio(), [recarregar]);
+  const { data, loading, error } = useAsync(() => listInsumosLaboratorio(), [recarregar]);
   const rec = () => setRecarregar((n) => n + 1);
 
   const aComprar = (data ?? []).filter((i) => i.precisa_comprar).length;
@@ -38,6 +38,7 @@ export function InsumosLaboratorioPage() {
         action={<Button onClick={() => setNovo(true)}><IconPlus width={16} height={16} />Novo insumo</Button>}
       />
 
+      {error && <ErroCarregamento mensagem={error} />}
       {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
       {data && data.length === 0 && (
         <EmptyState title="Nenhum insumo" description='Cadastre o primeiro em "Novo insumo".' />

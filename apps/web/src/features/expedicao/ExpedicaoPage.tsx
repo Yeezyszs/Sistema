@@ -8,7 +8,7 @@ import { useAsync } from '../../lib/useAsync';
 import { formatarData, formatarQuantidade, hojeLocalISO } from '../../lib/format';
 import { STATUS_CARGA_LABEL, STATUS_CARGA_TOM, posicaoLabel } from '@sistema/domain';
 import type { Carregamento } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus, IconSearch } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
@@ -26,7 +26,7 @@ export function ExpedicaoPage() {
   const [posicaoId, setPosicaoId] = useState('');
   const { sucesso, erro } = useToast();
 
-  const { data, loading } = useAsync(async () => {
+  const { data, loading, error } = useAsync(async () => {
     const [cargas, pedidos, clientes, produtos, lotes, posicoes, locais] = await Promise.all([
       listCarregamentos(), listPedidos(), listClientes(), listProdutos(), listLotes(),
       listPosicoesEstoque(), listLocaisEstoque(),
@@ -156,6 +156,7 @@ export function ExpedicaoPage() {
         </div>
       </div>
 
+      {error && <ErroCarregamento mensagem={error} />}
       {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
       {data && linhas.length === 0 && (
         <EmptyState title="Nenhuma carga" description='Registre a primeira em "Novo carregamento".' />

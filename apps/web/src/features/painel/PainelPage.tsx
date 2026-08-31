@@ -11,7 +11,7 @@ import {
   STATUS_LOTE, STATUS_LOTE_LABEL,
 } from '@sistema/domain';
 import type { StatusLote } from '@sistema/domain';
-import { PageHeader, Card, CardTitle, Spinner } from '../../components/ui';
+import { PageHeader, Card, CardTitle, Spinner, ErroCarregamento } from '../../components/ui';
 import { IconClock } from '../../components/icons';
 import { useAuth } from '../../lib/auth';
 
@@ -47,7 +47,7 @@ export function PainelPage() {
   const { podeAcessarModulo } = useAuth();
   const veComercial = podeAcessarModulo('comercial');
 
-  const { data, loading } = useAsync(async () => {
+  const { data, loading, error } = useAsync(async () => {
     const [apontSemana, linhas, recebimentos, prog, lotes, ops, ncs, osPcm, paradas, calibracoes, pedidos, cargas] =
       await Promise.all([
         listApontamentos(de, ate), listLinhas(), listRecebimentos(), listProgramacao(de, ate),
@@ -56,6 +56,15 @@ export function PainelPage() {
       ]);
     return { apontSemana, recebimentos, prog, lotes, ops, ncs, osPcm, paradas, calibracoes, pedidos, cargas, linhas, linhasMap: mapBy(linhas, 'id') };
   }, [de, ate]);
+
+  if (error || (loading === false && !data)) {
+    return (
+      <>
+        <PageHeader title="Painel" subtitle="Operação da fábrica — dia e semana" />
+        <ErroCarregamento mensagem={error} />
+      </>
+    );
+  }
 
   if (loading || !data) {
     return (

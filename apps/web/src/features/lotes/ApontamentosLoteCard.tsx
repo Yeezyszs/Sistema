@@ -6,7 +6,7 @@ import { useAsync } from '../../lib/useAsync';
 import { formatarData, formatarQuantidade, hojeLocalISO } from '../../lib/format';
 import { TURNO_PROD, TURNO_PROD_LABEL, calcularRendimento } from '@sistema/domain';
 import type { TurnoProd } from '@sistema/domain';
-import { Card, Button, Field, TextInput, Select, Modal, Spinner } from '../../components/ui';
+import { Card, Button, Field, TextInput, Select, Modal, Spinner, ErroCarregamento } from '../../components/ui';
 import { IconClipboard } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
@@ -27,7 +27,7 @@ export function ApontamentosLoteCard({ loteId, produtoId, sinalAbrir = 0 }: {
     if (sinalAbrir > 0) setModal(true);
   }, [sinalAbrir]);
 
-  const { data, loading } = useAsync(async () => {
+  const { data, loading, error } = useAsync(async () => {
     const [apontamentos, linhas] = await Promise.all([getApontamentosDoLote(loteId), listLinhas()]);
     // Descargas dos dias apontados — denominador da eficiência diária.
     const dias = [...new Set(apontamentos.map((a) => a.data))].sort();
@@ -86,6 +86,7 @@ export function ApontamentosLoteCard({ loteId, produtoId, sinalAbrir = 0 }: {
         </Button>
       </div>
 
+      {error && <ErroCarregamento mensagem={error} />}
       {loading && <div className="flex justify-center py-6"><Spinner className="h-5 w-5 text-brand-600" /></div>}
 
       {data && data.apontamentos.length === 0 && (

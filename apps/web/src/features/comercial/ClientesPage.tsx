@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { listClientes, criarCliente, atualizarCliente, excluirCliente } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import type { Cliente } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Modal } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus, IconSearch } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
@@ -15,7 +15,7 @@ export function ClientesPage() {
   const [salvando, setSalvando] = useState(false);
   const { sucesso, erro } = useToast();
 
-  const { data, loading } = useAsync(() => listClientes(), [recarregar]);
+  const { data, loading, error } = useAsync(() => listClientes(), [recarregar]);
   const rec = () => setRecarregar((n) => n + 1);
 
   const linhas = (data ?? []).filter((c) => {
@@ -75,6 +75,7 @@ export function ClientesPage() {
           className="w-full rounded-[7px] border border-slate-300 bg-white py-2 pl-9 pr-3 text-[12.5px] outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
       </div>
 
+      {error && <ErroCarregamento mensagem={error} />}
       {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
       {data && linhas.length === 0 && <EmptyState title="Nenhum cliente" description="Cadastre clientes em 'Novo cliente'." />}
 

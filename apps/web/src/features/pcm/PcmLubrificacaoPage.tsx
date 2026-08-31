@@ -5,7 +5,7 @@ import {
 import { useAsync } from '../../lib/useAsync';
 import { formatarData, hojeLocalISO } from '../../lib/format';
 import type { LubrificacaoPcm, LuExecucao, ColaboradorPcm } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconSearch } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
@@ -29,7 +29,7 @@ export function PcmLubrificacaoPage() {
   const [filtroSit, setFiltroSit] = useState<'todas' | Situacao>('todas');
   const { sucesso, erro } = useToast();
 
-  const { data, loading } = useAsync(async () => {
+  const { data, loading, error } = useAsync(async () => {
     const [pontos, execucoes, colaboradores] = await Promise.all([
       listLubrificacaoPcm(), listLuExecucoes(), listColaboradoresPcm(),
     ]);
@@ -92,6 +92,7 @@ export function PcmLubrificacaoPage() {
         </div>
       </div>
 
+      {error && <ErroCarregamento mensagem={error} />}
       {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
       {data && linhas.length === 0 && <EmptyState title="Nenhum ponto" description="Ajuste a busca ou o filtro." />}
 

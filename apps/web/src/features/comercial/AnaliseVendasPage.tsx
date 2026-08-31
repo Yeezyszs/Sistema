@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { listPedidos, listClientes, listProdutos, mapBy } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { formatarQuantidade } from '../../lib/format';
-import { PageHeader, Card, Spinner, EmptyState, Field, Select } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Field, Select, ErroCarregamento } from '../../components/ui';
 
 function reais(n: number): string {
   return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -11,10 +11,12 @@ const MESES_LBL = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set'
 
 export function AnaliseVendasPage() {
   const [meses, setMeses] = useState(6);
-  const { data, loading } = useAsync(async () => {
+  const { data, loading, error } = useAsync(async () => {
     const [pedidos, clientes, produtos] = await Promise.all([listPedidos(), listClientes(), listProdutos()]);
     return { pedidos, clientesMap: mapBy(clientes, 'id'), produtosMap: mapBy(produtos, 'id') };
   }, []);
+
+  if (error) return <ErroCarregamento mensagem={error} />;
 
   if (loading || !data) {
     return (

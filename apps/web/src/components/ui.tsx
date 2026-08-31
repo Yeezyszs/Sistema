@@ -146,6 +146,30 @@ export function FullScreen({ children }: { children: ReactNode }) {
 }
 
 // ── Estado vazio ───────────────────────────────────────────────
+// A consulta não completou. Sem isto a tela fica em spinner eterno ou vazia,
+// e o usuário não distingue "falhou" de "não há nada" — o que é grave nas
+// telas de compliance, onde vazio parece conformidade.
+export function ErroCarregamento({
+  mensagem,
+  titulo = 'Não foi possível carregar os dados',
+}: {
+  mensagem?: string | null;
+  titulo?: string;
+}) {
+  return (
+    <div className="rounded-[10px] border border-red-200 bg-red-50 px-5 py-4">
+      <p className="text-sm font-semibold text-red-800">{titulo}</p>
+      {mensagem && <p className="mt-1 text-sm text-red-700">{mensagem}</p>}
+      <button
+        onClick={() => window.location.reload()}
+        className="mt-3 rounded-lg border border-red-300 bg-white px-3 py-1.5 text-[13px] font-semibold text-red-700 transition hover:bg-red-100"
+      >
+        Tentar de novo
+      </button>
+    </div>
+  );
+}
+
 export function EmptyState({
   icon,
   title,

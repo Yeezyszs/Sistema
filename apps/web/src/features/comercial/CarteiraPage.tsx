@@ -5,7 +5,7 @@ import { useAsync } from '../../lib/useAsync';
 import { formatarData, formatarQuantidade } from '../../lib/format';
 import { SITUACAO_PEDIDO_LABEL } from '@sistema/domain';
 import type { SituacaoPedido } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Select, Field } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Select, Field, ErroCarregamento } from '../../components/ui';
 
 function reais(n: number | null): string {
   if (n == null) return '—';
@@ -21,10 +21,12 @@ const TOM_SITUACAO: Record<SituacaoPedido, string> = {
 
 export function CarteiraPage() {
   const [cliente, setCliente] = useState('');
-  const { data, loading } = useAsync(async () => {
+  const { data, loading, error } = useAsync(async () => {
     const [pedidos, clientes, produtos] = await Promise.all([listPedidos(), listClientes(), listProdutos()]);
     return { pedidos, clientes, clientesMap: mapBy(clientes, 'id'), produtosMap: mapBy(produtos, 'id') };
   }, []);
+
+  if (error) return <ErroCarregamento mensagem={error} />;
 
   if (loading || !data) {
     return (

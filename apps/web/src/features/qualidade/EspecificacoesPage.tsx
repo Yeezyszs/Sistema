@@ -11,7 +11,7 @@ import {
 import { useAsync } from '../../lib/useAsync';
 import { limiteTexto, TEMPLATE_FISICO_QUIMICO } from '@sistema/domain';
 import type { EspecificacaoParametro } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconFlask, IconPlus, IconChevronRight } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
@@ -222,7 +222,7 @@ function EspecCard({
   titulo: string; produto: string; cliente: string | null; shelf: number | null;
   aberta: boolean; onToggle: () => void; especId: string;
 }) {
-  const { data: params } = useAsync(async () => (aberta ? getParametrosDaEspecificacao(especId) : null), [especId, aberta]);
+  const { data: params, error: erroParams } = useAsync(async () => (aberta ? getParametrosDaEspecificacao(especId) : null), [especId, aberta]);
   return (
     <Card className="overflow-hidden">
       <div className="flex cursor-pointer items-center justify-between gap-4 p-5 hover:bg-slate-50" onClick={onToggle}>
@@ -234,6 +234,7 @@ function EspecCard({
         </div>
         <IconChevronRight className={`text-slate-300 transition-transform ${aberta ? 'rotate-90' : ''}`} />
       </div>
+      {aberta && erroParams && <div className="px-5 pb-5"><ErroCarregamento mensagem={erroParams} /></div>}
       {aberta && (
         <div className="border-t border-slate-100 px-5 py-4">
           {params == null ? (

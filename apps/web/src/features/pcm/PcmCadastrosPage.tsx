@@ -9,7 +9,7 @@ import { TIPO_PLANO_PCM_LABEL } from '@sistema/domain';
 import type {
   EquipamentoPcm, ComponenteEquipamento, PlanoPcm, LubrificacaoPcm, FerramentaPcm, ColaboradorPcm,
 } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconChevronRight, IconSearch, IconPlus } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
@@ -101,7 +101,7 @@ export function PcmCadastrosPage() {
   const [reg, setReg] = useState<RegistroEmEdicao | null>(null);
   const { sucesso, erro } = useToast();
 
-  const { data, loading } = useAsync(async () => {
+  const { data, loading, error } = useAsync(async () => {
     const [equipamentos, componentes, planos, lubrificacao, ferramentas, colaboradores] = await Promise.all([
       listEquipamentosPcm(), listComponentesPcm(), listPlanosPcm(),
       listLubrificacaoPcm(), listFerramentasPcm(), listColaboradoresPcm(),
@@ -233,6 +233,7 @@ export function PcmCadastrosPage() {
         )}
       </div>
 
+      {error && <ErroCarregamento mensagem={error} />}
       {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
 
       {data && aba === 'equipamentos' && (

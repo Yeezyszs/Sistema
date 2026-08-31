@@ -4,7 +4,7 @@ import { useAsync } from '../../lib/useAsync';
 import { formatarData, formatarQuantidade } from '../../lib/format';
 import { TIPO_LAUDO_LABEL } from '@sistema/domain';
 import type { LaudoDados } from '@sistema/domain';
-import { Spinner } from '../../components/ui';
+import { Spinner, ErroCarregamento } from '../../components/ui';
 
 // Cabeçalho institucional (fixo por enquanto — Bepi Mataruco / Sumaré).
 const EMPRESA = {
@@ -30,6 +30,8 @@ export function LaudoPrint() {
     const cliente = lote?.cliente_id ? await getCliente(lote.cliente_id) : null;
     return { laudo, resultados, lote, produto, cliente };
   }, [id]);
+
+  if (error) return <ErroCarregamento mensagem={error} />;
 
   if (loading)
     return (

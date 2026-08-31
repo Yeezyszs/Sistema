@@ -7,7 +7,7 @@ import { useAsync } from '../../lib/useAsync';
 import { formatarData, hojeLocalISO } from '../../lib/format';
 import { TRIMESTRE_PCM } from '@sistema/domain';
 import type { PreventivaPcm, TrimestrePcm, ColaboradorPcm } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus, IconSearch } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
@@ -21,7 +21,7 @@ export function PcmPreventivaPage() {
   const [filtroSit, setFiltroSit] = useState<'todas' | 'pendentes' | 'realizadas'>('pendentes');
   const { sucesso, erro } = useToast();
 
-  const { data, loading } = useAsync(async () => {
+  const { data, loading, error } = useAsync(async () => {
     const [preventivas, equipamentos, colaboradores] = await Promise.all([
       listPreventivaPcm(), listEquipamentosPcm(), listColaboradoresPcm(),
     ]);
@@ -74,6 +74,7 @@ export function PcmPreventivaPage() {
         </div>
       </div>
 
+      {error && <ErroCarregamento mensagem={error} />}
       {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
       {data && linhas.length === 0 && <EmptyState title="Nenhuma preventiva" description="Ajuste os filtros ou cadastre uma nova." />}
 

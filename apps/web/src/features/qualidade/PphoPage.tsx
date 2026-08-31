@@ -13,7 +13,7 @@ import { useAsync } from '../../lib/useAsync';
 import { formatarDataHora } from '../../lib/format';
 import { FREQUENCIA_PPHO, RESPOSTA_CHECKLIST_LABEL, execucaoConforme } from '@sistema/domain';
 import type { Ppho, ChecklistItem, RespostaChecklist } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, TextArea, Select, Modal } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, TextArea, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus, IconCheck } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
@@ -22,7 +22,7 @@ export function PphoPage() {
   const [recarregar, setRecarregar] = useState(0);
   const [modalFicha, setModalFicha] = useState(false);
 
-  const { data, loading } = useAsync(async () => {
+  const { data, loading, error } = useAsync(async () => {
     const [pphos, equipamentos, funcionarios] = await Promise.all([
       listPphos(),
       listEquipamentos(),
@@ -58,6 +58,7 @@ export function PphoPage() {
         ))}
       </div>
 
+      {error && <ErroCarregamento mensagem={error} />}
       {loading && (
         <div className="flex justify-center py-20">
           <Spinner className="h-7 w-7 text-brand-600" />
@@ -221,14 +222,16 @@ function HigienizacaoAba({
   const [pphoId, setPphoId] = useState('');
   const ppho = pphos.find((p) => p.id === pphoId);
 
-  const { data: itens } = useAsync(
+  const { data: itens, error: erroItens } = useAsync(
     async () => (ppho ? getItensDoChecklist(ppho.checklist_id) : null),
     [ppho?.checklist_id ?? ''],
   );
-  const { data: execucoes } = useAsync(
+  const { data: execucoes, error: erroExec } = useAsync(
     async () => (ppho ? getExecucoesDoChecklist(ppho.checklist_id) : null),
     [ppho?.checklist_id ?? '', pphoId],
   );
+
+  if (erroItens || erroExec) return <ErroCarregamento mensagem={erroItens ?? erroExec} />;
 
   if (pphos.length === 0)
     return <EmptyState title="Nenhuma ficha PPHO" description="Crie uma ficha antes de registrar a higienização." />;

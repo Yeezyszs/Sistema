@@ -16,7 +16,7 @@ import type {
   TipoInspecao, RespostaChecklist, ChecklistItem,
   DocumentoFornecedor, CategoriaAnalise, ResultadoDocumento,
 } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus, IconDoc, IconDownload } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
@@ -39,7 +39,7 @@ export function FornecedoresPage() {
   const [modalHom, setModalHom] = useState(false);
   const [laudosDe, setLaudosDe] = useState<{ id: string; razao_social: string } | null>(null);
 
-  const { data, loading } = useAsync(async () => {
+  const { data, loading, error } = useAsync(async () => {
     const [inspecoes, homologacoes, fornecedores, documentos] = await Promise.all([
       listInspecoesRecebimento(), listHomologacoes(), listFornecedores(), listDocumentosFornecedor(),
     ]);
@@ -75,6 +75,7 @@ export function FornecedoresPage() {
         ))}
       </div>
 
+      {error && <ErroCarregamento mensagem={error} />}
       {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
 
       {data && aba === 'inspecoes' && (
@@ -173,7 +174,7 @@ function ModalInspecao({
   const [salvando, setSalvando] = useState(false);
   const { sucesso, erro } = useToast();
 
-  const { data: cl } = useAsync(
+  const { data: cl, error: erroChecklist } = useAsync(
     async () => garantirChecklist(`inspecao_${tipo}`, `Inspeção de ${TIPO_INSPECAO_LABEL[tipo]}`, ITENS_INSPECAO[tipo]),
     [tipo],
   );
@@ -211,6 +212,7 @@ function ModalInspecao({
   return (
     <Modal open onClose={onClose} title="Nova inspeção de recebimento" size="lg">
       <form onSubmit={onSubmit} className="space-y-4">
+        {erroChecklist && <ErroCarregamento mensagem={erroChecklist} titulo="Não foi possível carregar o checklist" />}
         <div className="grid grid-cols-2 gap-3">
           <Field label="Tipo"><Select value={tipo} onChange={(e) => { setTipo(e.target.value as TipoInspecao); setRespostas({}); }}>{TIPO_INSPECAO.map((t) => <option key={t} value={t}>{TIPO_INSPECAO_LABEL[t]}</option>)}</Select></Field>
           <Field label="Fornecedor / produtor"><Select name="fornecedor_id" defaultValue=""><option value="">—</option>{fornecedores.map((f) => <option key={f.id} value={f.id}>{f.razao_social}</option>)}</Select></Field>
@@ -310,7 +312,7 @@ function ModalLaudos({
   const [abrindo, setAbrindo] = useState<string | null>(null);
   const { sucesso, erro } = useToast();
 
-  const { data: docs, loading } = useAsync(
+  const { data: docs, loading, error } = useAsync(
     () => getDocumentosDoFornecedor(fornecedor.id),
     [fornecedor.id, recarregar],
   );

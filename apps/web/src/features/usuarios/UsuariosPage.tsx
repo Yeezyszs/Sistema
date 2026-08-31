@@ -5,7 +5,7 @@ import {
 import { useAsync } from '../../lib/useAsync';
 import { PERFIL_LABEL, MODULOS_POR_PERFIL } from '@sistema/domain';
 import type { Perfil } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, ErroCarregamento } from '../../components/ui';
 import { useToast } from '../../components/Toast';
 
 const TOM_PERFIL: Record<Perfil, string> = {
@@ -22,7 +22,7 @@ export function UsuariosPage() {
   const [ocupado, setOcupado] = useState<string | null>(null);
   const { sucesso, erro } = useToast();
 
-  const { data, loading } = useAsync(async () => {
+  const { data, loading, error } = useAsync(async () => {
     const [usuarios, perfis] = await Promise.all([listUsuarios(), listPerfisCatalogo()]);
     return { usuarios, perfis, perfilPorId: mapBy(perfis, 'id'), perfilPorNome: mapBy(perfis, 'nome') };
   }, [recarregar]);
@@ -47,6 +47,7 @@ export function UsuariosPage() {
     <>
       <PageHeader grupo="Administração" title="Usuários & perfis" subtitle="Quem acessa o quê — o perfil define os módulos visíveis" />
 
+      {error && <ErroCarregamento mensagem={error} />}
       {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
       {data && data.usuarios.length === 0 && <EmptyState title="Nenhum usuário" />}
 

@@ -12,7 +12,7 @@ import { useAsync } from '../../lib/useAsync';
 import { formatarData, formatarQuantidade, hojeLocalISO } from '../../lib/format';
 import { STATUS_OP_LABEL, STATUS_OP_TOM } from '@sistema/domain';
 import type { StatusOP } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconClipboard, IconChevronRight, IconPlus, IconSearch } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 import { ProdutoPicker } from '../../components/ProdutoPicker';
@@ -162,7 +162,7 @@ export function OrdensPage() {
         </div>
       )}
 
-      {error && <Card className="p-4 text-sm text-red-600">Erro: {error}</Card>}
+      {error && <ErroCarregamento mensagem={error} />}
 
       {data && ordensFiltradas.length === 0 && (
         <EmptyState

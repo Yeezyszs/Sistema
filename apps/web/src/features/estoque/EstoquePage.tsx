@@ -7,7 +7,7 @@ import { useAsync } from '../../lib/useAsync';
 import { formatarQuantidade } from '../../lib/format';
 import { posicaoLabel, pesoEstoque } from '@sistema/domain';
 import type { LocalEstoque, StatusPosicao, PosicaoEstoque } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, Select, TextInput, Modal } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, Select, TextInput, Modal, ErroCarregamento } from '../../components/ui';
 import { IconBox } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
@@ -18,7 +18,7 @@ export function EstoquePage() {
   const [editandoPos, setEditandoPos] = useState<PosicaoEstoque | null>(null);
   const { sucesso, erro } = useToast();
 
-  const { data, loading } = useAsync(async () => {
+  const { data, loading, error } = useAsync(async () => {
     const [locais, posicoes, lotes, produtos, clientes, embalagens] = await Promise.all([
       listLocaisEstoque(), listPosicoesEstoque(), listLotes(), listProdutos(), listClientes(), listEmbalagensAlmox(),
     ]);
@@ -69,6 +69,7 @@ export function EstoquePage() {
         ))}
       </div>
 
+      {error && <ErroCarregamento mensagem={error} />}
       {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
 
       {data && aba === 'mapa' && (

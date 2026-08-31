@@ -12,7 +12,7 @@ import {
   TIPO_CALIBRACAO, TIPO_CALIBRACAO_LABEL, situacaoCalibracao, SITUACAO_CALIBRACAO_LABEL,
 } from '@sistema/domain';
 import type { SituacaoCalibracao, Calibracao } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
@@ -29,7 +29,7 @@ export function CalibracaoPage() {
   const [modalCalib, setModalCalib] = useState(false);
   const { sucesso, erro } = useToast();
 
-  const { data, loading } = useAsync(async () => {
+  const { data, loading, error } = useAsync(async () => {
     const [instrumentos, calibracoes] = await Promise.all([listInstrumentos(), listCalibracoes()]);
     // calibração mais recente por instrumento
     const ultimaPorInstr = new Map<string, Calibracao>();
@@ -89,6 +89,7 @@ export function CalibracaoPage() {
         }
       />
 
+      {error && <ErroCarregamento mensagem={error} />}
       {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
 
       {data && data.instrumentos.length === 0 && (

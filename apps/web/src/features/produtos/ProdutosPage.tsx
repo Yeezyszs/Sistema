@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { listProdutos, atualizarProduto } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import type { Produto } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Modal } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Modal, ErroCarregamento } from '../../components/ui';
 import { IconSearch } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
@@ -12,7 +12,7 @@ export function ProdutosPage() {
   const [busca, setBusca] = useState('');
   const { sucesso, erro } = useToast();
 
-  const { data, loading } = useAsync(() => listProdutos(), [recarregar]);
+  const { data, loading, error } = useAsync(() => listProdutos(), [recarregar]);
   const rec = () => setRecarregar((n) => n + 1);
 
   const acabados = (data ?? []).filter((p) => p.tipo === 'produto_acabado');
@@ -35,6 +35,7 @@ export function ProdutosPage() {
         </div>
       </div>
 
+      {error && <ErroCarregamento mensagem={error} />}
       {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
       {data && linhas.length === 0 && <EmptyState title="Nenhum produto" description="Ajuste a busca." />}
 

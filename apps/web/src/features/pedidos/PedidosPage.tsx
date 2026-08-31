@@ -10,7 +10,7 @@ import {
   SITUACAO_PEDIDO, SITUACAO_PEDIDO_LABEL, valorTotalPedido,
 } from '@sistema/domain';
 import type { StatusPedido, SituacaoPedido, Pedido } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus, IconSearch } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 import { ProdutoPicker } from '../../components/ProdutoPicker';
@@ -34,7 +34,7 @@ export function PedidosPage() {
   const [produtoId, setProdutoId] = useState('');
   const { sucesso, erro } = useToast();
 
-  const { data, loading } = useAsync(async () => {
+  const { data, loading, error } = useAsync(async () => {
     const [pedidos, clientes, produtos, lotes] = await Promise.all([
       listPedidos(), listClientes(), listProdutos(), listLotes(),
     ]);
@@ -134,6 +134,7 @@ export function PedidosPage() {
         )}
       </div>
 
+      {error && <ErroCarregamento mensagem={error} />}
       {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
       {data && linhas.length === 0 && (
         <EmptyState title="Nenhum pedido" description='Registre o primeiro em "Novo pedido".' />

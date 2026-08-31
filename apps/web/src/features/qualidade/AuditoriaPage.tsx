@@ -9,7 +9,7 @@ import {
   STATUS_AUDITORIA_LABEL, STATUS_AUDITORIA_TOM, CLASSIFICACAO_ITEM, CLASSIFICACAO_ITEM_LABEL, itemEhNaoConforme,
 } from '@sistema/domain';
 import type { Auditoria, StatusAuditoria, ClassificacaoItem } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, TextArea, Select, Modal } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, TextArea, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus, IconChevronRight } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
@@ -27,7 +27,7 @@ export function AuditoriaPage() {
   const [modalPpr, setModalPpr] = useState(false);
   const { sucesso, erro } = useToast();
 
-  const { data, loading } = useAsync(async () => {
+  const { data, loading, error } = useAsync(async () => {
     const [auditorias, ppr, funcionarios] = await Promise.all([
       listAuditorias(), listVerificacoesPpr(), listFuncionarios(),
     ]);
@@ -91,6 +91,7 @@ export function AuditoriaPage() {
         ))}
       </div>
 
+      {error && <ErroCarregamento mensagem={error} />}
       {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
 
       {data && aba === 'auditorias' && (
@@ -184,7 +185,7 @@ function AuditoriaCard({
   const { sucesso, erro } = useToast();
   const fmap = mapBy(funcionarios, 'id');
 
-  const { data: itens } = useAsync(async () => (aberta ? getItensDaAuditoria(auditoria.id) : null), [auditoria.id, aberta, recItens]);
+  const { data: itens, error: erroItens } = useAsync(async () => (aberta ? getItensDaAuditoria(auditoria.id) : null), [auditoria.id, aberta, recItens]);
 
   async function addItem(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -229,7 +230,9 @@ function AuditoriaCard({
         <div className="border-t border-slate-100 p-5 space-y-4">
           {auditoria.escopo && <p className="text-sm text-slate-600">{auditoria.escopo}{auditoria.auditor_id ? ` · Auditor: ${fmap.get(auditoria.auditor_id)?.nome ?? ''}` : ''}</p>}
 
-          {itens == null ? (
+          {erroItens ? (
+            <ErroCarregamento mensagem={erroItens} />
+          ) : itens == null ? (
             <Spinner className="h-5 w-5 text-brand-600" />
           ) : itens.length === 0 ? (
             <p className="text-sm text-slate-400">Nenhum item avaliado ainda.</p>

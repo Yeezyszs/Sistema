@@ -7,7 +7,7 @@ import { useAsync } from '../../lib/useAsync';
 import { formatarData, hojeLocalISO } from '../../lib/format';
 import { MATRIZ_AMBIENTAL, MATRIZ_AMBIENTAL_LABEL, situacaoEnvio, SITUACAO_ENVIO_LABEL } from '@sistema/domain';
 import type { SituacaoEnvio } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
@@ -23,7 +23,7 @@ export function AmbientalPage() {
   const [modalMon, setModalMon] = useState(false);
   const { sucesso, erro } = useToast();
 
-  const { data, loading } = useAsync(async () => {
+  const { data, loading, error } = useAsync(async () => {
     const [pontos, monitoramentos] = await Promise.all([listPontosAmostragem(), listMonitoramentoAmbiental()]);
     return { pontos, pontosMap: mapBy(pontos, 'id'), monitoramentos };
   }, [recarregar]);
@@ -89,6 +89,7 @@ export function AmbientalPage() {
         ))}
       </div>
 
+      {error && <ErroCarregamento mensagem={error} />}
       {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
 
       {data && aba === 'pontos' && (

@@ -7,7 +7,7 @@ import { useAsync } from '../../lib/useAsync';
 import { formatarData, formatarQuantidade, hojeLocalISO } from '../../lib/format';
 import { TURNO, TURNO_LABEL } from '@sistema/domain';
 import type { Turno, Recebimento, NovoRecebimento, Produto, Fornecedor } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconRecebimento, IconSearch } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
@@ -228,7 +228,7 @@ export function RecebimentosPage() {
           </div>
 
           {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
-          {error && <Card className="p-4 text-sm text-red-600">Erro: {error}</Card>}
+          {error && <ErroCarregamento mensagem={error} />}
           {data && linhas.length === 0 && (
             <EmptyState icon={<IconRecebimento width={40} height={40} />} title="Nenhuma carga" description="As cargas da descarga aparecerão aqui." />
           )}

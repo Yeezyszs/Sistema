@@ -2,7 +2,7 @@ import { Link, useParams } from 'react-router-dom';
 import { getOrdemProducao, getLotesDaOrdem, getProduto, getCliente } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { formatarQuantidade } from '../../lib/format';
-import { Spinner } from '../../components/ui';
+import { Spinner, ErroCarregamento } from '../../components/ui';
 import { IconArrowLeft } from '../../components/icons';
 
 // Bags por sublote (grupo do quadro). Ajuste aqui se o padrão mudar.
@@ -12,7 +12,7 @@ const LINHAS_REPROCESSO = 8;
 
 export function OrdemProducaoPrint() {
   const { id = '' } = useParams();
-  const { data, loading } = useAsync(async () => {
+  const { data, loading, error } = useAsync(async () => {
     const op = await getOrdemProducao(id);
     if (!op) return { op: null } as const;
     const [lotes, produto, cliente] = await Promise.all([
@@ -22,6 +22,8 @@ export function OrdemProducaoPrint() {
     ]);
     return { op, lote: lotes[0] ?? null, produto, cliente };
   }, [id]);
+
+  if (error) return <ErroCarregamento mensagem={error} />;
 
   if (loading) return <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>;
   if (!data?.op) return <p className="p-8 text-sm text-slate-500">Ordem não encontrada.</p>;

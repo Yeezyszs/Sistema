@@ -15,7 +15,7 @@ import { useAsync } from '../../lib/useAsync';
 import { formatarDataHora } from '../../lib/format';
 import { TIPO_TESTE_DM, TIPO_TESTE_DM_LABEL, dmConforme } from '@sistema/domain';
 import type { TipoTesteDM } from '@sistema/domain';
-import { PageHeader, Card, Spinner, Button, Field, TextInput, Select } from '../../components/ui';
+import { PageHeader, Card, Spinner, Button, Field, TextInput, Select, ErroCarregamento } from '../../components/ui';
 import { useToast } from '../../components/Toast';
 
 type Aba = 'detector' | 'imas' | 'vidros';
@@ -24,7 +24,7 @@ export function PccFisicoPage() {
   const [aba, setAba] = useState<Aba>('detector');
   const [recarregar, setRecarregar] = useState(0);
 
-  const { data, loading } = useAsync(async () => {
+  const { data, loading, error } = useAsync(async () => {
     const [detectores, verifsDM, imas, verifsIma, vidros, lotes] = await Promise.all([
       listDetectoresMetais(),
       listVerificacoesDM(),
@@ -67,6 +67,7 @@ export function PccFisicoPage() {
         )}
       </div>
 
+      {error && <ErroCarregamento mensagem={error} />}
       {loading && (
         <div className="flex justify-center py-20">
           <Spinner className="h-7 w-7 text-brand-600" />

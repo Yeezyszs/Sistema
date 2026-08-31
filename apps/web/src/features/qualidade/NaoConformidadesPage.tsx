@@ -19,7 +19,7 @@ import {
   DISPOSICAO_NC_LABEL,
 } from '@sistema/domain';
 import type { StatusNC } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, TextArea, Select, Modal } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, TextArea, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconShield, IconPlus } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
@@ -127,7 +127,7 @@ export function NaoConformidadesPage() {
           <Spinner className="h-7 w-7 text-brand-600" />
         </div>
       )}
-      {error && <Card className="p-4 text-sm text-red-600">Erro: {error}</Card>}
+      {error && <ErroCarregamento mensagem={error} />}
 
       {data && ncsVisiveis.length === 0 && (
         <EmptyState

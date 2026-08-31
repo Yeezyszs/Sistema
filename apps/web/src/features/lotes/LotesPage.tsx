@@ -5,7 +5,7 @@ import { useAsync } from '../../lib/useAsync';
 import { formatarData, formatarQuantidade } from '../../lib/format';
 import { STATUS_LOTE, STATUS_LOTE_LABEL } from '@sistema/domain';
 import type { StatusLote } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Pill } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Pill, ErroCarregamento } from '../../components/ui';
 import { IconBox, IconPlus, IconSearch } from '../../components/icons';
 
 // Badge de status no padrão do novo desenho: pastel + texto escuro.
@@ -74,7 +74,7 @@ export function LotesPage() {
       </div>
 
       {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
-      {error && <Card className="p-4 text-red-600">Erro ao carregar lotes: {error}</Card>}
+      {error && <ErroCarregamento mensagem={error} />}
 
       {data && lotes.length === 0 && (
         <EmptyState

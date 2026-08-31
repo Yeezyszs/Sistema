@@ -6,7 +6,7 @@ import {
   TIPO_PALLET_LABEL, MOV_PALLET, MOV_PALLET_LABEL, palletsEmTerceiros,
 } from '@sistema/domain';
 import type { Pallet, TipoMovPallet } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
@@ -16,7 +16,7 @@ export function PalletsPage() {
   const [salvando, setSalvando] = useState(false);
   const { sucesso, erro } = useToast();
 
-  const { data, loading } = useAsync(async () => {
+  const { data, loading, error } = useAsync(async () => {
     const [pallets, movs] = await Promise.all([listPallets(), listMovimentosPallet()]);
     return { pallets, movs, palletsMap: new Map(pallets.map((p) => [p.id, p])) };
   }, [recarregar]);
@@ -53,6 +53,7 @@ export function PalletsPage() {
         action={<Button onClick={() => setMov(true)}><IconPlus width={16} height={16} />Movimentar</Button>}
       />
 
+      {error && <ErroCarregamento mensagem={error} />}
       {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
 
       {data && (

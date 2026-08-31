@@ -8,7 +8,7 @@ import { formatarData, hojeLocalISO } from '../../lib/format';
 import {
   aguaConforme, AGUA_CLORO_MIN, AGUA_CLORO_MAX, AGUA_PH_MIN, AGUA_PH_MAX,
 } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Modal } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
@@ -21,7 +21,7 @@ export function MonitoramentoAguaPage() {
   const [ph, setPh] = useState('');
   const { sucesso, erro } = useToast();
 
-  const { data, loading } = useAsync(() => listMonitoramentosAgua(), [recarregar]);
+  const { data, loading, error } = useAsync(() => listMonitoramentosAgua(), [recarregar]);
   const rec = () => setRecarregar((n) => n + 1);
 
   const preConforme = aguaConforme(cloro ? Number(cloro) : null, ph ? Number(ph) : null);
@@ -71,6 +71,7 @@ export function MonitoramentoAguaPage() {
         action={<Button onClick={abrir}><IconPlus width={16} height={16} />Nova medição</Button>}
       />
 
+      {error && <ErroCarregamento mensagem={error} />}
       {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
       {data && data.length === 0 && (
         <EmptyState title="Sem medições" description='Registre a primeira em "Nova medição".' />

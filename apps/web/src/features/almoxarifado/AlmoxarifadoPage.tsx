@@ -10,7 +10,7 @@ import {
   TIPO_MOV_ALMOX_LABEL, abaixoDoMinimo,
 } from '@sistema/domain';
 import type { AlmoxItem, CategoriaAlmox, TipoMovAlmox, AlmoxMovimento } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus, IconSearch } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
@@ -35,7 +35,7 @@ export function AlmoxarifadoPage() {
   const [salvando, setSalvando] = useState(false);
   const { sucesso, erro } = useToast();
 
-  const { data, loading } = useAsync(() => listAlmoxItens(), [recarregar]);
+  const { data, loading, error } = useAsync(() => listAlmoxItens(), [recarregar]);
   const rec = () => setRecarregar((n) => n + 1);
 
   const itens = (data ?? []).filter((i) => {
@@ -108,6 +108,7 @@ export function AlmoxarifadoPage() {
         ))}
       </div>
 
+      {error && <ErroCarregamento mensagem={error} />}
       {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
       {data && itens.length === 0 && <EmptyState title="Nenhum item" description="Cadastre itens em 'Novo item'." />}
 
@@ -282,7 +283,7 @@ function ModalMovimento({ item, onClose, onSaved }: { item: AlmoxItem; onClose: 
 }
 
 function ModalExtrato({ item, onClose }: { item: AlmoxItem; onClose: () => void }) {
-  const { data, loading } = useAsync(() => listAlmoxMovimentos(item.id), [item.id]);
+  const { data, loading, error } = useAsync(() => listAlmoxMovimentos(item.id), [item.id]);
   const tom = (t: AlmoxMovimento['tipo']) => t === 'entrada' ? 'text-emerald-600' : t === 'saida' ? 'text-red-600' : 'text-slate-500';
   const sinal = (t: AlmoxMovimento['tipo']) => t === 'entrada' ? '+' : t === 'saida' ? '−' : '±';
   return (

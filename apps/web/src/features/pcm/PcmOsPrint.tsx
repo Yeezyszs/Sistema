@@ -2,17 +2,19 @@ import { Link, useParams } from 'react-router-dom';
 import { getOrdemPcm, getExecucoesDaOs } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { formatarData } from '../../lib/format';
-import { Spinner } from '../../components/ui';
+import { Spinner, ErroCarregamento } from '../../components/ui';
 import { IconArrowLeft, IconLeaf } from '../../components/icons';
 
 // Formulário de O.S. para impressão (A4 paisagem) — espelha o template do PCM.
 export function PcmOsPrint() {
   const { id = '' } = useParams();
-  const { data, loading } = useAsync(async () => {
+  const { data, loading, error } = useAsync(async () => {
     const os = await getOrdemPcm(id);
     const execucoes = os ? await getExecucoesDaOs(id) : [];
     return { os, execucoes };
   }, [id]);
+
+  if (error) return <ErroCarregamento mensagem={error} />;
 
   if (loading) return <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>;
   if (!data?.os) return <p className="p-8 text-sm text-slate-500">O.S. não encontrada.</p>;

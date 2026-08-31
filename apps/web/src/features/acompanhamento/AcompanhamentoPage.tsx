@@ -11,7 +11,7 @@ import {
 import type {
   AnaliseProcesso, AnaliseProcessoValor, EspecificacaoParametro, NovoAnaliseValor,
 } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus, IconSearch } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
@@ -24,7 +24,7 @@ export function AcompanhamentoPage() {
   const [filtroCliente, setFiltroCliente] = useState('');
   const { sucesso, erro } = useToast();
 
-  const { data, loading } = useAsync(async () => {
+  const { data, loading, error } = useAsync(async () => {
     const [analises, clientes, produtos, lotes] = await Promise.all([
       listAnalisesProcesso(), listClientes(), listProdutos(), listLotes(),
     ]);
@@ -72,6 +72,7 @@ export function AcompanhamentoPage() {
         </div>
       </div>
 
+      {error && <ErroCarregamento mensagem={error} />}
       {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
       {data && linhas.length === 0 && (
         <EmptyState title="Nenhuma análise" description='Registre a primeira em "Nova análise".' />
@@ -327,7 +328,7 @@ function ModalNovaAnalise({
 }
 
 function DetalheModal({ analise, onClose }: { analise: AnaliseProcesso | null; onClose: () => void }) {
-  const { data, loading } = useAsync(
+  const { data, loading, error } = useAsync(
     () => (analise ? getValoresDaAnalise(analise.id) : Promise.resolve([] as AnaliseProcessoValor[])),
     [analise?.id],
   );

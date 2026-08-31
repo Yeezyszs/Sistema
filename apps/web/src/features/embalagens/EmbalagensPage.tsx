@@ -10,7 +10,7 @@ import {
   embalagemEmPosse, embalagemTotal,
 } from '@sistema/domain';
 import type { AlmoxItem, TipoEventoEmbalagem, EmbalagemEvento } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
@@ -29,7 +29,7 @@ export function EmbalagensPage() {
   const [salvando, setSalvando] = useState(false);
   const { sucesso, erro } = useToast();
 
-  const { data, loading } = useAsync(() => listEmbalagensAlmox(), [recarregar]);
+  const { data, loading, error } = useAsync(() => listEmbalagensAlmox(), [recarregar]);
   const rec = () => setRecarregar((n) => n + 1);
   const itens = data ?? [];
 
@@ -93,6 +93,7 @@ export function EmbalagensPage() {
         <Kpi titulo="Tipos cadastrados" valor={String(itens.length)} />
       </div>
 
+      {error && <ErroCarregamento mensagem={error} />}
       {loading && <div className="mt-6 flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
       {data && itens.length === 0 && <div className="mt-6"><EmptyState title="Nenhuma embalagem" description="Cadastre em 'Nova embalagem'." /></div>}
 
@@ -241,7 +242,7 @@ function ModalEvento({ item, onClose, onSaved }: { item: AlmoxItem; onClose: () 
 }
 
 function ModalExtrato({ item, onClose }: { item: AlmoxItem; onClose: () => void }) {
-  const { data, loading } = useAsync(() => listEventosEmbalagem(item.id), [item.id]);
+  const { data, loading, error } = useAsync(() => listEventosEmbalagem(item.id), [item.id]);
   const entra = (t: EmbalagemEvento['tipo']) => t === 'compra' || t.startsWith('retorno');
   return (
     <Modal open onClose={onClose} title={`Extrato — ${item.nome}`} size="lg">

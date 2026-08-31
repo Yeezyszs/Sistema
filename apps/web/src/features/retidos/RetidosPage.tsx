@@ -11,7 +11,7 @@ import {
   DESTINO_REPROCESSO, DESTINO_REPROCESSO_LABEL,
 } from '@sistema/domain';
 import type { Reprocesso, Desvio, DestinoReprocesso } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus, IconSearch } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
@@ -26,7 +26,7 @@ export function RetidosPage() {
   const [recarregar, setRecarregar] = useState(0);
   const { sucesso, erro } = useToast();
 
-  const { data, loading } = useAsync(async () => {
+  const { data, loading, error } = useAsync(async () => {
     const [retidos, lotes, produtos, ncs, desvios] = await Promise.all([
       listReprocessos(), listLotes(), listProdutos(), listNaoConformidades(), listDesvios(),
     ]);
@@ -50,6 +50,7 @@ export function RetidosPage() {
         ))}
       </div>
 
+      {error && <ErroCarregamento mensagem={error} />}
       {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
 
       {data && aba === 'retidos' && <AbaRetidos data={data} rec={rec} sucesso={sucesso} erro={erro} />}

@@ -7,7 +7,7 @@ import { useAsync } from '../../lib/useAsync';
 import { formatarData, formatarQuantidade } from '../../lib/format';
 import { TURNO_PROD, TURNO_PROD_LABEL, calcularMeta } from '@sistema/domain';
 import type { TurnoProd, Linha, Produto, Programacao, Apontamento } from '@sistema/domain';
-import { PageHeader, Card, Spinner, Button, Field, TextInput, Select, Modal } from '../../components/ui';
+import { PageHeader, Card, Spinner, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconArrowLeft, IconChevronRight, IconX } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 import { ProdutoPicker } from '../../components/ProdutoPicker';
@@ -48,7 +48,7 @@ export function ProgramacaoPage() {
   const { dias, de, ate } = semanaDe(refBase);
   const { sucesso, erro } = useToast();
 
-  const { data, loading } = useAsync(async () => {
+  const { data, loading, error } = useAsync(async () => {
     const [prog, linhas, produtos, apont] = await Promise.all([
       listProgramacao(de, ate), listLinhas(), listProdutos(), listApontamentos(de, ate),
     ]);
@@ -132,6 +132,7 @@ export function ProgramacaoPage() {
         </div>
       </div>
 
+      {error && <ErroCarregamento mensagem={error} />}
       {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
 
       {data && (

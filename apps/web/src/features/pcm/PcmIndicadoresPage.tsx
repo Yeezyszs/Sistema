@@ -11,7 +11,7 @@ import {
   TIPO_PARADA, TURNO_PARADA, horasEntre, calcularIndicadores,
 } from '@sistema/domain';
 import type { Parada, ProducaoHoras, CustoManut, TipoParada } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
@@ -32,7 +32,7 @@ export function PcmIndicadoresPage() {
   const [recarregar, setRecarregar] = useState(0);
   const { sucesso, erro } = useToast();
 
-  const { data, loading } = useAsync(async () => {
+  const { data, loading, error } = useAsync(async () => {
     const [paradas, producao, custos, ordens, equipamentos] = await Promise.all([
       listParadas(), listProducaoHoras(), listCustosManut(), listOrdensPcm(), listEquipamentosPcm(),
     ]);
@@ -72,6 +72,7 @@ export function PcmIndicadoresPage() {
         )}
       </div>
 
+      {error && <ErroCarregamento mensagem={error} />}
       {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
 
       {data && aba === 'dashboard' && <Dashboard data={data} desde={desde} desdeISO={desdeISO} meses={meses} />}

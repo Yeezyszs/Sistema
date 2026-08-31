@@ -8,7 +8,7 @@ import { formatarData, hojeLocalISO } from '../../lib/format';
 import {
   phmetroConforme, PHMETRO_PH4_MIN, PHMETRO_PH4_MAX, PHMETRO_PH7_MIN, PHMETRO_PH7_MAX,
 } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Modal } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
@@ -21,7 +21,7 @@ export function CalibracaoPhmetroPage() {
   const [ph7, setPh7] = useState('');
   const { sucesso, erro } = useToast();
 
-  const { data, loading } = useAsync(() => listCalibracoesPhmetro(), [recarregar]);
+  const { data, loading, error } = useAsync(() => listCalibracoesPhmetro(), [recarregar]);
   const rec = () => setRecarregar((n) => n + 1);
 
   const preConforme = phmetroConforme(ph4 ? Number(ph4) : null, ph7 ? Number(ph7) : null);
@@ -69,6 +69,7 @@ export function CalibracaoPhmetroPage() {
         action={<Button onClick={abrir}><IconPlus width={16} height={16} />Nova calibração</Button>}
       />
 
+      {error && <ErroCarregamento mensagem={error} />}
       {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
       {data && data.length === 0 && (
         <EmptyState title="Sem calibrações" description='Registre a primeira em "Nova calibração".' />

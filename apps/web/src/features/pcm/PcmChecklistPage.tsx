@@ -8,7 +8,7 @@ import {
   proximoEstadoChecklist, diasNoMes,
 } from '@sistema/domain';
 import type { EstadoChecklist } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Field, Select } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Field, Select, ErroCarregamento } from '../../components/ui';
 import { useToast } from '../../components/Toast';
 
 const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -23,7 +23,7 @@ export function PcmChecklistPage() {
   const [estados, setEstados] = useState<Map<string, EstadoChecklist>>(new Map());
   const { erro } = useToast();
 
-  const { data, loading } = useAsync(async () => {
+  const { data, loading, error } = useAsync(async () => {
     const [colaboradores, ferramentas] = await Promise.all([
       listColaboradoresPcm(), listFerramentasPcm(),
     ]);
@@ -107,6 +107,7 @@ export function PcmChecklistPage() {
         </span>
       </div>
 
+      {error && <ErroCarregamento mensagem={error} />}
       {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
 
       {data && !colaboradorId && (

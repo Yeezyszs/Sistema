@@ -6,7 +6,7 @@ import {
   EIXOS_POR_TIPO, calcularRisco, classificarRisco, CLASSIFICACAO_LABEL, CLASSIFICACAO_TOM,
 } from '@sistema/domain';
 import type { TipoAnaliseRisco } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, TextArea, Select, Modal } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, TextArea, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus, IconShield } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
@@ -19,7 +19,7 @@ export function AnaliseRiscoPage() {
   const [recarregar, setRecarregar] = useState(0);
   const [modal, setModal] = useState(false);
 
-  const { data, loading } = useAsync(async () => listAnalisesRisco(tipo), [tipo, recarregar]);
+  const { data, loading, error } = useAsync(async () => listAnalisesRisco(tipo), [tipo, recarregar]);
 
   return (
     <>
@@ -38,6 +38,7 @@ export function AnaliseRiscoPage() {
         ))}
       </div>
 
+      {error && <ErroCarregamento mensagem={error} />}
       {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
 
       {data && data.length === 0 && (

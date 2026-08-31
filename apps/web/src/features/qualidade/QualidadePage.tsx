@@ -14,7 +14,7 @@ import { useAsync } from '../../lib/useAsync';
 import { formatarHora } from '../../lib/format';
 import { TIPO_PCC_LABEL, limiteLabel, valorConforme } from '@sistema/domain';
 import type { PontoControle } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, Select, TextInput, TextArea } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, Select, TextInput, TextArea, ErroCarregamento } from '../../components/ui';
 import { StatusChip } from '../../components/StatusChip';
 import { IconShield, IconFlask } from '../../components/icons';
 import { useToast } from '../../components/Toast';
@@ -260,7 +260,7 @@ function LotePendente({
   const [agindo, setAgindo] = useState(false);
   const { sucesso, erro } = useToast();
 
-  const { data: mons } = useAsync(
+  const { data: mons, error: erroMons } = useAsync(
     async () => {
       if (!expandido) return null;
       return getMonitoramentosDoLote(loteId);
@@ -315,7 +315,9 @@ function LotePendente({
       {expandido && (
         <div className="border-t border-slate-100 p-4 space-y-4">
           {/* Monitoramentos */}
-          {mons === null || mons === undefined ? (
+          {erroMons ? (
+            <ErroCarregamento mensagem={erroMons} />
+          ) : mons === null || mons === undefined ? (
             <Spinner className="h-5 w-5 text-brand-600" />
           ) : mons.length === 0 ? (
             <p className="text-sm text-slate-400">Nenhum monitoramento registrado para este lote.</p>

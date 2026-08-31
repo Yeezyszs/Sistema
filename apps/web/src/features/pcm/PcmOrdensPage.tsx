@@ -8,7 +8,7 @@ import { useAsync } from '../../lib/useAsync';
 import { formatarData, hojeLocalISO } from '../../lib/format';
 import { TIPO_OS_PCM, NATUREZA_OS, PRIORIDADE_OS_PCM, PRIORIDADE_OS_PCM_TOM, SETORES_PCM } from '@sistema/domain';
 import type { OrdemPcm, NovaOsExecucao, ColaboradorPcm, SetorPcm } from '@sistema/domain';
-import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal } from '../../components/ui';
+import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus, IconSearch, IconDoc } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
@@ -21,7 +21,7 @@ export function PcmOrdensPage() {
   const [filtroStatus, setFiltroStatus] = useState<'todas' | 'Em Aberto' | 'Concluído'>('Em Aberto');
   const { sucesso, erro } = useToast();
 
-  const { data, loading } = useAsync(async () => {
+  const { data, loading, error } = useAsync(async () => {
     const [ordens, equipamentos, colaboradores] = await Promise.all([
       listOrdensPcm(), listEquipamentosPcm(), listColaboradoresPcm(),
     ]);
@@ -73,6 +73,7 @@ export function PcmOrdensPage() {
         </div>
       </div>
 
+      {error && <ErroCarregamento mensagem={error} />}
       {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
       {data && linhas.length === 0 && <EmptyState title="Nenhuma O.S." description='Abra a primeira em "Nova O.S.".' />}
 

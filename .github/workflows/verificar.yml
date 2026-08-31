@@ -1,0 +1,34 @@
+name: Verificação
+
+# Roda em qualquer branch e em PR. O deploy depende deste workflow passar —
+# antes, um erro de tipo ia para produção: `vite build` não checa tipos, e o
+# deploy só rodava o build.
+on:
+  push:
+  pull_request:
+  workflow_call:
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Instalar dependências
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Testes
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build

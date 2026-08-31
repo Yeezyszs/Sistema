@@ -15,7 +15,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Portão: sem typecheck, testes e build passando, nada é publicado.
+  verificar:
+    uses: ./.github/workflows/verificar.yml
+
   build:
+    needs: verificar
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

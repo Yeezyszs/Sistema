@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 
 // ── Botão ──────────────────────────────────────────────────────
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: 'primary' | 'ghost' | 'outline';
+  variant?: 'primary' | 'ghost' | 'outline' | 'perigo';
   loading?: boolean;
 };
 
@@ -20,11 +20,18 @@ export function Button({
     primary: 'bg-brand-600 text-white hover:bg-brand-700 disabled:bg-brand-300',
     outline: 'border border-slate-300 text-slate-700 hover:bg-slate-50',
     ghost: 'text-slate-600 hover:bg-slate-100',
+    // Ação destrutiva. Existe como variante para que o estado desabilitado
+    // seja tratado aqui — quando a cor vinha por className com `!important`,
+    // ela vencia o `disabled:` e o botão bloqueado ficava idêntico ao ativo.
+    perigo: 'bg-red-600 text-white hover:bg-red-700 disabled:bg-red-300',
   };
   return (
     <button
       disabled={disabled || loading}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed ${styles[variant]} ${className}`}
+      // `disabled:opacity-60` é rede de segurança: opacidade é propriedade
+      // separada, então continua visível mesmo se a cor de fundo for
+      // sobrescrita por quem usa o componente.
+      className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${styles[variant]} ${className}`}
       {...rest}
     >
       {loading && <Spinner className="h-4 w-4" />}

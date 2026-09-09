@@ -276,15 +276,18 @@ function ModalExclusao({
         {!permiteMultiplos && ' Se houver uma versão anterior, ela volta a ser a vigente.'}
       </p>
       <div className="mt-4">
-        <Field label="Motivo da exclusão">
+        <Field label="Motivo da exclusão (obrigatório)">
           <TextInput value={motivo} onChange={(e) => setMotivo(e.target.value)}
             placeholder="Ex.: documento divergente, lançado no fornecedor errado…" required autoFocus />
         </Field>
       </div>
       <div className="mt-4 flex justify-end gap-3">
         <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
-        <Button onClick={() => void confirmar()} loading={salvando} disabled={!motivo.trim()}
-          className="!bg-red-600 hover:!bg-red-700">Excluir documento</Button>
+        <Button variant="perigo" onClick={() => void confirmar()} loading={salvando}
+          disabled={!motivo.trim()}
+          title={!motivo.trim() ? 'Informe o motivo da exclusão para continuar.' : undefined}>
+          Excluir documento
+        </Button>
       </div>
     </Modal>
   );

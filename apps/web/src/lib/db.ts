@@ -2,6 +2,7 @@
 // Schemas de domínio expostos no PostgREST; lookups cruzados são resolvidos
 // em JS para evitar dependência de embedding cross-schema.
 import { supabase } from './supabaseClient';
+import { nomeArquivoSeguro } from './format';
 import type {
   Lote,
   NovoLote,
@@ -1094,7 +1095,7 @@ export async function enviarDocumentoFornecedor(
   meta: NovoDocumentoFornecedor,
   arquivo: File,
 ): Promise<DocumentoFornecedor> {
-  const path = `${meta.fornecedor_id}/${Date.now()}-${arquivo.name}`;
+  const path = `${meta.fornecedor_id}/${Date.now()}-${nomeArquivoSeguro(arquivo.name)}`;
   const up = await supabase.storage
     .from('fornecedores')
     .upload(path, arquivo, { upsert: false, contentType: arquivo.type || undefined });

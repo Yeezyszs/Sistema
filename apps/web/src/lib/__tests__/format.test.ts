@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  nomeArquivoSeguro,
   formatarData,
   hojeLocalISO,
   formatarQuantidade,
@@ -67,5 +68,36 @@ describe('formatarDuracao', () => {
   it('recusa intervalo incompleto ou invertido', () => {
     expect(formatarDuracao(null, '2026-07-20T09:00:00Z')).toBeNull();
     expect(formatarDuracao('2026-07-20T10:00:00Z', '2026-07-20T09:00:00Z')).toBeNull();
+  });
+});
+
+describe('nomeArquivoSeguro', () => {
+  it('tira acento e espaco — o caso que quebrava o upload', () => {
+    // "Invalid key" no Storage: a chave nao aceita acento nem espaco.
+    expect(nomeArquivoSeguro('Alvara\u0301 de Funcionamento.pdf'))
+      .toBe('Alvara-de-Funcionamento.pdf');
+  });
+
+  it('preserva a extensao mesmo com o nome todo invalido', () => {
+    expect(nomeArquivoSeguro('\u00e7\u00e3\u00f5 %%%.PDF')).toBe('cao.PDF');
+  });
+
+  it('nome sem nada aproveitavel vira "arquivo"', () => {
+    expect(nomeArquivoSeguro('###.pdf')).toBe('arquivo.pdf');
+    expect(nomeArquivoSeguro('')).toBe('arquivo');
+  });
+
+  it('arquivo sem extensao continua sem ponto no fim', () => {
+    expect(nomeArquivoSeguro('Laudo 2026')).toBe('Laudo-2026');
+  });
+
+  it('nao deixa a chave crescer sem limite', () => {
+    const gerado = nomeArquivoSeguro('a'.repeat(400) + '.pdf');
+    expect(gerado.length).toBeLessThanOrEqual(124);
+    expect(gerado.endsWith('.pdf')).toBe(true);
+  });
+
+  it('mantem ponto interno e hifen, que sao validos', () => {
+    expect(nomeArquivoSeguro('NF-1234_v2.final.pdf')).toBe('NF-1234_v2.final.pdf');
   });
 });

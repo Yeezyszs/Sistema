@@ -56,3 +56,30 @@ export function formatarDuracao(inicio: string | null, fim: string | null): stri
   if (min === 0) return `${h}h`;
   return `${h}h ${min}min`;
 }
+
+// Nome de arquivo seguro para chave do Supabase Storage. A chave só aceita um
+// conjunto restrito de caracteres — "Alvará de Funcionamento.pdf" era recusado
+// com "Invalid key". Tira acento, troca o resto por hífen e preserva a
+// extensão. O nome original continua guardado em `arquivo_nome`, então o
+// usuário vê e baixa com o nome que ele subiu.
+export function nomeArquivoSeguro(nome: string): string {
+  const ponto = nome.lastIndexOf('.');
+  const temExt = ponto > 0 && ponto < nome.length - 1;
+  const base = temExt ? nome.slice(0, ponto) : nome;
+  const ext = temExt ? nome.slice(ponto + 1) : '';
+
+  const limpar = (s: string) =>
+    s
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^A-Za-z0-9._-]+/g, '-')
+      .replace(/-{2,}/g, '-')
+      .replace(/^[-.]+|[-.]+$/g, '');
+
+  // Limite de tamanho: a chave completa carrega ainda o id do fornecedor e o
+  // timestamp, e nomes vindos de scanner passam fácil de 200 caracteres.
+  const baseLimpa = limpar(base).slice(0, 120);
+  const extLimpa = limpar(ext).slice(0, 10);
+  const seguro = baseLimpa || 'arquivo';
+  return extLimpa ? `${seguro}.${extLimpa}` : seguro;
+}

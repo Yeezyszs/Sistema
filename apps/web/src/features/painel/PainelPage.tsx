@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   listApontamentos, listLinhas, listRecebimentos, listProgramacao, listLotes,
@@ -10,10 +11,13 @@ import {
   calcularRendimento, ncEstaAberta, situacaoCalibracao,
   STATUS_LOTE, STATUS_LOTE_LABEL,
 } from '@sistema/domain';
-import type { StatusLote } from '@sistema/domain';
+import type { Perfil, StatusLote } from '@sistema/domain';
 import { PageHeader, Card, CardTitle, Spinner, ErroCarregamento } from '../../components/ui';
 import { IconClock } from '../../components/icons';
 import { useAuth } from '../../lib/auth';
+import { Kpi } from './comum';
+import { PainelAlmoxarifado } from './PainelAlmoxarifado';
+import { PainelCompras } from './PainelCompras';
 
 const reais = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const kg = (n: number) => formatarQuantidade(n);
@@ -41,7 +45,73 @@ const COR_STATUS: Record<StatusLote, string> = {
   cancelado: '#cbd5e1',
 };
 
+// ── Seletor de visão ───────────────────────────────────────────
+// O painel de operação não serve a quem não acessa produção: os atalhos dele
+// levam a lotes, NCs e calibração, que compras e almoxarifado não abrem.
+// Cada perfil abre no painel que responde à pergunta dele.
+type Visao = 'operacao' | 'almoxarifado' | 'compras';
+
+const VISAO_LABEL: Record<Visao, string> = {
+  operacao: 'Operação',
+  almoxarifado: 'Almoxarifado',
+  compras: 'Compras',
+};
+
+const SUBTITULO: Record<Visao, string> = {
+  operacao: 'Operação da fábrica — dia e semana',
+  almoxarifado: 'O que vai faltar e o que saiu da minha mão',
+  compras: 'O que precisa comprar e de quem pode comprar',
+};
+
+// Gestão vê as três; os demais veem só a sua.
+// A tupla garante ao menos uma visão: sem isso a primeira posição seria
+// opcional e a página poderia ficar sem nada para mostrar.
+function visoesDoUsuario(perfis: Perfil[]): [Visao, ...Visao[]] {
+  if (perfis.includes('gestao')) return ['operacao', 'almoxarifado', 'compras'];
+  const visoes: Visao[] = [];
+  if (perfis.some((p) => p === 'operador' || p === 'qualidade' || p === 'manutencao')) {
+    visoes.push('operacao');
+  }
+  if (perfis.includes('almoxarifado')) visoes.push('almoxarifado');
+  if (perfis.includes('compras')) visoes.push('compras');
+  const [primeira, ...resto] = visoes;
+  return primeira ? [primeira, ...resto] : ['operacao'];
+}
+
 export function PainelPage() {
+  const { perfis } = useAuth();
+  const visoes = visoesDoUsuario(perfis);
+  const [visao, setVisao] = useState<Visao>(visoes[0]);
+  // Se os perfis mudarem e a visão escolhida sumir, cai na primeira disponível.
+  const atual: Visao = visoes.includes(visao) ? visao : visoes[0];
+
+  return (
+    <>
+      <PageHeader title="Painel" subtitle={SUBTITULO[atual]} meta={formatarData(hojeLocalISO())} />
+
+      {visoes.length > 1 && (
+        <div className="mb-5 flex flex-wrap gap-2">
+          {visoes.map((v) => (
+            <button key={v} onClick={() => setVisao(v)}
+              className={`rounded-full border px-3.5 py-[7px] text-[12.5px] font-semibold transition ${
+                atual === v
+                  ? 'border-slate-900 bg-slate-900 text-white'
+                  : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+              }`}>
+              {VISAO_LABEL[v]}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {atual === 'operacao' && <PainelOperacao />}
+      {atual === 'almoxarifado' && <PainelAlmoxarifado />}
+      {atual === 'compras' && <PainelCompras />}
+    </>
+  );
+}
+
+function PainelOperacao() {
   const hoje = hojeLocalISO();
   const { de, ate } = semanaAtual();
   const { podeAcessarModulo } = useAuth();
@@ -57,22 +127,10 @@ export function PainelPage() {
     return { apontSemana, recebimentos, prog, lotes, ops, ncs, osPcm, paradas, calibracoes, pedidos, cargas, linhas, linhasMap: mapBy(linhas, 'id') };
   }, [de, ate]);
 
-  if (error || (loading === false && !data)) {
-    return (
-      <>
-        <PageHeader title="Painel" subtitle="Operação da fábrica — dia e semana" />
-        <ErroCarregamento mensagem={error} />
-      </>
-    );
-  }
+  if (error || (loading === false && !data)) return <ErroCarregamento mensagem={error} />;
 
   if (loading || !data) {
-    return (
-      <>
-        <PageHeader title="Painel" subtitle="Operação da fábrica — dia e semana" />
-        <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>
-      </>
-    );
+    return <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>;
   }
 
   const { apontSemana, recebimentos, prog, lotes, ops, ncs, osPcm, paradas, calibracoes, pedidos, cargas, linhas } = data;
@@ -122,12 +180,6 @@ export function PainelPage() {
 
   return (
     <>
-      <PageHeader
-        title="Painel"
-        subtitle="Operação da fábrica — dia e semana"
-        meta={formatarData(hoje)}
-      />
-
       {/* Pulso do dia */}
       <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
         <Kpi label="Produção hoje" valor={`${kg(prodHoje)} kg`}
@@ -293,16 +345,6 @@ function BlocoDocumentos() {
         </span>
         <Link to="/gestao-documentos" className="text-xs font-semibold text-brand-700 hover:underline">Gestão de Documentos →</Link>
       </div>
-    </Card>
-  );
-}
-
-function Kpi({ label, valor, sub }: { label: string; valor: string; sub?: string }) {
-  return (
-    <Card className="px-[18px] py-4">
-      <p className="text-[11.5px] font-semibold uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="mt-2 text-2xl font-bold leading-none tabular-nums text-slate-900">{valor}</p>
-      {sub && <p className="mt-1.5 text-xs text-slate-500">{sub}</p>}
     </Card>
   );
 }

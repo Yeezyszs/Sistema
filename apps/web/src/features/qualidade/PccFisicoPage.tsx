@@ -52,7 +52,7 @@ export function PccFisicoPage() {
     <>
       <PageHeader grupo="Qualidade" title="PCC Físico" subtitle="Detector de metais, imãs e quebra de vidros (FSSC 22000)" />
 
-      <div className="mb-5 flex gap-2">
+      <div className="mb-5 flex flex-wrap gap-2">
         {([['detector', 'Detector de metais'], ['imas', 'Imãs'], ['vidros', 'Quebra de vidros']] as const).map(
           ([id, label]) => (
             <button
@@ -183,7 +183,7 @@ function DetectorAba({ data, onSaved }: { data: any; onSaved: () => void }) {
         {data.verifsDM.length === 0 ? (
           <Card className="p-4 text-sm text-slate-400">Nenhuma verificação registrada.</Card>
         ) : (
-          <Card className="overflow-hidden">
+          <Card className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
@@ -275,7 +275,7 @@ function ImasAba({ data, onSaved }: { data: any; onSaved: () => void }) {
         {data.verifsIma.length === 0 ? (
           <Card className="p-4 text-sm text-slate-400">Nenhuma verificação registrada.</Card>
         ) : (
-          <Card className="overflow-hidden">
+          <Card className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">

@@ -17,6 +17,7 @@ export function PcmOrdensPage() {
   const [modal, setModal] = useState(false);
   const [editando, setEditando] = useState<OrdemPcm | null>(null);
   const [concluindo, setConcluindo] = useState<OrdemPcm | null>(null);
+  const [vendo, setVendo] = useState<OrdemPcm | null>(null);
   const [busca, setBusca] = useState('');
   const [filtroStatus, setFiltroStatus] = useState<'todas' | 'Em Aberto' | 'Concluído'>('Em Aberto');
   const { sucesso, erro } = useToast();
@@ -77,8 +78,42 @@ export function PcmOrdensPage() {
       {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
       {data && linhas.length === 0 && <EmptyState title="Nenhuma O.S." description='Abra a primeira em "Nova O.S.".' />}
 
+      {/* No celular a tabela escondia 4 das 9 colunas — inclusive status,
+          prioridade e todos os botoes. Ali a lista vira cartao, e tocar abre a
+          O.S. */}
       {data && linhas.length > 0 && (
-        <Card className="overflow-x-auto">
+        <div className="flex flex-col gap-2.5 md:hidden">
+          {linhas.map((o) => (
+            <button key={o.id} onClick={() => setVendo(o)}
+              className="w-full rounded-[10px] border border-slate-200 bg-white px-4 py-3 text-left transition active:bg-slate-50">
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="text-[13px] font-bold text-slate-900">O.S. {o.numero}</span>
+                <span className="text-[11.5px] text-slate-400">{formatarData(o.data)}</span>
+              </div>
+              <p className="mt-1 line-clamp-2 text-[13px] text-slate-700">{o.descricao ?? 'Sem descrição'}</p>
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+                  {o.setor ?? 'sem setor'}
+                </span>
+                {o.prioridade && (
+                  <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${PRIORIDADE_OS_PCM_TOM[o.prioridade]}`}>
+                    {o.prioridade}
+                  </span>
+                )}
+                <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${o.status === 'Concluído' ? 'bg-brand-100 text-brand-700' : 'bg-amber-100 text-amber-700'}`}>
+                  {o.status}
+                </span>
+                {o.parada_equip && (
+                  <span className="rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-medium text-red-700">Equip. parado</span>
+                )}
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {data && linhas.length > 0 && (
+        <Card className="hidden overflow-x-auto md:block">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
@@ -95,7 +130,7 @@ export function PcmOrdensPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {linhas.map((o) => (
-                <tr key={o.id} className="hover:bg-slate-50">
+                <tr key={o.id} onClick={() => setVendo(o)} className="cursor-pointer hover:bg-slate-50">
                   <td className="px-3 py-2.5 font-medium text-slate-700">{o.numero}</td>
                   <td className="px-3 py-2.5 text-slate-500">{formatarData(o.data)}</td>
                   <td className="px-3 py-2.5 text-slate-600">{o.setor ?? '—'}</td>
@@ -112,7 +147,7 @@ export function PcmOrdensPage() {
                       {o.status}
                     </span>
                   </td>
-                  <td className="px-3 py-2.5 text-right whitespace-nowrap">
+                  <td onClick={(e) => e.stopPropagation()} className="px-3 py-2.5 text-right whitespace-nowrap">
                     <Link to={`/pcm-os/${o.id}/imprimir`} className="mr-3 inline-flex align-middle text-slate-400 hover:text-slate-700" title="Imprimir O.S.">
                       <IconDoc width={15} height={15} />
                     </Link>
@@ -127,6 +162,15 @@ export function PcmOrdensPage() {
             </tbody>
           </table>
         </Card>
+      )}
+
+      {vendo && (
+        <ModalVerOs os={vendo}
+          onClose={() => setVendo(null)}
+          onEditar={() => { setEditando(vendo); setVendo(null); }}
+          onConcluir={() => { setConcluindo(vendo); setVendo(null); }}
+          onExcluir={async () => { const alvo = vendo; setVendo(null); await remover(alvo.id); }}
+        />
       )}
 
       {(modal || editando) && (
@@ -344,5 +388,92 @@ function ModalConcluirOs({ os, colaboradores, onClose, onSaved, sucesso, erro }:
         </div>
       </form>
     </Modal>
+  );
+}
+
+// ── Ver O.S. ───────────────────────────────────────────────────
+// Tocar na O.S. abre ela por inteiro. No celular a tabela escondia metade dos
+// campos, e a única forma de ver o resto era o formulário de impressão — que é
+// uma folha A4 e não cabe numa tela de 390px.
+function ModalVerOs({ os, onClose, onEditar, onConcluir, onExcluir }: {
+  os: OrdemPcm;
+  onClose: () => void;
+  onEditar: () => void;
+  onConcluir: () => void;
+  onExcluir: () => void;
+}) {
+  const emAberto = os.status === 'Em Aberto';
+
+  return (
+    <Modal open onClose={onClose} title={`O.S. ${os.numero}`} size="lg">
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${emAberto ? 'bg-amber-100 text-amber-700' : 'bg-brand-100 text-brand-700'}`}>
+          {os.status}
+        </span>
+        {os.prioridade && (
+          <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${PRIORIDADE_OS_PCM_TOM[os.prioridade]}`}>
+            {os.prioridade}
+          </span>
+        )}
+        {os.parada_equip && (
+          <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700">
+            Equipamento parado
+          </span>
+        )}
+        {os.parada_prod && (
+          <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700">
+            Produção parada
+          </span>
+        )}
+      </div>
+
+      {/* Duas colunas no celular, quatro a partir do tablet. */}
+      <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
+        <Dado t="Data" v={formatarData(os.data)} />
+        <Dado t="Hora" v={os.hora?.slice(0, 5) ?? '—'} />
+        <Dado t="Setor" v={os.setor ?? '—'} />
+        <Dado t="Requisitante" v={os.req ?? '—'} />
+        <Dado t="Tipo" v={os.tipo ?? '—'} />
+        <Dado t="Demanda" v={os.natureza ?? '—'} />
+        <Dado t="Programada para" v={os.data_prog ? formatarData(os.data_prog) : '—'} />
+        <Dado t="Concluída em" v={os.data_concl ? formatarData(os.data_concl) : '—'} />
+      </dl>
+
+      <Texto titulo="Descrição do serviço">{os.descricao}</Texto>
+      <Texto titulo="Serviço realizado" vazio="Ainda não preenchido.">{os.realizado}</Texto>
+      {os.exec && <Texto titulo="Executante">{os.exec}</Texto>}
+
+      <div className="mt-5 flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-4">
+        <Button type="button" variant="ghost" onClick={onExcluir}>Excluir</Button>
+        <Link to={`/pcm-os/${os.id}/imprimir`}
+          className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+          <IconDoc width={15} height={15} /> Imprimir
+        </Link>
+        <Button type="button" variant="outline" onClick={onEditar}>Editar</Button>
+        {emAberto && <Button type="button" onClick={onConcluir}>Concluir</Button>}
+      </div>
+    </Modal>
+  );
+}
+
+function Dado({ t, v }: { t: string; v: string }) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-[10.5px] font-semibold uppercase tracking-wide text-slate-400">{t}</dt>
+      <dd className="mt-0.5 break-words text-[13px] font-medium text-slate-800">{v}</dd>
+    </div>
+  );
+}
+
+function Texto({ titulo, children, vazio = '—' }: {
+  titulo: string; children: string | null; vazio?: string;
+}) {
+  return (
+    <div className="mt-4">
+      <p className="text-[10.5px] font-semibold uppercase tracking-wide text-slate-400">{titulo}</p>
+      <p className={`mt-1 whitespace-pre-wrap rounded-lg bg-slate-50 p-3 text-[13px] ${children ? 'text-slate-800' : 'text-slate-400'}`}>
+        {children || vazio}
+      </p>
+    </div>
   );
 }

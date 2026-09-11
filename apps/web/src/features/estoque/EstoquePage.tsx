@@ -61,7 +61,7 @@ export function EstoquePage() {
         subtitle={`Posição física e saldo por lote — ${ocupadas}/${total} ruas ocupadas`}
       />
 
-      <div className="mb-5 flex gap-2">
+      <div className="mb-5 flex flex-wrap gap-2">
         {([['mapa', 'Mapa (posições)'], ['saldo', 'Saldo por lote']] as const).map(([id, label]) => (
           <button key={id} onClick={() => setAba(id)}
             className={`rounded-full border px-3.5 py-[7px] text-[12.5px] font-semibold transition ${aba === id ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'}`}>

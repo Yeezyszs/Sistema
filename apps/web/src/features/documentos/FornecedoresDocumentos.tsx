@@ -154,7 +154,7 @@ export function FornecedoresDocumentos() {
           description={data.fornecedores.length === 0 ? 'Cadastre o primeiro em "Novo fornecedor".' : 'Nenhum resultado para os filtros aplicados.'}
         />
       ) : (
-        <Card className="overflow-hidden">
+        <Card className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className={LINHA_CABECALHO}>

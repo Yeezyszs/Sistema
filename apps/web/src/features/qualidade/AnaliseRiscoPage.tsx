@@ -29,7 +29,7 @@ export function AnaliseRiscoPage() {
         action={<Button onClick={() => setModal(true)}><IconPlus width={16} height={16} />Nova análise</Button>}
       />
 
-      <div className="mb-5 flex gap-2">
+      <div className="mb-5 flex flex-wrap gap-2">
         {([['food_defense', 'Food Defense'], ['food_fraud', 'Food Fraud']] as const).map(([id, label]) => (
           <button key={id} onClick={() => setTipo(id)}
             className={`rounded-full border px-3.5 py-[7px] text-[12.5px] font-semibold transition ${tipo === id ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'}`}>

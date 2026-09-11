@@ -21,7 +21,7 @@ export function PcmOsPrint() {
   const { os, execucoes } = data;
 
   return (
-    <div className="min-h-screen bg-slate-100 p-6 print:bg-white print:p-0">
+    <div className="min-h-screen bg-slate-100 p-3 sm:p-6 print:bg-white print:p-0">
       <style>{'@media print { @page { size: A4 landscape; margin: 10mm; } .no-print { display: none !important; } }'}</style>
 
       <div className="no-print mx-auto mb-4 flex max-w-4xl items-center justify-between">
@@ -33,9 +33,9 @@ export function PcmOsPrint() {
         </button>
       </div>
 
-      <div className="mx-auto max-w-4xl border border-slate-300 bg-white p-6 text-sm text-slate-800 print:border-0">
+      <div className="mx-auto max-w-4xl border border-slate-300 bg-white p-4 text-sm text-slate-800 sm:p-6 print:border-0 print:p-0">
         {/* Cabeçalho */}
-        <div className="mb-4 flex items-center justify-between border-b-2 border-slate-800 pb-3">
+        <div className="mb-4 flex flex-col gap-3 border-b-2 border-slate-800 pb-3 sm:flex-row sm:items-center sm:justify-between print:flex-row print:items-center print:justify-between">
           <div className="flex items-center gap-2">
             <span className="flex h-10 w-10 items-center justify-center rounded bg-brand-700 text-white"><IconLeaf width={22} height={22} /></span>
             <div>
@@ -43,14 +43,14 @@ export function PcmOsPrint() {
               <p className="text-xs text-slate-500">Bepi Mataruco · Manutenção — PCM</p>
             </div>
           </div>
-          <div className="text-right">
+          <div className="sm:text-right print:text-right">
             <p className="text-lg font-bold">ORDEM DE SERVIÇO</p>
             <p className="font-mono text-2xl font-bold">Nº {String(os.numero).padStart(4, '0')}</p>
           </div>
         </div>
 
         {/* Dados */}
-        <div className="mb-4 grid grid-cols-4 gap-x-6 gap-y-2">
+        <div className="mb-4 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4 print:grid-cols-4">
           <Campo t="Data" v={formatarData(os.data)} />
           <Campo t="Hora" v={os.hora?.slice(0, 5) ?? '—'} />
           <Campo t="Requisitante" v={os.req ?? '—'} />
@@ -65,7 +65,7 @@ export function PcmOsPrint() {
         <Bloco titulo="Serviço realizado">{os.realizado ?? ''}</Bloco>
 
         {/* Paradas */}
-        <div className="mb-4 grid grid-cols-2 gap-4">
+        <div className="mb-4 grid gap-4 sm:grid-cols-2 print:grid-cols-2">
           <div className="border border-slate-300 p-2">
             <p className="mb-1 text-xs font-bold uppercase">Parada de equipamento: {os.parada_equip ? 'SIM' : 'NÃO'}</p>
             {os.parada_equip && (
@@ -88,7 +88,8 @@ export function PcmOsPrint() {
 
         {/* Execução */}
         <p className="mb-1 text-xs font-bold uppercase">Execução</p>
-        <table className="mb-6 w-full border-collapse text-xs">
+        <div className="mb-6 overflow-x-auto print:overflow-visible">
+        <table className="w-full min-w-[520px] border-collapse text-xs print:min-w-0">
           <thead>
             <tr>
               {['Mantenedor', 'Início', 'Hora', 'Fim', 'Hora', 'Fechamento', 'Assinatura'].map((h) => (
@@ -109,10 +110,11 @@ export function PcmOsPrint() {
               </tr>
             ))}
           </tbody>
-        </table>
+          </table>
+        </div>
 
         {/* Assinaturas */}
-        <div className="grid grid-cols-2 gap-12 pt-6">
+        <div className="grid gap-8 pt-6 sm:grid-cols-2 sm:gap-12 print:grid-cols-2">
           <div className="border-t border-slate-500 pt-1 text-center text-xs">Requisitante</div>
           <div className="border-t border-slate-500 pt-1 text-center text-xs">Supervisor de Manutenção</div>
         </div>

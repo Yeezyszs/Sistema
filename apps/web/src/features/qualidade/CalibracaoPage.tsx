@@ -97,7 +97,7 @@ export function CalibracaoPage() {
       )}
 
       {data && data.instrumentos.length > 0 && (
-        <Card className="overflow-hidden">
+        <Card className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">

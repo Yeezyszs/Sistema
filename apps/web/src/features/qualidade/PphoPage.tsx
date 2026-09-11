@@ -45,7 +45,7 @@ export function PphoPage() {
         }
       />
 
-      <div className="mb-5 flex gap-2">
+      <div className="mb-5 flex flex-wrap gap-2">
         {([['higienizacao', 'Registrar higienização'], ['fichas', 'Fichas PPHO']] as const).map(([id, label]) => (
           <button
             key={id}
@@ -97,7 +97,7 @@ function FichasAba({ pphos, equipamentosMap }: { pphos: Ppho[]; equipamentosMap:
       />
     );
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">

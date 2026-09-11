@@ -52,7 +52,7 @@ export function PcmIndicadoresPage() {
       <PageHeader grupo="Manutenção" title="Indicadores de Manutenção" subtitle="Disponibilidade · MTTR · MTBF (PCM)" />
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {([
             ['dashboard', 'Indicadores'], ['paradas', `Paradas (${data?.paradas.length ?? 0})`],
             ['producao', 'Produção (horas)'], ['custos', `Custos (${data?.custos.length ?? 0})`],

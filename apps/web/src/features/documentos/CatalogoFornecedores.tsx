@@ -24,7 +24,11 @@ import { useAbaUrl } from '../../lib/useAbaUrl';
 
 export function CatalogoFornecedores() {
   const [recarregar, setRecarregar] = useState(0);
-  const [aba, setAba] = useAbaUrl('aba', ['checklist', 'documentos'] as const, 'checklist');
+  // Chave própria: este catálogo vive dentro da Gestão de Documentos, que já usa
+  // `aba` para as abas do módulo. Com a mesma chave, escolher "Tipos de
+  // documento" gravava `aba=documentos`, o módulo não reconhecia esse valor e
+  // caía na Visão geral — ou seja, a aba era inalcançável.
+  const [aba, setAba] = useAbaUrl('catalogo', ['checklist', 'documentos'] as const, 'checklist');
   const [segAtivo, setSegAtivo] = useState<string | null>(null);
   const [modalSeg, setModalSeg] = useState(false);
   const [editSeg, setEditSeg] = useState<SegmentoFornecedor | null>(null);

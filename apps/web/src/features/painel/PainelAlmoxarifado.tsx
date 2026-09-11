@@ -86,7 +86,7 @@ export function PainelAlmoxarifado() {
       </div>
 
       <div className="mt-3.5 grid gap-3.5 lg:grid-cols-[1.55fr_1fr] lg:items-start">
-        <div className="flex flex-col gap-3.5">
+        <div className="flex min-w-0 flex-col gap-3.5">
           {/* Repor agora */}
           <Card className="overflow-hidden">
             <div className="px-[18px] pt-[18px]">
@@ -225,7 +225,7 @@ export function PainelAlmoxarifado() {
           </Card>
         </div>
 
-        <div className="flex flex-col gap-3.5">
+        <div className="flex min-w-0 flex-col gap-3.5">
           {/* Embalagens fora da fábrica */}
           {embalagens.length > 0 && (
             <Card className="p-[18px]">

@@ -94,7 +94,7 @@ export function PainelCompras() {
       </div>
 
       <div className="mt-3.5 grid gap-3.5 lg:grid-cols-[1.55fr_1fr] lg:items-start">
-        <div className="flex flex-col gap-3.5">
+        <div className="flex min-w-0 flex-col gap-3.5">
           {/* Documentos vencidos e a vencer */}
           <Card className="overflow-hidden">
             <div className="px-[18px] pt-[18px]">
@@ -255,7 +255,7 @@ export function PainelCompras() {
           </Card>
         </div>
 
-        <div className="flex flex-col gap-3.5">
+        <div className="flex min-w-0 flex-col gap-3.5">
           {/* Situação documental dos fornecedores */}
           <Card className="p-[18px]">
             <CardTitle sub={`${totalFornecedores} fornecedor(es) sujeito(s) à homologação.`}>

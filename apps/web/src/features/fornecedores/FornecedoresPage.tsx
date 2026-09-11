@@ -19,6 +19,7 @@ import type {
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus, IconDoc, IconDownload } from '../../components/icons';
 import { useToast } from '../../components/Toast';
+import { useAbaUrl } from '../../lib/useAbaUrl';
 
 function catLabelDoc(c: string | null): string {
   if (!c) return 'Documento';
@@ -33,7 +34,7 @@ const TOM_CLASS: Record<string, string> = {
 };
 
 export function FornecedoresPage() {
-  const [aba, setAba] = useState<'inspecoes' | 'homologacao'>('inspecoes');
+  const [aba, setAba] = useAbaUrl('aba', ['inspecoes', 'homologacao'] as const, 'inspecoes');
   const [recarregar, setRecarregar] = useState(0);
   const [modalInsp, setModalInsp] = useState(false);
   const [modalHom, setModalHom] = useState(false);

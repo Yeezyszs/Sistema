@@ -12,6 +12,7 @@ import type { Auditoria, StatusAuditoria, ClassificacaoItem } from '@sistema/dom
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus, IconChevronRight } from '../../components/icons';
 import { useToast } from '../../components/Toast';
+import { useAbaUrl } from '../../lib/useAbaUrl';
 
 const TOM_CLASS: Record<string, string> = {
   info: 'bg-sky-100 text-sky-700', alerta: 'bg-amber-100 text-amber-700', sucesso: 'bg-brand-100 text-brand-700',
@@ -21,7 +22,7 @@ const CLASS_TOM: Record<ClassificacaoItem, string> = {
 };
 
 export function AuditoriaPage() {
-  const [aba, setAba] = useState<'auditorias' | 'ppr'>('auditorias');
+  const [aba, setAba] = useAbaUrl('aba', ['auditorias', 'ppr'] as const, 'auditorias');
   const [recarregar, setRecarregar] = useState(0);
   const [modalAud, setModalAud] = useState(false);
   const [modalPpr, setModalPpr] = useState(false);

@@ -3,15 +3,16 @@
 // Não confundir com os laudos de matéria-prima em Fornecedores & Recebimento:
 // lá é o QA da carga que chega; aqui é a documentação legal e de certificação
 // que habilita o fornecedor a fornecer (homologação, FOR-POP 7).
-import { useState } from 'react';
 import { PageHeader } from '../../components/ui';
 import { useAuth } from '../../lib/auth';
 import { DashboardDocumentos } from './DashboardDocumentos';
 import { FornecedoresDocumentos } from './FornecedoresDocumentos';
 import { RelatoriosDocumentos } from './RelatoriosDocumentos';
 import { CatalogoFornecedores } from './CatalogoFornecedores';
+import { useAbaUrl } from '../../lib/useAbaUrl';
 
-type Aba = 'painel' | 'fornecedores' | 'relatorios' | 'catalogo';
+const ABAS = ['painel', 'fornecedores', 'relatorios', 'catalogo'] as const;
+type Aba = (typeof ABAS)[number];
 
 export function DocumentosPage() {
   const { perfis } = useAuth();
@@ -19,7 +20,7 @@ export function DocumentosPage() {
   // no dia a dia (compras) precisa dele para cadastrar o que cada segmento
   // exige; a qualidade continua fora por enquanto, a pedido.
   const podeCatalogo = perfis.includes('gestao') || perfis.includes('compras');
-  const [aba, setAba] = useState<Aba>('painel');
+  const [aba, setAba] = useAbaUrl('aba', ABAS, 'painel');
 
   const abas: [Aba, string][] = [
     ['painel', 'Visão geral'],

@@ -91,8 +91,10 @@ function SemAcesso() {
 // Bloqueia acesso a um módulo cujo perfil do usuário não cobre.
 // Complementa (não substitui) o RLS do banco, que é a defesa real.
 function ModuloGuard({ modulo, children }: { modulo: Modulo; children: ReactNode }) {
-  const { podeAcessarModulo, loading } = useAuth();
-  if (loading) return null;
+  const { podeAcessarModulo, loading, perfisProntos } = useAuth();
+  // Decidir sem os perfis negaria acesso a tudo — e no login isso piscava
+  // "sem acesso" antes da tela certa aparecer.
+  if (loading || !perfisProntos) return null;
   if (podeAcessarModulo(modulo)) return children;
 
   // Redirecionar só é seguro se o destino for acessível — senão o destino nega

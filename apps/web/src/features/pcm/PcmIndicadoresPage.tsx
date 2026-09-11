@@ -14,9 +14,11 @@ import type { Parada, ProducaoHoras, CustoManut, TipoParada } from '@sistema/dom
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus } from '../../components/icons';
 import { useToast } from '../../components/Toast';
+import { useAbaUrl } from '../../lib/useAbaUrl';
 
 const MESES = ['—', 'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-type Aba = 'dashboard' | 'paradas' | 'producao' | 'custos';
+const ABAS = ['dashboard', 'paradas', 'producao', 'custos'] as const;
+type Aba = (typeof ABAS)[number];
 type ToastFn = (m: string) => void;
 
 function reais(v: number): string {
@@ -27,7 +29,7 @@ function h1(v: number | null): string {
 }
 
 export function PcmIndicadoresPage() {
-  const [aba, setAba] = useState<Aba>('dashboard');
+  const [aba, setAba] = useAbaUrl('aba', ABAS, 'dashboard');
   const [meses, setMeses] = useState(6);
   const [recarregar, setRecarregar] = useState(0);
   const { sucesso, erro } = useToast();

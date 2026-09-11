@@ -14,15 +14,16 @@ import type { Reprocesso, Desvio, DestinoReprocesso } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus, IconSearch } from '../../components/icons';
 import { useToast } from '../../components/Toast';
+import { useAbaUrl } from '../../lib/useAbaUrl';
 
 const TOM_CLASS: Record<string, string> = {
   alerta: 'bg-amber-100 text-amber-700', sucesso: 'bg-brand-100 text-brand-700',
 };
 
-type Aba = 'retidos' | 'legenda' | 'painel';
+const ABAS = ['retidos', 'legenda', 'painel'] as const;
 
 export function RetidosPage() {
-  const [aba, setAba] = useState<Aba>('retidos');
+  const [aba, setAba] = useAbaUrl('aba', ABAS, 'retidos');
   const [recarregar, setRecarregar] = useState(0);
   const { sucesso, erro } = useToast();
 

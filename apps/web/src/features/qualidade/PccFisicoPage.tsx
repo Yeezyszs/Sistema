@@ -17,11 +17,12 @@ import { TIPO_TESTE_DM, TIPO_TESTE_DM_LABEL, dmConforme } from '@sistema/domain'
 import type { TipoTesteDM } from '@sistema/domain';
 import { PageHeader, Card, Spinner, Button, Field, TextInput, Select, ErroCarregamento } from '../../components/ui';
 import { useToast } from '../../components/Toast';
+import { useAbaUrl } from '../../lib/useAbaUrl';
 
-type Aba = 'detector' | 'imas' | 'vidros';
+const ABAS = ['detector', 'imas', 'vidros'] as const;
 
 export function PccFisicoPage() {
-  const [aba, setAba] = useState<Aba>('detector');
+  const [aba, setAba] = useAbaUrl('aba', ABAS, 'detector');
   const [recarregar, setRecarregar] = useState(0);
 
   const { data, loading, error } = useAsync(async () => {

@@ -16,9 +16,10 @@ import type { Ppho, ChecklistItem, RespostaChecklist } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus, IconCheck } from '../../components/icons';
 import { useToast } from '../../components/Toast';
+import { useAbaUrl } from '../../lib/useAbaUrl';
 
 export function PphoPage() {
-  const [aba, setAba] = useState<'fichas' | 'higienizacao'>('higienizacao');
+  const [aba, setAba] = useAbaUrl('aba', ['fichas', 'higienizacao'] as const, 'higienizacao');
   const [recarregar, setRecarregar] = useState(0);
   const [modalFicha, setModalFicha] = useState(false);
 

@@ -10,9 +10,10 @@ import type { LocalEstoque, StatusPosicao, PosicaoEstoque } from '@sistema/domai
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, Select, TextInput, Modal, ErroCarregamento } from '../../components/ui';
 import { IconBox } from '../../components/icons';
 import { useToast } from '../../components/Toast';
+import { useAbaUrl } from '../../lib/useAbaUrl';
 
 export function EstoquePage() {
-  const [aba, setAba] = useState<'mapa' | 'saldo'>('mapa');
+  const [aba, setAba] = useAbaUrl('aba', ['mapa', 'saldo'] as const, 'mapa');
   const [recarregar, setRecarregar] = useState(0);
   const [alocando, setAlocando] = useState<LocalEstoque | null>(null);
   const [editandoPos, setEditandoPos] = useState<PosicaoEstoque | null>(null);

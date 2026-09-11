@@ -10,6 +10,7 @@ import type { SituacaoEnvio } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus } from '../../components/icons';
 import { useToast } from '../../components/Toast';
+import { useAbaUrl } from '../../lib/useAbaUrl';
 
 const SIT_CLASS: Record<SituacaoEnvio, string> = {
   em_dia: 'bg-brand-100 text-brand-700', a_vencer: 'bg-amber-100 text-amber-700',
@@ -17,7 +18,7 @@ const SIT_CLASS: Record<SituacaoEnvio, string> = {
 };
 
 export function AmbientalPage() {
-  const [aba, setAba] = useState<'monitoramentos' | 'pontos'>('monitoramentos');
+  const [aba, setAba] = useAbaUrl('aba', ['monitoramentos', 'pontos'] as const, 'monitoramentos');
   const [recarregar, setRecarregar] = useState(0);
   const [modalPonto, setModalPonto] = useState(false);
   const [modalMon, setModalMon] = useState(false);

@@ -12,8 +12,10 @@ import type {
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconChevronRight, IconSearch, IconPlus } from '../../components/icons';
 import { useToast } from '../../components/Toast';
+import { useAbaUrl } from '../../lib/useAbaUrl';
 
-type Aba = 'equipamentos' | 'planos' | 'lubrificacao' | 'ferramentas' | 'colaboradores';
+const ABAS = ['equipamentos', 'planos', 'lubrificacao', 'ferramentas', 'colaboradores'] as const;
+type Aba = (typeof ABAS)[number];
 type TabelaPcm = 'equipamentos' | 'equipamento_componentes' | 'planos' | 'lubrificacao' | 'ferramentas' | 'colaboradores';
 
 // ── Modal genérico de registro (novo/editar) ───────────────────
@@ -94,7 +96,7 @@ function ModalRegistro({ reg, onClose, onSaved }: {
 }
 
 export function PcmCadastrosPage() {
-  const [aba, setAba] = useState<Aba>('equipamentos');
+  const [aba, setAba] = useAbaUrl('aba', ABAS, 'equipamentos');
   const [busca, setBusca] = useState('');
   const [filtroSetor, setFiltroSetor] = useState('');
   const [recarregar, setRecarregar] = useState(0);

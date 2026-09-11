@@ -11,12 +11,13 @@ import type { Contraprova, ContraprovaRetencao } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus, IconSearch } from '../../components/icons';
 import { useToast } from '../../components/Toast';
+import { useAbaUrl } from '../../lib/useAbaUrl';
 
-type Aba = 'caixas' | 'retencao';
+const ABAS = ['caixas', 'retencao'] as const;
 type ToastFn = (m: string) => void;
 
 export function ContraprovasPage() {
-  const [aba, setAba] = useState<Aba>('caixas');
+  const [aba, setAba] = useAbaUrl('aba', ABAS, 'caixas');
   const [recarregar, setRecarregar] = useState(0);
   const { sucesso, erro } = useToast();
 

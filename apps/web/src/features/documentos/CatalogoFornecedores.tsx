@@ -20,10 +20,11 @@ import {
 } from '../../components/ui';
 import { IconPlus } from '../../components/icons';
 import { useToast } from '../../components/Toast';
+import { useAbaUrl } from '../../lib/useAbaUrl';
 
 export function CatalogoFornecedores() {
   const [recarregar, setRecarregar] = useState(0);
-  const [aba, setAba] = useState<'checklist' | 'documentos'>('checklist');
+  const [aba, setAba] = useAbaUrl('aba', ['checklist', 'documentos'] as const, 'checklist');
   const [segAtivo, setSegAtivo] = useState<string | null>(null);
   const [modalSeg, setModalSeg] = useState(false);
   const [editSeg, setEditSeg] = useState<SegmentoFornecedor | null>(null);

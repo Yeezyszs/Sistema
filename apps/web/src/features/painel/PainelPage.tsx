@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   listApontamentos, listLinhas, listRecebimentos, listProgramacao, listLotes,
@@ -15,6 +14,7 @@ import type { Perfil, StatusLote } from '@sistema/domain';
 import { PageHeader, Card, CardTitle, Spinner, ErroCarregamento } from '../../components/ui';
 import { IconClock } from '../../components/icons';
 import { useAuth } from '../../lib/auth';
+import { useAbaUrl } from '../../lib/useAbaUrl';
 import { Kpi } from './comum';
 import { PainelAlmoxarifado } from './PainelAlmoxarifado';
 import { PainelCompras } from './PainelCompras';
@@ -81,9 +81,10 @@ function visoesDoUsuario(perfis: Perfil[]): [Visao, ...Visao[]] {
 export function PainelPage() {
   const { perfis } = useAuth();
   const visoes = visoesDoUsuario(perfis);
-  const [visao, setVisao] = useState<Visao>(visoes[0]);
-  // Se os perfis mudarem e a visão escolhida sumir, cai na primeira disponível.
-  const atual: Visao = visoes.includes(visao) ? visao : visoes[0];
+  // A visão fica na URL: quem tem mais de uma não perde a escolha se a aba
+  // do navegador for descartada e recarregada. `visoes` já filtra pelo
+  // perfil, então uma visão que o usuário não tem cai na primeira dele.
+  const [atual, setVisao] = useAbaUrl('visao', visoes, visoes[0]);
 
   return (
     <>

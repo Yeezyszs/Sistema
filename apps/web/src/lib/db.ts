@@ -1888,10 +1888,29 @@ export async function listPerfisCatalogo(): Promise<PerfilRow[]> {
   return unwrap<PerfilRow[]>(await core().from('perfis').select('id, nome').order('nome'));
 }
 
+// Duas consultas simples em vez de embedding. `usuario_perfis` tem duas
+// chaves estrangeiras para `usuarios` — `usuario_id` e `created_by` — e o
+// PostgREST não tem como adivinhar qual delas usar: a tela quebrava com
+// "more than one relationship was found". O vínculo é resolvido aqui, como já
+// é feito no resto deste arquivo.
 export async function listUsuarios(): Promise<UsuarioAdmin[]> {
-  return unwrap<UsuarioAdmin[]>(
-    await core().from('usuarios').select('id, nome, email, ativo, usuario_perfis(perfil_id)').order('nome'),
-  );
+  const [usuarios, vinculos] = await Promise.all([
+    unwrap<{ id: string; nome: string; email: string; ativo: boolean }[]>(
+      await core().from('usuarios').select('id, nome, email, ativo').order('nome'),
+    ),
+    unwrap<{ usuario_id: string; perfil_id: string }[]>(
+      await core().from('usuario_perfis').select('usuario_id, perfil_id'),
+    ),
+  ]);
+
+  const porUsuario = new Map<string, { perfil_id: string }[]>();
+  for (const v of vinculos) {
+    const lista = porUsuario.get(v.usuario_id);
+    if (lista) lista.push({ perfil_id: v.perfil_id });
+    else porUsuario.set(v.usuario_id, [{ perfil_id: v.perfil_id }]);
+  }
+
+  return usuarios.map((u) => ({ ...u, usuario_perfis: porUsuario.get(u.id) ?? [] }));
 }
 
 export async function atribuirPerfil(usuarioId: string, perfilId: string): Promise<void> {

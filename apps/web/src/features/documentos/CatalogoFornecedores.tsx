@@ -6,6 +6,7 @@ import {
   listSegmentosFornecedor, criarSegmentoFornecedor, atualizarSegmentoFornecedor,
   listDocumentosExigidos, criarDocumentoExigido, atualizarDocumentoExigido,
   listSegmentoDocumentos, vincularDocumentoAoSegmento, desvincularDocumentoDoSegmento,
+  definirValidadeDoSegmento,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import {
@@ -79,6 +80,15 @@ export function CatalogoFornecedores() {
     catch (err) { erro(err instanceof Error ? err.message : 'Falha.'); }
   }
 
+  // A mesma licença pode ser vitalícia num segmento e vencer em outro, então a
+  // regra de vencimento é ajustável aqui, no checklist do segmento.
+  async function mudarValidade(vinculoId: string, valor: 'padrao' | 'sim' | 'nao') {
+    try {
+      await definirValidadeDoSegmento(vinculoId, valor === 'padrao' ? null : valor === 'sim');
+      rec();
+    } catch (err) { erro(err instanceof Error ? err.message : 'Falha.'); }
+  }
+
   async function alternarAtivoDoc(d: DocumentoExigido) {
     try {
       await atualizarDocumentoExigido(d.id, { ativo: !d.ativo });
@@ -146,7 +156,7 @@ export function CatalogoFornecedores() {
                       <tr className={LINHA_CABECALHO}>
                         <th className="px-3 py-[11px]">Documento</th>
                         <th className="px-3 py-[11px]">Exigência</th>
-                        <th className="hidden px-3 py-[11px] sm:table-cell">Validade</th>
+                        <th className="px-3 py-[11px]">Vencimento</th>
                         <th className="px-3 py-[11px]" />
                       </tr>
                     </thead>
@@ -161,8 +171,21 @@ export function CatalogoFornecedores() {
                                 {EXIGENCIA_LABEL[v.exigencia]}
                               </span>
                             </td>
-                            <td className="hidden px-3 py-2.5 text-slate-500 sm:table-cell">
-                              {d?.tem_validade ? 'Controla vencimento' : '—'}{d?.permite_multiplos ? ' · vários arquivos' : ''}
+                            <td className="px-3 py-2.5">
+                              <Select
+                                value={v.tem_validade === null ? 'padrao' : v.tem_validade ? 'sim' : 'nao'}
+                                onChange={(e) => void mudarValidade(v.id, e.target.value as 'padrao' | 'sim' | 'nao')}
+                                className="!py-1 !text-xs"
+                              >
+                                <option value="padrao">
+                                  Padrão do tipo ({d?.tem_validade ? 'vence' : 'vitalícia'})
+                                </option>
+                                <option value="sim">Vence — cobrar data</option>
+                                <option value="nao">Vitalícia neste segmento</option>
+                              </Select>
+                              {d?.permite_multiplos && (
+                                <span className="mt-1 block text-[11px] text-slate-400">vários arquivos</span>
+                              )}
                             </td>
                             <td className="px-3 py-2.5 text-right">
                               <button onClick={() => void remover(v.id)} className="text-xs font-medium text-slate-400 hover:text-red-600">Remover</button>

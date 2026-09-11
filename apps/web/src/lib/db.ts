@@ -1188,6 +1188,16 @@ export async function vincularDocumentoAoSegmento(
   if (res.error) throw new Error(res.error.message);
 }
 
+// Exceção de vencimento do documento naquele segmento (null volta ao padrão
+// do tipo de documento).
+export async function definirValidadeDoSegmento(
+  id: string,
+  tem_validade: boolean | null,
+): Promise<void> {
+  const res = await qualidade().from('segmento_documentos').update({ tem_validade }).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
 export async function desvincularDocumentoDoSegmento(id: string): Promise<void> {
   const res = await qualidade().from('segmento_documentos').delete().eq('id', id);
   if (res.error) throw new Error(res.error.message);

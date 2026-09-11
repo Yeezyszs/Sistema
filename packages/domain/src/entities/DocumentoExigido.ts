@@ -50,6 +50,10 @@ export interface SegmentoDocumento {
   segmento_id: string;
   documento_exigido_id: string;
   exigencia: Exigencia;
+  /** Exceção deste segmento para o vencimento. `null` segue o tipo de
+   *  documento; `false` é vitalícia aqui; `true` controla vencimento aqui.
+   *  A mesma licença pode ser vitalícia num segmento e vencer em outro. */
+  tem_validade: boolean | null;
   created_at: string;
   created_by: string | null;
 }

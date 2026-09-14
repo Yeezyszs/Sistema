@@ -23,6 +23,11 @@ import type {
   ItemChecklistGeral,
   NovoFornecedor,
   AtualizacaoFornecedor,
+  ParametrosSemana,
+  NovosParametrosSemana,
+  PrevisaoSemana,
+  PrevisaoDia,
+  FormaPagamento,
   EtapaLote,
   Etapa,
   Recebimento,
@@ -1968,5 +1973,72 @@ export async function atualizarProdutor(id: string, patch: AtualizacaoFornecedor
 // apagar apagaria o histórico de cargas junto.
 export async function excluirProdutor(id: string): Promise<void> {
   const res = await core().from('fornecedores').delete().eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// ── Suprimentos: parâmetros da semana ──────────────────────────
+export async function listParametrosSemana(): Promise<ParametrosSemana[]> {
+  return unwrap<ParametrosSemana[]>(
+    await producao().from('suprimento_parametros').select('*').order('semana_inicio', { ascending: false }),
+  );
+}
+
+export async function salvarParametrosSemana(payload: NovosParametrosSemana): Promise<void> {
+  const res = await producao()
+    .from('suprimento_parametros')
+    .upsert(payload, { onConflict: 'org_id,semana_inicio' });
+  if (res.error) throw new Error(res.error.message);
+}
+
+// ── Suprimentos: previsão da semana ────────────────────────────
+export async function listPrevisaoDaSemana(semana: string): Promise<PrevisaoSemana[]> {
+  return unwrap<PrevisaoSemana[]>(
+    await producao().from('suprimento_previsao').select('*').eq('semana_inicio', semana),
+  );
+}
+
+export async function listDiasDaPrevisao(previsaoIds: string[]): Promise<PrevisaoDia[]> {
+  if (previsaoIds.length === 0) return [];
+  return unwrap<PrevisaoDia[]>(
+    await producao().from('suprimento_previsao_dias').select('*').in('previsao_id', previsaoIds),
+  );
+}
+
+export async function criarLinhaPrevisao(payload: {
+  semana_inicio: string; fornecedor_id: string; variedade?: string | null;
+  pagamento?: FormaPagamento | null; confirmado?: boolean;
+}): Promise<PrevisaoSemana> {
+  const res = await producao().from('suprimento_previsao').insert(payload).select('*').single();
+  if (res.error) throw new Error(res.error.message);
+  return res.data as PrevisaoSemana;
+}
+
+export async function atualizarLinhaPrevisao(
+  id: string,
+  patch: Partial<Pick<PrevisaoSemana, 'variedade' | 'pagamento' | 'confirmado' | 'observacao'>>,
+): Promise<void> {
+  const res = await producao().from('suprimento_previsao').update(patch).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function excluirLinhaPrevisao(id: string): Promise<void> {
+  const res = await producao().from('suprimento_previsao').delete().eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// Zero apaga a célula em vez de gravar 0: "não mandou nada nesse dia" e
+// "mandou zero" são a mesma coisa, e a linha vazia lê melhor na grade.
+export async function definirCargasDoDia(
+  previsao_id: string, data: string, cargas: number,
+): Promise<void> {
+  if (cargas <= 0) {
+    const res = await producao()
+      .from('suprimento_previsao_dias').delete().eq('previsao_id', previsao_id).eq('data', data);
+    if (res.error) throw new Error(res.error.message);
+    return;
+  }
+  const res = await producao()
+    .from('suprimento_previsao_dias')
+    .upsert({ previsao_id, data, cargas }, { onConflict: 'previsao_id,data' });
   if (res.error) throw new Error(res.error.message);
 }

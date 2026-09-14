@@ -41,6 +41,7 @@ import { AmbientalPage } from '../features/qualidade/AmbientalPage';
 import { FornecedoresPage } from '../features/fornecedores/FornecedoresPage';
 import { DocumentosPage } from '../features/documentos/DocumentosPage';
 import { ProdutoresPage } from '../features/suprimentos/ProdutoresPage';
+import { SemanaPage } from '../features/suprimentos/SemanaPage';
 import { LaudoPrint } from '../features/lotes/LaudoPrint';
 import { OrdensPage } from '../features/ordens/OrdensPage';
 import { OrdemPage } from '../features/ordens/OrdemPage';
@@ -188,6 +189,7 @@ export default function App() {
             <Route path="/clientes" element={<ModuloGuard modulo="comercial"><ClientesPage /></ModuloGuard>} />
             <Route path="/carteira" element={<ModuloGuard modulo="comercial"><CarteiraPage /></ModuloGuard>} />
             <Route path="/analise-vendas" element={<ModuloGuard modulo="comercial"><AnaliseVendasPage /></ModuloGuard>} />
+            <Route path="/semana" element={<ModuloGuard modulo="suprimentos"><SemanaPage /></ModuloGuard>} />
             <Route path="/produtores" element={<ModuloGuard modulo="suprimentos"><ProdutoresPage /></ModuloGuard>} />
             <Route path="/almoxarifado" element={<ModuloGuard modulo="almoxarifado"><AlmoxarifadoPage /></ModuloGuard>} />
             <Route path="/embalagens" element={<ModuloGuard modulo="almoxarifado"><EmbalagensPage /></ModuloGuard>} />

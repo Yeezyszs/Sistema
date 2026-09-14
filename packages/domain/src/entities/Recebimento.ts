@@ -25,6 +25,15 @@ export interface Recebimento {
   hora_inicio: string | null; // início da descarga (HH:MM)
   hora_fim: string | null; // fim da descarga (HH:MM)
   recebido_em: string; // ISO timestamp
+  // ── Suprimentos ──
+  /** Linha da previsão que esta carga cumpre. Null = chegou sem estar previsto
+   *  — acontece, e o sistema não pode recusar o caminhão que está no pátio. */
+  previsao_id: string | null;
+  /** Parâmetros da semana copiados no lançamento: mudar o preço de hoje não
+   *  pode reescrever o custo das cargas antigas. */
+  preco_renda: number | null;
+  preco_farinha: number | null;
+  teto_pct: number | null;
   created_at: string;
   created_by: string | null;
 }

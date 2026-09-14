@@ -1,3 +1,5 @@
+import type { FormaPagamento } from './Suprimentos';
+
 // Dados-mestre de fornecedor (core.fornecedores).
 export const TIPO_FORNECEDOR = [
   'fornecedor',
@@ -47,6 +49,17 @@ export interface Fornecedor {
   // Nada a ver com `homologado` / qualidade.homologacoes (nota e classe):
   // são duas homologações diferentes.
   status_documental: 'sem_documentos' | 'pendente' | 'ok';
+  // ── Campos do produtor de mandioca (Suprimentos) ──
+  contato: string | null;
+  cidade: string | null;
+  uf: string | null;
+  distancia_km: number | null;
+  variedades: string[] | null;
+  pagamento_padrao: FormaPagamento | null;
+  observacao: string | null;
+  /** Decisão do comprador: entra ou não na lista de trabalho da semana.
+   *  Não é exclusão — o histórico de cargas continua apontando para ele. */
+  ativo: boolean;
   created_at: string;
   created_by: string | null;
 }
@@ -58,6 +71,14 @@ export interface NovoFornecedor {
   telefone?: string | null;
   email?: string | null;
   classificacao_risco?: ClassificacaoRisco | null;
+  contato?: string | null;
+  cidade?: string | null;
+  uf?: string | null;
+  distancia_km?: number | null;
+  variedades?: string[] | null;
+  pagamento_padrao?: FormaPagamento | null;
+  observacao?: string | null;
+  ativo?: boolean;
 }
 
 export type AtualizacaoFornecedor = Partial<NovoFornecedor>;

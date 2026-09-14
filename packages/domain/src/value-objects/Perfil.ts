@@ -18,7 +18,7 @@ export const MODULO = [
   'ordens', 'lotes', 'recebimentos', 'fornecedores',
   'qualidade', 'acompanhamento', 'monitoramento_agua', 'insumos_lab', 'contraprovas', 'pcc_fisico', 'ppho', 'especificacoes', 'calibracao',
   'analise_risco', 'auditoria', 'ambiental', 'nao_conformidades',
-  'manutencao', 'comercial', 'almoxarifado', 'documentos', 'usuarios',
+  'manutencao', 'comercial', 'almoxarifado', 'documentos', 'suprimentos', 'usuarios',
 ] as const;
 export type Modulo = (typeof MODULO)[number];
 
@@ -39,7 +39,7 @@ export const MODULOS_POR_PERFIL: Record<Perfil, Modulo[]> = {
   manutencao: ['painel', 'manutencao', 'calibracao', 'pcc_fisico', 'almoxarifado'],
   // Compras cuida da documentação de homologação e do estoque de consumíveis
   // e embalagens. Não vê produção, qualidade nem comercial.
-  compras: ['painel', 'documentos', 'almoxarifado'],
+  compras: ['painel', 'documentos', 'almoxarifado', 'suprimentos'],
   // Almoxarifado atende a manutenção: quem entrega a peça e quem a consome
   // olham o mesmo estoque.
   almoxarifado: ['painel', 'almoxarifado', 'manutencao'],

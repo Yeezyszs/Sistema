@@ -36,6 +36,7 @@ const ITENS_LOGISTICA: SubItem[] = [
 ];
 
 const ITENS_SUPRIMENTOS: SubItem[] = [
+  { to: '/produtores', icon: <IconUser width={16} height={16} />, label: 'Produtores', modulo: 'suprimentos' },
   { to: '/recebimentos', icon: <IconRecebimento width={16} height={16} />, label: 'Recebimentos', modulo: 'recebimentos' },
   { to: '/fornecedores', icon: <IconUser width={16} height={16} />, label: 'Fornecedores & QA', modulo: 'fornecedores' },
 ];

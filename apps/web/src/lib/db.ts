@@ -1937,3 +1937,36 @@ export async function atualizarUsuarioAtivo(id: string, ativo: boolean): Promise
   const res = await core().from('usuarios').update({ ativo }).eq('id', id);
   if (res.error) throw new Error(res.error.message);
 }
+
+// ── Suprimentos: produtores de mandioca ────────────────────────
+// O produtor é um core.fornecedores com tipo 'produtor_rural'. `ativo` é a
+// decisão do comprador sobre quem entra na lista de trabalho — não é exclusão,
+// porque o histórico de cargas continua apontando para ele.
+export async function listProdutores(): Promise<Fornecedor[]> {
+  return unwrap<Fornecedor[]>(
+    await core().from('fornecedores').select('*').eq('tipo', 'produtor_rural').order('razao_social'),
+  );
+}
+
+export async function criarProdutor(payload: NovoFornecedor): Promise<Fornecedor> {
+  const res = await core()
+    .from('fornecedores')
+    .insert({ ...payload, tipo: 'produtor_rural' })
+    .select('*')
+    .single();
+  if (res.error) throw new Error(res.error.message);
+  return res.data as Fornecedor;
+}
+
+export async function atualizarProdutor(id: string, patch: AtualizacaoFornecedor): Promise<void> {
+  const res = await core().from('fornecedores').update(patch).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// Exclusão de verdade só é possível para quem nunca entregou nem foi previsto.
+// Nos demais casos a chamada falha por chave estrangeira — e é melhor assim:
+// apagar apagaria o histórico de cargas junto.
+export async function excluirProdutor(id: string): Promise<void> {
+  const res = await core().from('fornecedores').delete().eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}

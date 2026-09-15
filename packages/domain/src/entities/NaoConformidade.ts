@@ -24,6 +24,39 @@ export const ORIGEM_NC_LABEL: Record<OrigemNC, string> = {
   outras: 'Outras',
 };
 
+export const TIPO_NC = ['rnc', 'notificacao_ocorrencia'] as const;
+export type TipoNC = (typeof TIPO_NC)[number];
+
+export const TIPO_NC_LABEL: Record<TipoNC, string> = {
+  rnc: 'RNC — Relatório de não conformidade',
+  notificacao_ocorrencia: 'Notificação de ocorrência',
+};
+
+export const TIPO_NC_CURTO: Record<TipoNC, string> = {
+  rnc: 'RNC',
+  notificacao_ocorrencia: 'Notificação',
+};
+
+export const EFICACIA_NC = ['eficaz', 'ineficaz', 'na'] as const;
+export type EficaciaNC = (typeof EFICACIA_NC)[number];
+
+export const EFICACIA_NC_LABEL: Record<EficaciaNC, string> = {
+  eficaz: 'Eficaz',
+  ineficaz: 'Não eficaz',
+  na: 'Não aplicável',
+};
+
+// Causa raiz pelos 5 porquês — o `jsonb` guarda as respostas em ordem.
+export interface CausaRaiz {
+  porques: string[];
+  conclusao?: string;
+}
+
+/** Só as respostas preenchidas, sem buracos no meio. */
+export function porquesPreenchidos(causa: CausaRaiz | null | undefined): string[] {
+  return (causa?.porques ?? []).map((p) => p.trim()).filter(Boolean);
+}
+
 export const STATUS_NC = ['aberta', 'em_andamento', 'concluida', 'eficacia_pendente'] as const;
 export type StatusNC = (typeof STATUS_NC)[number];
 
@@ -56,7 +89,7 @@ export interface NaoConformidade {
   id: string;
   org_id: string;
   numero: number;
-  tipo: 'rnc' | 'notificacao_ocorrencia';
+  tipo: TipoNC;
   origem: OrigemNC;
   reincidencia_de: number | null;
   lote_id: string | null;
@@ -66,9 +99,9 @@ export interface NaoConformidade {
   descricao: string;
   qtd_nao_conforme_kg: number | null;
   disposicao: DisposicaoNC | null;
-  causa_raiz: Record<string, unknown> | null;
+  causa_raiz: CausaRaiz | null;
   status: StatusNC;
-  eficacia: 'eficaz' | 'ineficaz' | 'na' | null;
+  eficacia: EficaciaNC | null;
   emitente_id: string | null;
   aberta_em: string;
   encerrada_em: string | null;
@@ -77,8 +110,9 @@ export interface NaoConformidade {
 }
 
 export interface NovaNaoConformidade {
-  tipo?: 'rnc' | 'notificacao_ocorrencia';
+  tipo?: TipoNC;
   origem: OrigemNC;
+  reincidencia_de?: number | null;
   lote_id?: string | null;
   fornecedor_id?: string | null;
   cliente_id?: string | null;

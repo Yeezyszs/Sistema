@@ -5,7 +5,6 @@ import {
   listFornecedores,
   listClientes,
   criarNaoConformidade,
-  atualizarStatusNC,
   mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
@@ -17,8 +16,15 @@ import {
   STATUS_NC_TOM,
   DISPOSICAO_NC,
   DISPOSICAO_NC_LABEL,
+  TIPO_NC,
+  TIPO_NC_LABEL,
+  TIPO_NC_CURTO,
+  periodoVigente,
+  rotuloPeriodo,
+  intervaloDoPeriodo,
 } from '@sistema/domain';
-import type { StatusNC } from '@sistema/domain';
+import type { NaoConformidade, TipoNC } from '@sistema/domain';
+import { NcDetalhe } from './NcDetalhe';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, TextArea, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconShield, IconPlus } from '../../components/icons';
 import { useToast } from '../../components/Toast';
@@ -35,6 +41,10 @@ export function NaoConformidadesPage() {
   const [modalAberto, setModalAberto] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [filtro, setFiltro] = useState<'todas' | 'abertas'>('abertas');
+  const [fornecedorFiltro, setFornecedorFiltro] = useState('');
+  const [periodoFiltro, setPeriodoFiltro] = useState('');
+  const [aberta, setAberta] = useState<NaoConformidade | null>(null);
+  const [reincidenciaDe, setReincidenciaDe] = useState<number | null>(null);
   const { sucesso, erro } = useToast();
 
   const { data, loading, error } = useAsync(async () => {
@@ -49,13 +59,28 @@ export function NaoConformidadesPage() {
       lotes,
       lotesMap: mapBy(lotes, 'id'),
       fornecedores,
+      fornecedoresMap: mapBy(fornecedores, 'id'),
       clientes,
     };
   }, [recarregar]);
 
-  const ncsVisiveis = (data?.ncs ?? []).filter((nc) =>
-    filtro === 'abertas' ? nc.status !== 'concluida' : true,
-  );
+  // Os filtros por fornecedor e por semestre existem para responder à pergunta
+  // que a avaliação de desempenho faz: quantas NCs este fornecedor teve no
+  // período? É o 4º critério do FOR-POP 07.
+  const ncsVisiveis = (data?.ncs ?? []).filter((nc) => {
+    if (filtro === 'abertas' && nc.status === 'concluida') return false;
+    if (fornecedorFiltro && nc.fornecedor_id !== fornecedorFiltro) return false;
+    if (periodoFiltro) {
+      const [inicio, fim] = intervaloDoPeriodo(periodoFiltro);
+      const dia = (nc.aberta_em ?? '').slice(0, 10);
+      if (dia < inicio || dia > fim) return false;
+    }
+    return true;
+  });
+
+  // A NC aberta no detalhe precisa vir da lista recarregada, senão o modal
+  // segue mostrando o estado anterior depois de salvar.
+  const ncAberta = aberta ? data?.ncs.find((n) => n.id === aberta.id) ?? aberta : null;
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -67,6 +92,8 @@ export function NaoConformidadesPage() {
     setSalvando(true);
     try {
       await criarNaoConformidade({
+        tipo: (String(form.get('tipo') ?? 'rnc') as TipoNC),
+        reincidencia_de: reincidenciaDe,
         origem,
         descricao,
         lote_id: String(form.get('lote_id') ?? '') || null,
@@ -77,6 +104,7 @@ export function NaoConformidadesPage() {
       });
       sucesso('Não conformidade registrada.');
       setModalAberto(false);
+      setReincidenciaDe(null);
       setRecarregar((n) => n + 1);
     } catch (err) {
       erro(err instanceof Error ? err.message : 'Falha ao registrar NC.');
@@ -85,15 +113,6 @@ export function NaoConformidadesPage() {
     }
   }
 
-  async function mudarStatus(id: string, status: StatusNC) {
-    try {
-      await atualizarStatusNC(id, status);
-      sucesso('Status atualizado.');
-      setRecarregar((n) => n + 1);
-    } catch (err) {
-      erro(err instanceof Error ? err.message : 'Falha.');
-    }
-  }
 
   return (
     <>
@@ -108,7 +127,7 @@ export function NaoConformidadesPage() {
         }
       />
 
-      <div className="mb-4 flex flex-wrap gap-2">
+      <div className="mb-4 flex flex-wrap items-end gap-2">
         {(['abertas', 'todas'] as const).map((f) => (
           <button
             key={f}
@@ -120,6 +139,18 @@ export function NaoConformidadesPage() {
             {f === 'abertas' ? 'Em aberto' : 'Todas'}
           </button>
         ))}
+        <Select value={fornecedorFiltro} onChange={(e) => setFornecedorFiltro(e.target.value)} className="!w-56">
+          <option value="">Todos os fornecedores</option>
+          {(data?.fornecedores ?? []).map((f) => (
+            <option key={f.id} value={f.id}>{f.razao_social}</option>
+          ))}
+        </Select>
+        <Select value={periodoFiltro} onChange={(e) => setPeriodoFiltro(e.target.value)} className="!w-44">
+          <option value="">Todos os períodos</option>
+          {ultimosSemestres().map((p) => (
+            <option key={p} value={p}>{rotuloPeriodo(p)}</option>
+          ))}
+        </Select>
       </div>
 
       {loading && (
@@ -142,39 +173,44 @@ export function NaoConformidadesPage() {
           {ncsVisiveis.map((nc) => (
             <Card key={nc.id} className="p-5">
               <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
+                <button type="button" onClick={() => setAberta(nc)} className="min-w-0 flex-1 text-left">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-semibold text-slate-900">NC nº {nc.numero}</span>
                     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${TOM_CLASS[STATUS_NC_TOM[nc.status]]}`}>
                       {STATUS_NC_LABEL[nc.status]}
                     </span>
+                    <span className="text-xs text-slate-400">{TIPO_NC_CURTO[nc.tipo]}</span>
                     <span className="text-xs text-slate-400">{ORIGEM_NC_LABEL[nc.origem]}</span>
+                    {nc.reincidencia_de != null && (
+                      <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
+                        Reincidência da nº {nc.reincidencia_de}
+                      </span>
+                    )}
                   </div>
                   <p className="mt-2 text-sm text-slate-700">{nc.descricao}</p>
                   <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
                     {nc.lote_id && <span>Lote: {data.lotesMap.get(nc.lote_id)?.codigo ?? '—'}</span>}
                     {nc.qtd_nao_conforme_kg != null && <span>{nc.qtd_nao_conforme_kg} kg NC</span>}
                     {nc.disposicao && <span>Disposição: {DISPOSICAO_NC_LABEL[nc.disposicao]}</span>}
+                    {nc.fornecedor_id && <span>Fornecedor: {data.fornecedoresMap.get(nc.fornecedor_id)?.razao_social ?? '—'}</span>}
                     <span>Aberta em {formatarData(nc.aberta_em)}</span>
                   </div>
-                </div>
+                </button>
                 <div className="shrink-0">
                   {nc.status !== 'concluida' ? (
-                    <div className="flex flex-col gap-2">
-                      {nc.status === 'aberta' && (
-                        <Button variant="outline" className="px-3 py-1.5 text-xs" onClick={() => void mudarStatus(nc.id, 'em_andamento')}>
-                          Iniciar tratativa
+                    <Button className="px-3 py-1.5 text-xs" onClick={() => setAberta(nc)}>
+                      Tratar
+                    </Button>
+                  ) : (
+                    <div className="flex flex-col items-end gap-2">
+                      <span className="text-xs text-slate-400">Encerrada {formatarData(nc.encerrada_em)}</span>
+                      {nc.eficacia === 'ineficaz' && (
+                        <Button variant="outline" className="px-3 py-1.5 text-xs"
+                          onClick={() => { setReincidenciaDe(nc.numero); setModalAberto(true); }}>
+                          Abrir reincidência
                         </Button>
                       )}
-                      <Button
-                        className="px-3 py-1.5 text-xs"
-                        onClick={() => void mudarStatus(nc.id, 'concluida')}
-                      >
-                        Concluir
-                      </Button>
                     </div>
-                  ) : (
-                    <span className="text-xs text-slate-400">Encerrada {formatarData(nc.encerrada_em)}</span>
                   )}
                 </div>
               </div>
@@ -183,9 +219,22 @@ export function NaoConformidadesPage() {
         </div>
       )}
 
-      <Modal open={modalAberto} onClose={() => setModalAberto(false)} title="Nova não conformidade" size="lg">
+      <Modal open={modalAberto} onClose={() => { setModalAberto(false); setReincidenciaDe(null); }}
+        title={reincidenciaDe ? `Reincidência da NC nº ${reincidenciaDe}` : 'Nova não conformidade'} size="lg">
         <form onSubmit={onSubmit} className="space-y-4">
+          {reincidenciaDe != null && (
+            <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">
+              Esta NC nasce ligada à nº {reincidenciaDe}, cuja ação corretiva não foi eficaz.
+            </p>
+          )}
           <div className="grid grid-cols-2 gap-3">
+            <Field label="Tipo">
+              <Select name="tipo" defaultValue="rnc">
+                {TIPO_NC.map((t) => (
+                  <option key={t} value={t}>{TIPO_NC_LABEL[t]}</option>
+                ))}
+              </Select>
+            </Field>
             <Field label="Origem">
               <Select name="origem" defaultValue="" required>
                 <option value="" disabled>Selecione…</option>
@@ -243,6 +292,29 @@ export function NaoConformidadesPage() {
           </div>
         </form>
       </Modal>
+
+      {ncAberta && data && (
+        <NcDetalhe
+          nc={ncAberta}
+          fornecedorNome={ncAberta.fornecedor_id ? data.fornecedoresMap.get(ncAberta.fornecedor_id)?.razao_social ?? null : null}
+          loteCodigo={ncAberta.lote_id ? data.lotesMap.get(ncAberta.lote_id)?.codigo ?? null : null}
+          onFechar={() => setAberta(null)}
+          onMudou={() => setRecarregar((n) => n + 1)}
+        />
+      )}
     </>
   );
+}
+
+// Os semestres do formulário FOR-POP 07, do mais recente para trás.
+function ultimosSemestres(): string[] {
+  const vigente = periodoVigente();
+  const lista: string[] = [];
+  for (let ano = Number(vigente.slice(0, 4)); ano >= 2022; ano--) {
+    for (const mes of ['07', '01']) {
+      const p = `${ano}-${mes}`;
+      if (p <= vigente) lista.push(p);
+    }
+  }
+  return lista;
 }

@@ -63,6 +63,7 @@ import type {
   NaoConformidade,
   NovaNaoConformidade,
   NcCorrecao,
+  AvaliacaoFornecedor,
   StatusNC,
   DetectorMetais,
   VerificacaoDM,
@@ -743,6 +744,44 @@ export async function criarCorrecaoNC(payload: {
   data_implementacao?: string | null;
 }): Promise<void> {
   const res = await qualidade().from('nc_correcoes').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function atualizarNaoConformidade(
+  id: string,
+  patch: Partial<Pick<NaoConformidade,
+    'descricao' | 'disposicao' | 'causa_raiz' | 'eficacia' | 'status' | 'reincidencia_de' | 'encerrada_em'
+  >>,
+): Promise<void> {
+  const res = await qualidade().from('nao_conformidades').update(patch).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// ── Avaliação de desempenho de fornecedor (FOR-POP 07) ─────────
+export async function listAvaliacoesFornecedor(): Promise<AvaliacaoFornecedor[]> {
+  return unwrap<AvaliacaoFornecedor[]>(
+    await qualidade().from('avaliacoes_fornecedor').select('*').order('periodo', { ascending: false }),
+  );
+}
+
+// Uma avaliação por fornecedor e período: o índice único garante, o upsert usa.
+export async function salvarAvaliacaoFornecedor(payload: {
+  fornecedor_id: string;
+  periodo: string;
+  criterios: Record<string, number>;
+  pontuacao: number;
+  classificacao: string;
+  responsavel: string | null;
+  observacao: string | null;
+}): Promise<void> {
+  const res = await qualidade()
+    .from('avaliacoes_fornecedor')
+    .upsert({ ...payload, avaliado_em: new Date().toISOString().slice(0, 10) }, { onConflict: 'org_id,fornecedor_id,periodo' });
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function excluirAvaliacaoFornecedor(id: string): Promise<void> {
+  const res = await qualidade().from('avaliacoes_fornecedor').delete().eq('id', id);
   if (res.error) throw new Error(res.error.message);
 }
 

@@ -9,9 +9,10 @@ import { DashboardDocumentos } from './DashboardDocumentos';
 import { FornecedoresDocumentos } from './FornecedoresDocumentos';
 import { RelatoriosDocumentos } from './RelatoriosDocumentos';
 import { CatalogoFornecedores } from './CatalogoFornecedores';
+import { AvaliacoesFornecedor } from './AvaliacoesFornecedor';
 import { useAbaUrl } from '../../lib/useAbaUrl';
 
-const ABAS = ['painel', 'fornecedores', 'relatorios', 'catalogo'] as const;
+const ABAS = ['painel', 'fornecedores', 'avaliacoes', 'relatorios', 'catalogo'] as const;
 type Aba = (typeof ABAS)[number];
 
 export function DocumentosPage() {
@@ -25,6 +26,7 @@ export function DocumentosPage() {
   const abas: [Aba, string][] = [
     ['painel', 'Visão geral'],
     ['fornecedores', 'Fornecedores'],
+    ['avaliacoes', 'Avaliações'],
     ['relatorios', 'Relatórios'],
     ...(podeCatalogo ? ([['catalogo', 'Catálogo']] as [Aba, string][]) : []),
   ];
@@ -48,6 +50,7 @@ export function DocumentosPage() {
 
       {aba === 'painel' && <DashboardDocumentos onAbrirFornecedores={() => setAba('fornecedores')} />}
       {aba === 'fornecedores' && <FornecedoresDocumentos />}
+      {aba === 'avaliacoes' && <AvaliacoesFornecedor />}
       {aba === 'relatorios' && <RelatoriosDocumentos />}
       {aba === 'catalogo' && podeCatalogo && <CatalogoFornecedores />}
     </>

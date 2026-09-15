@@ -44,10 +44,14 @@ export const MODULOS_POR_PERFIL: Record<Perfil, Modulo[]> = {
   // Almoxarifado atende a manutenção: quem entrega a peça e quem a consome
   // olham o mesmo estoque.
   almoxarifado: ['painel', 'almoxarifado', 'manutencao'],
-  // Comercial vende e acompanha o que sustenta a venda: a compra de matéria-prima
-  // (suprimentos) e os lotes prontos. De produção, só lotes — programação,
-  // apontamento e ordens são do chão de fábrica.
-  comercial: ['painel', 'comercial', 'pedidos', 'suprimentos', 'lotes'],
+  // Comercial vende e acompanha o que sustenta a venda: o grupo Suprimentos
+  // inteiro (previsão da semana, produtores, recebimentos e fornecedores) e os
+  // lotes prontos. De produção, só lotes — programação, apontamento e ordens
+  // são do chão de fábrica.
+  comercial: [
+    'painel', 'comercial', 'pedidos', 'lotes',
+    'suprimentos', 'recebimentos', 'fornecedores',
+  ],
 };
 
 // Verdadeiro se algum dos perfis do usuário dá acesso ao módulo.

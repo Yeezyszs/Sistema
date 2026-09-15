@@ -175,6 +175,21 @@ function PainelOperacao() {
   const carteira = pedidos.filter((p) => p.status === 'aprovado' && p.situacao !== 'carregado');
   const cargasHoje = cargas.filter((c) => c.data === hoje).length;
 
+  // Cada tile declara o módulo que ele abre, para sumir de quem não o acessa.
+  const acoes = ([
+    { modulo: 'lotes', n: aguardando, label: 'Lotes aguardando liberação', to: '/lotes', tom: 'alerta' },
+    { modulo: 'lotes', n: bloqueados, label: 'Lotes bloqueados', to: '/lotes', tom: 'critico' },
+    { modulo: 'nao_conformidades', n: ncsAbertas, label: 'Não conformidades abertas', to: '/nao-conformidades', tom: 'critico' },
+    { modulo: 'manutencao', n: osAbertas, label: 'O.S. de manutenção abertas', to: '/manutencao', tom: 'alerta' },
+    { modulo: 'manutencao', n: horasParadasHoje > 0 ? `${horasParadasHoje.toFixed(1)} h` : 0,
+      label: `Paradas de hoje${paradasHoje.length ? ` · ${paradasHoje.length} evento(s)` : ''}`,
+      to: '/pcm-indicadores', tom: 'alerta' },
+    { modulo: 'calibracao', n: calibVencendo, label: 'Calibração vencendo / vencida', to: '/calibracao', tom: 'alerta' },
+    { modulo: 'ordens', n: opsAbertas, label: 'Ordens de produção em aberto', to: '/ordens', tom: 'info' },
+    { modulo: 'pedidos', n: carteira.length, label: 'Pedidos a expedir', to: '/pedidos', tom: 'info' },
+    { modulo: 'expedicao', n: cargasHoje, label: 'Cargas de hoje', to: '/expedicao', tom: 'info' },
+  ] as const).filter((a) => podeAcessarModulo(a.modulo));
+
   // ── Comercial ──
   const kgAExpedir = carteira.reduce((s, p) => s + (p.peso_carga_kg ?? 0), 0);
   const rsEmAberto = carteira.reduce((s, p) => s + (p.valor_total_rs ?? 0), 0);
@@ -268,23 +283,19 @@ function PainelOperacao() {
         </Card>
       </div>
 
-      {/* Precisa de ação */}
-      <Card className="mt-3.5 p-[18px]">
-        <CardTitle>Precisa de ação</CardTitle>
-        <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
-          <Acao n={aguardando} label="Lotes aguardando liberação" to="/lotes" tom="alerta" />
-          <Acao n={bloqueados} label="Lotes bloqueados" to="/lotes" tom="critico" />
-          <Acao n={ncsAbertas} label="Não conformidades abertas" to="/nao-conformidades" tom="critico" />
-          <Acao n={osAbertas} label="O.S. de manutenção abertas" to="/manutencao" tom="alerta" />
-          <Acao n={horasParadasHoje > 0 ? `${horasParadasHoje.toFixed(1)} h` : 0}
-            label={`Paradas de hoje${paradasHoje.length ? ` · ${paradasHoje.length} evento(s)` : ''}`}
-            to="/pcm-indicadores" tom="alerta" />
-          <Acao n={calibVencendo} label="Calibração vencendo / vencida" to="/calibracao" tom="alerta" />
-          <Acao n={opsAbertas} label="Ordens de produção em aberto" to="/ordens" tom="info" />
-          <Acao n={carteira.length} label="Pedidos a expedir" to="/pedidos" tom="info" />
-          <Acao n={cargasHoje} label="Cargas de hoje" to="/expedicao" tom="info" />
-        </div>
-      </Card>
+      {/* Precisa de ação — só o que este usuário consegue abrir. Um atalho para
+          módulo sem acesso leva a um redirecionamento silencioso de volta para
+          cá, o que parece defeito. */}
+      {acoes.length > 0 && (
+        <Card className="mt-3.5 p-[18px]">
+          <CardTitle>Precisa de ação</CardTitle>
+          <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+            {acoes.map((a) => (
+              <Acao key={a.to + a.label} n={a.n} label={a.label} to={a.to} tom={a.tom} />
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* Documentos de fornecedor — bloco próprio: se a consulta falhar, o
           painel não pode dizer que está tudo em dia. */}

@@ -1,5 +1,5 @@
 // Perfis de acesso (core.perfis) — definem quais módulos cada usuário vê.
-export const PERFIL = ['gestao', 'operador', 'qualidade', 'manutencao', 'compras', 'almoxarifado'] as const;
+export const PERFIL = ['gestao', 'operador', 'qualidade', 'manutencao', 'compras', 'almoxarifado', 'comercial'] as const;
 export type Perfil = (typeof PERFIL)[number];
 
 export const PERFIL_LABEL: Record<Perfil, string> = {
@@ -9,6 +9,7 @@ export const PERFIL_LABEL: Record<Perfil, string> = {
   manutencao: 'Manutenção',
   compras: 'Compras',
   almoxarifado: 'Almoxarifado',
+  comercial: 'Comercial',
 };
 
 // Códigos de módulo — usados nas rotas/menu para decidir visibilidade.
@@ -43,6 +44,10 @@ export const MODULOS_POR_PERFIL: Record<Perfil, Modulo[]> = {
   // Almoxarifado atende a manutenção: quem entrega a peça e quem a consome
   // olham o mesmo estoque.
   almoxarifado: ['painel', 'almoxarifado', 'manutencao'],
+  // Comercial vende e acompanha o que sustenta a venda: a compra de matéria-prima
+  // (suprimentos) e os lotes prontos. De produção, só lotes — programação,
+  // apontamento e ordens são do chão de fábrica.
+  comercial: ['painel', 'comercial', 'pedidos', 'suprimentos', 'lotes'],
 };
 
 // Verdadeiro se algum dos perfis do usuário dá acesso ao módulo.

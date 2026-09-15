@@ -15,6 +15,7 @@ const TOM_PERFIL: Record<Perfil, string> = {
   manutencao: 'bg-amber-600 text-white',
   compras: 'bg-violet-600 text-white',
   almoxarifado: 'bg-teal-600 text-white',
+  comercial: 'bg-rose-600 text-white',
 };
 
 export function UsuariosPage() {

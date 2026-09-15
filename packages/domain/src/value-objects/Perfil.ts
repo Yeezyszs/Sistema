@@ -1,5 +1,5 @@
 // Perfis de acesso (core.perfis) — definem quais módulos cada usuário vê.
-export const PERFIL = ['gestao', 'operador', 'qualidade', 'manutencao', 'compras', 'almoxarifado', 'comercial'] as const;
+export const PERFIL = ['gestao', 'operador', 'qualidade', 'manutencao', 'compras', 'almoxarifado', 'comercial', 'administrador'] as const;
 export type Perfil = (typeof PERFIL)[number];
 
 export const PERFIL_LABEL: Record<Perfil, string> = {
@@ -10,6 +10,7 @@ export const PERFIL_LABEL: Record<Perfil, string> = {
   compras: 'Compras',
   almoxarifado: 'Almoxarifado',
   comercial: 'Comercial',
+  administrador: 'Administrador',
 };
 
 // Códigos de módulo — usados nas rotas/menu para decidir visibilidade.
@@ -23,9 +24,14 @@ export const MODULO = [
 ] as const;
 export type Modulo = (typeof MODULO)[number];
 
-// Quais módulos cada perfil acessa. 'gestao' sempre vê tudo (checado à parte).
+// Quais módulos cada perfil acessa.
+//
+// Nenhum perfil é mágico: `gestao` é só uma lista grande. Administrar usuários
+// e perfis é responsabilidade distinta de tocar a fábrica, então mora no perfil
+// `administrador` e é concedida à parte — quem gerencia a operação não precisa
+// poder mudar o acesso dos outros.
 export const MODULOS_POR_PERFIL: Record<Perfil, Modulo[]> = {
-  gestao: [...MODULO],
+  gestao: MODULO.filter((m) => m !== 'usuarios'),
   operador: [
     'painel',
     'pcp', 'produtos', 'pedidos', 'expedicao', 'estoque', 'pallets', 'reprocesso',
@@ -52,10 +58,12 @@ export const MODULOS_POR_PERFIL: Record<Perfil, Modulo[]> = {
     'painel', 'comercial', 'pedidos', 'lotes',
     'suprimentos', 'recebimentos', 'fornecedores',
   ],
+  // Só a administração de usuários e perfis. Soma-se a outro perfil.
+  administrador: ['painel', 'usuarios'],
 };
 
 // Verdadeiro se algum dos perfis do usuário dá acesso ao módulo.
+// Perfis somam: quem é gestão e administrador acessa a união dos dois.
 export function podeAcessar(perfis: Perfil[], modulo: Modulo): boolean {
-  if (perfis.includes('gestao')) return true;
   return perfis.some((p) => MODULOS_POR_PERFIL[p]?.includes(modulo));
 }

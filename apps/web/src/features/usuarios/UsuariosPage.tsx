@@ -16,6 +16,7 @@ const TOM_PERFIL: Record<Perfil, string> = {
   compras: 'bg-violet-600 text-white',
   almoxarifado: 'bg-teal-600 text-white',
   comercial: 'bg-rose-600 text-white',
+  administrador: 'bg-slate-800 text-white',
 };
 
 export function UsuariosPage() {
@@ -94,7 +95,7 @@ export function UsuariosPage() {
                 {/* Módulos que os perfis liberam */}
                 <p className="mt-3 text-xs text-slate-400">
                   {ehGestao
-                    ? 'Gestão — acesso a todos os módulos.'
+                    ? `Gestão — todos os módulos${nomesPerfil.includes('administrador') ? ', incluindo a administração de usuários' : ', exceto a administração de usuários'}.`
                     : nomesPerfil.length === 0
                       ? 'Sem perfil — não acessa nenhum módulo.'
                       : `Acessa: ${modulosDeArray(nomesPerfil)}`}

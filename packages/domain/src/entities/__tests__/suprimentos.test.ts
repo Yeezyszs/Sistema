@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   rendimentoRaiz, custoTFarinha, precoTRaiz, valorDaCarga,
-  tetoCusto, rendaMaxima, folgaNoTeto,
+  tetoCusto, rendaMaxima, folgaNoTeto, somarDias, segundaDaSemana,
 } from '../../index';
 
 // Os números de referência vêm do "Simulador Waldecir", a planilha que o
@@ -72,5 +72,25 @@ describe('entradas ausentes', () => {
     expect(custoTFarinha(540, null)).toBeNull();
     expect(valorDaCarga(null, 540, 0.85)).toBeNull();
     expect(folgaNoTeto(540, 0.85, null)).toBeNull();
+  });
+});
+
+describe('datas da semana', () => {
+  it('segunda-feira é o começo da própria semana', () => {
+    expect(segundaDaSemana('2026-09-14')).toBe('2026-09-14');
+  });
+
+  it('qualquer dia cai na segunda anterior, inclusive o domingo', () => {
+    expect(segundaDaSemana('2026-09-16')).toBe('2026-09-14');
+    expect(segundaDaSemana('2026-09-19')).toBe('2026-09-14');
+    expect(segundaDaSemana('2026-09-20')).toBe('2026-09-14');
+    expect(segundaDaSemana('2026-09-21')).toBe('2026-09-21');
+  });
+
+  it('somar dias atravessa mês e ano sem escorregar de fuso', () => {
+    expect(somarDias('2026-09-14', 5)).toBe('2026-09-19');
+    expect(somarDias('2026-09-30', 1)).toBe('2026-10-01');
+    expect(somarDias('2026-12-31', 1)).toBe('2027-01-01');
+    expect(somarDias('2026-01-01', -1)).toBe('2025-12-31');
   });
 });

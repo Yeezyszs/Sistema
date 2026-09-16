@@ -52,4 +52,10 @@ export interface NovoRecebimento {
   hora_inicio?: string | null;
   hora_fim?: string | null;
   recebido_em: string;
+  // Preenchidos pela tela de chegada: a linha da previsão que esta carga
+  // cumpre e os preços da semana congelados no momento do lançamento.
+  previsao_id?: string | null;
+  preco_renda?: number | null;
+  preco_farinha?: number | null;
+  teto_pct?: number | null;
 }

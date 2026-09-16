@@ -1,12 +1,17 @@
 import { useState, type FormEvent } from 'react';
 import {
-  listRecebimentos, listProdutos, listFornecedores,
+  listRecebimentos, listProdutos, listProdutores, listPrevisaoDaSemana, listParametrosSemana,
   criarRecebimento, atualizarRecebimento, excluirRecebimento, mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
-import { formatarData, formatarQuantidade, hojeLocalISO } from '../../lib/format';
-import { TURNO, TURNO_LABEL } from '@sistema/domain';
-import type { Turno, Recebimento, NovoRecebimento, Produto, Fornecedor } from '@sistema/domain';
+import { formatarData, formatarQuantidade, formatarReais, hojeLocalISO } from '../../lib/format';
+import {
+  TURNO, TURNO_LABEL, VARIEDADES_MANDIOCA,
+  custoTFarinha, valorDaCarga, tetoCusto, segundaDaSemana,
+} from '@sistema/domain';
+import type {
+  Turno, Recebimento, NovoRecebimento, Produto, Fornecedor, ParametrosSemana,
+} from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconRecebimento, IconSearch } from '../../components/icons';
 import { useToast } from '../../components/Toast';
@@ -20,11 +25,14 @@ function montarPayload(form: FormData, fornecedores: Fornecedor[]): NovoRecebime
   const txt = (k: string) => String(form.get(k) ?? '').trim() || null;
   const dataStr = String(form.get('data') ?? '').trim();
   const recebido_em = dataStr ? new Date(`${dataStr}T12:00:00`).toISOString() : new Date().toISOString();
-  const produtor = txt('produtor');
-  const forn = fornecedores.find((f) => f.razao_social.toLowerCase() === (produtor ?? '').toLowerCase());
+  // O produtor é escolhido na lista: antes era texto livre casado por nome
+  // exato, e qualquer diferença de grafia deixava a carga sem fornecedor_id —
+  // o que fazia a célula da grade da semana nunca marcar a chegada.
+  const fornecedorId = txt('fornecedor_id');
+  const forn = fornecedores.find((f) => f.id === fornecedorId);
   return {
     produto_id: String(form.get('produto_id') ?? ''),
-    produtor,
+    produtor: forn?.razao_social ?? null,
     fornecedor_id: forn?.id ?? null,
     variedade: txt('variedade'),
     turno: txt('turno') as Turno | null,
@@ -63,16 +71,16 @@ function CamposCarga({ materiasPrimas, fornecedores, carga }: {
         </Select>
       </Field>
       <Field label="Produtor">
-        <TextInput name="produtor" list="produtores" defaultValue={carga?.produtor ?? ''} placeholder="Nome do produtor" />
-        <datalist id="produtores">
-          {fornecedores.map((f) => <option key={f.id} value={f.razao_social} />)}
-        </datalist>
+        <Select name="fornecedor_id" defaultValue={carga?.fornecedor_id ?? ''} required>
+          <option value="" disabled>Selecione…</option>
+          {fornecedores.map((f) => <option key={f.id} value={f.id}>{f.razao_social}</option>)}
+        </Select>
       </Field>
       <div className="grid grid-cols-2 gap-3">
         <Field label="Variedade">
           <TextInput name="variedade" list="variedades" defaultValue={carga?.variedade ?? ''} placeholder="Paraguaia" />
           <datalist id="variedades">
-            <option value="Paraguaia" /><option value="Oguçu" /><option value="OJ" /><option value="Cascuda" />
+            {VARIEDADES_MANDIOCA.map((v) => <option key={v} value={v} />)}
           </datalist>
         </Field>
         <Field label="Ticket">
@@ -116,19 +124,34 @@ export function RecebimentosPage() {
   const { sucesso, erro } = useToast();
 
   const { data, loading, error } = useAsync(async () => {
-    const [recebimentos, produtos, fornecedores] = await Promise.all([
+    const [recebimentos, produtos, fornecedores, parametros] = await Promise.all([
       listRecebimentos(),
       listProdutos(),
-      listFornecedores(),
+      listProdutores(),
+      listParametrosSemana(),
     ]);
     return {
-      recebimentos, produtos, fornecedores,
+      recebimentos, produtos, fornecedores, parametros,
       produtosMap: mapBy(produtos, 'id'),
       fornecedoresMap: mapBy(fornecedores, 'id'),
     };
   }, [recarregar]);
 
   const materiasPrimas = data?.produtos.filter((p) => p.tipo === 'materia_prima') ?? [];
+  // No seletor entra só a lista de trabalho: os produtores importados como
+  // inativos não têm o que fazer na portaria. O nome fica gravado em `produtor`,
+  // então carga antiga de produtor desativado continua legível.
+  const produtoresAtivos = (data?.fornecedores ?? []).filter((f) => f.ativo !== false);
+  const paramDaSemana: ParametrosSemana | null =
+    data?.parametros.find((p) => p.semana_inicio === segundaDaSemana(hojeLocalISO())) ?? null;
+
+  // Cada carga carrega os preços da sua própria semana, então o teto é
+  // comparado com o que estava valendo quando ela chegou — não com o de hoje.
+  function acimaDoTeto(r: Recebimento): boolean {
+    const custo = custoTFarinha(r.renda, r.preco_renda);
+    const teto = tetoCusto(r.preco_farinha, r.teto_pct ?? 58);
+    return custo != null && teto != null && custo > teto;
+  }
 
   function nomeProdutor(r: { produtor: string | null; fornecedor_id: string | null }): string {
     if (r.produtor) return r.produtor;
@@ -143,14 +166,41 @@ export function RecebimentosPage() {
     return [nomeProdutor(r), produto, r.variedade ?? '', r.ticket ?? ''].some((v) => v.toLowerCase().includes(q));
   });
 
+  // A carga que chega pertence a uma semana: dela saem a linha da previsão que
+  // ela cumpre e os preços que valem hoje. Os preços são copiados para dentro
+  // do recebimento — mudar o preço da semana que vem não pode reescrever o
+  // custo das cargas já lançadas.
+  async function completarComASemana(payload: NovoRecebimento): Promise<NovoRecebimento> {
+    const semana = segundaDaSemana(payload.recebido_em.slice(0, 10));
+    const param = data?.parametros.find((p) => p.semana_inicio === semana) ?? null;
+    let previsaoId: string | null = null;
+    if (payload.fornecedor_id) {
+      try {
+        const linhas = await listPrevisaoDaSemana(semana);
+        previsaoId = linhas.find((l) => l.fornecedor_id === payload.fornecedor_id)?.id ?? null;
+      } catch {
+        // Sem previsão não se recusa a carga: o caminhão está no pátio.
+        previsaoId = null;
+      }
+    }
+    return {
+      ...payload,
+      previsao_id: previsaoId,
+      preco_renda: param?.preco_renda ?? null,
+      preco_farinha: param?.preco_farinha ?? null,
+      teto_pct: param?.teto_pct ?? null,
+    };
+  }
+
   async function onCriar(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
     const payload = montarPayload(form, data?.fornecedores ?? []);
     if (!payload.produto_id) { erro('Selecione o produto.'); return; }
+    if (!payload.fornecedor_id) { erro('Selecione o produtor.'); return; }
     setSalvando(true);
     try {
-      await criarRecebimento(payload);
+      await criarRecebimento(await completarComASemana(payload));
       (e.target as HTMLFormElement).reset();
       sucesso('Carga registrada.');
       setRecarregar((n) => n + 1);
@@ -189,20 +239,29 @@ export function RecebimentosPage() {
 
   return (
     <>
-      <PageHeader grupo="Suprimentos" title="Recebimentos" subtitle="Controle de cargas — entrada de matéria-prima (Descarga)" />
+      <PageHeader grupo="Suprimentos" title="Chegada da carga"
+        subtitle="Controle de cargas — o que chegou, de quem, a que preço" />
 
       <div className="grid gap-6 lg:grid-cols-5">
         {/* Cadastro */}
         <Card className="p-6 lg:col-span-2">
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-400">Nova carga</h2>
+          {data && !paramDaSemana && (
+            <p className="mb-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              Sem preços definidos para esta semana — a carga é registrada, mas fica sem valor.
+              Defina na Previsão da semana.
+            </p>
+          )}
           <form onSubmit={onCriar} className="space-y-4">
-            <CamposCarga materiasPrimas={materiasPrimas} fornecedores={data?.fornecedores ?? []} />
+            <CamposCarga materiasPrimas={materiasPrimas} fornecedores={produtoresAtivos} />
             <Button type="submit" loading={salvando} className="w-full">Registrar carga</Button>
           </form>
         </Card>
 
         {/* Lista */}
-        <div className="lg:col-span-3">
+        {/* `min-w-0`: sem isto o filho do grid assume min-width:auto e a tabela
+            larga empurra a coluna inteira, estourando a página no celular. */}
+        <div className="min-w-0 lg:col-span-3">
           <div className="mb-4 flex flex-wrap items-center gap-2">
             <div className="relative flex-1 min-w-[180px]">
               <IconSearch width={15} height={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -239,15 +298,17 @@ export function RecebimentosPage() {
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
                     <th className="px-3 py-[11px]">Nº</th>
-                    <th className="px-3 py-[11px]">Turno</th>
+                    <th className="hidden px-3 py-[11px] 2xl:table-cell">Turno</th>
                     <th className="px-3 py-[11px]">Data</th>
-                    <th className="px-3 py-[11px]">Ticket</th>
+                    <th className="hidden px-3 py-[11px] 2xl:table-cell">Ticket</th>
                     <th className="px-3 py-[11px]">Produtor</th>
-                    <th className="hidden px-3 py-[11px] lg:table-cell">Variedade</th>
-                    <th className="hidden px-3 py-[11px] md:table-cell">Descarga</th>
+                    <th className="hidden px-3 py-[11px] 2xl:table-cell">Variedade</th>
+                    <th className="hidden px-3 py-[11px] 2xl:table-cell">Descarga</th>
                     <th className="px-3 py-[11px] text-right">Peso</th>
                     <th className="px-3 py-[11px] text-right">Renda</th>
-                    <th className="px-3 py-[11px] text-center">Cancha</th>
+                    <th className="px-3 py-[11px] text-right">R$/t farinha</th>
+                    <th className="px-3 py-[11px] text-right">Valor</th>
+                    <th className="hidden px-3 py-[11px] text-center 2xl:table-cell">Cancha</th>
                     <th className="px-3 py-[11px]" />
                   </tr>
                 </thead>
@@ -255,7 +316,7 @@ export function RecebimentosPage() {
                   {linhas.map((r) => (
                     <tr key={r.id} className="group hover:bg-slate-50">
                       <td className="px-3 py-2.5 font-medium text-slate-700">{r.numero ?? '—'}</td>
-                      <td className="px-3 py-2.5">
+                      <td className="hidden px-3 py-2.5 2xl:table-cell">
                         {r.turno ? (
                           <span className={`rounded px-1.5 py-0.5 text-xs font-medium ${r.turno === 'noturno' ? 'bg-indigo-100 text-indigo-700' : 'bg-amber-100 text-amber-700'}`}>
                             {TURNO_LABEL[r.turno]}
@@ -263,17 +324,24 @@ export function RecebimentosPage() {
                         ) : '—'}
                       </td>
                       <td className="px-3 py-2.5 text-slate-500">{formatarData(r.recebido_em)}</td>
-                      <td className="px-3 py-2.5 text-slate-500">{r.ticket ?? '—'}</td>
+                      <td className="hidden px-3 py-2.5 text-slate-500 2xl:table-cell">{r.ticket ?? '—'}</td>
                       <td className="px-3 py-2.5 text-slate-700">{nomeProdutor(r)}</td>
-                      <td className="hidden px-3 py-2.5 text-slate-500 lg:table-cell">{r.variedade ?? '—'}</td>
-                      <td className="hidden px-3 py-2.5 text-slate-500 md:table-cell">
+                      <td className="hidden px-3 py-2.5 text-slate-500 2xl:table-cell">{r.variedade ?? '—'}</td>
+                      <td className="hidden px-3 py-2.5 text-slate-500 2xl:table-cell">
                         {r.hora_inicio || r.hora_fim
                           ? `${r.hora_inicio?.slice(0, 5) ?? '—'} → ${r.hora_fim?.slice(0, 5) ?? '—'}`
                           : '—'}
                       </td>
                       <td className="px-3 py-2.5 text-right text-slate-600">{formatarQuantidade(r.quantidade)}</td>
                       <td className="px-3 py-2.5 text-right text-slate-600">{r.renda ?? '—'}</td>
-                      <td className="px-3 py-2.5 text-center text-slate-500">{r.cancha ?? '—'}</td>
+                      <td className={`px-3 py-2.5 text-right ${acimaDoTeto(r) ? 'font-semibold text-red-700' : 'text-slate-600'}`}
+                        title={acimaDoTeto(r) ? 'Custo acima do teto da semana' : undefined}>
+                        {formatarReais(custoTFarinha(r.renda, r.preco_renda))}
+                      </td>
+                      <td className="px-3 py-2.5 text-right text-slate-600">
+                        {formatarReais(valorDaCarga(r.quantidade, r.renda, r.preco_renda))}
+                      </td>
+                      <td className="hidden px-3 py-2.5 text-center text-slate-500 2xl:table-cell">{r.cancha ?? '—'}</td>
                       <td className="px-3 py-2.5 text-right whitespace-nowrap">
                         <button onClick={() => setEditando(r)} className="text-xs font-medium text-slate-500 hover:text-brand-600">Editar</button>
                         <button onClick={() => setExcluindo(r)} className="ml-3 text-xs font-medium text-slate-400 hover:text-red-600">Excluir</button>
@@ -287,11 +355,18 @@ export function RecebimentosPage() {
         </div>
       </div>
 
+      <p className="mt-5 rounded-lg bg-slate-50 px-4 py-3 text-xs text-slate-500">
+        A carga é ligada sozinha à linha da previsão do produtor naquela semana — é assim que a
+        grade marca o que chegou. Os preços da semana são copiados para dentro da carga no
+        lançamento, então mudar o preço depois não reescreve o custo do que já entrou.
+        Custo em vermelho é carga acima do teto da semana.
+      </p>
+
       {/* Modal de edição */}
       <Modal open={editando != null} onClose={() => setEditando(null)} title={`Editar carga nº ${editando?.numero ?? ''}`} size="lg">
         {editando && (
           <form onSubmit={onEditar} className="space-y-4">
-            <CamposCarga materiasPrimas={materiasPrimas} fornecedores={data?.fornecedores ?? []} carga={editando} />
+            <CamposCarga materiasPrimas={materiasPrimas} fornecedores={produtoresAtivos} carga={editando} />
             <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
               <Button type="button" variant="outline" onClick={() => setEditando(null)}>Cancelar</Button>
               <Button type="submit" loading={salvando}>Salvar alterações</Button>

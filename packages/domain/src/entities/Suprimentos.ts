@@ -132,3 +132,28 @@ export interface PrevisaoDia {
   data: string;
   cargas: number;
 }
+
+// ── Datas da semana ────────────────────────────────────────────────────────
+// A semana do comprador começa na segunda e vai até sábado. Estas duas contas
+// são usadas pela grade de previsão e pela chegada da carga — a chegada precisa
+// saber a que semana pertence para achar a previsão e os parâmetros do dia.
+
+/** Mesma data deslocada em n dias, no calendário local, sem fuso no meio. */
+export function somarDias(iso: string, n: number): string {
+  const [a, m, d] = iso.slice(0, 10).split('-').map(Number);
+  const dt = new Date(a!, m! - 1, d!);
+  dt.setDate(dt.getDate() + n);
+  return isoLocal(dt);
+}
+
+/** Segunda-feira da semana que contém a data. */
+export function segundaDaSemana(iso: string): string {
+  const [a, m, d] = iso.slice(0, 10).split('-').map(Number);
+  const dt = new Date(a!, m! - 1, d!);
+  dt.setDate(dt.getDate() - ((dt.getDay() + 6) % 7));
+  return isoLocal(dt);
+}
+
+function isoLocal(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}

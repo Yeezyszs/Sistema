@@ -17,6 +17,7 @@ import { useAsync } from '../../lib/useAsync';
 import { formatarData, hojeLocalISO } from '../../lib/format';
 import {
   FORMA_PAGAMENTO, FORMA_PAGAMENTO_LABEL, VARIEDADES_MANDIOCA, rendaMaxima,
+  somarDias, segundaDaSemana,
 } from '@sistema/domain';
 import type { Fornecedor, FormaPagamento, PrevisaoSemana } from '@sistema/domain';
 import {
@@ -28,28 +29,10 @@ import { useToast } from '../../components/Toast';
 
 const DIAS_ROTULO = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
-/** Segunda-feira da semana que contém a data. */
-function segundaDe(iso: string): string {
-  const [a, m, d] = iso.slice(0, 10).split('-').map(Number);
-  const dt = new Date(a!, m! - 1, d!);
-  dt.setDate(dt.getDate() - ((dt.getDay() + 6) % 7));
-  return isoLocal(dt);
-}
 
-function isoLocal(d: Date): string {
-  const p = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
-}
-
-function somarDias(iso: string, n: number): string {
-  const [a, m, d] = iso.slice(0, 10).split('-').map(Number);
-  const dt = new Date(a!, m! - 1, d!);
-  dt.setDate(dt.getDate() + n);
-  return isoLocal(dt);
-}
 
 export function SemanaPage() {
-  const [semana, setSemana] = useState(() => segundaDe(hojeLocalISO()));
+  const [semana, setSemana] = useState(() => segundaDaSemana(hojeLocalISO()));
   const [recarregar, setRecarregar] = useState(0);
   const [adicionando, setAdicionando] = useState(false);
   const [editandoLinha, setEditandoLinha] = useState<PrevisaoSemana | null>(null);
@@ -173,8 +156,8 @@ export function SemanaPage() {
           <button onClick={() => setSemana(somarDias(semana, 7))}
             className="rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-600 hover:bg-slate-50"
             aria-label="Próxima semana">→</button>
-          {semana !== segundaDe(hoje) && (
-            <button onClick={() => setSemana(segundaDe(hoje))}
+          {semana !== segundaDaSemana(hoje) && (
+            <button onClick={() => setSemana(segundaDaSemana(hoje))}
               className="ml-1 text-xs font-semibold text-brand-700 hover:underline">Semana atual</button>
           )}
         </div>

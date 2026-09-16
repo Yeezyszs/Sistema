@@ -46,7 +46,9 @@ export const MODULOS_POR_PERFIL: Record<Perfil, Modulo[]> = {
   manutencao: ['painel', 'manutencao', 'calibracao', 'pcc_fisico', 'almoxarifado'],
   // Compras cuida da documentação de homologação e do estoque de consumíveis
   // e embalagens. Não vê produção, qualidade nem comercial.
-  compras: ['painel', 'documentos', 'almoxarifado', 'suprimentos'],
+  // A chegada da carga (`recebimentos`) é do comprador tanto quanto a
+  // previsão: é onde ele confere se o que combinou entrou de fato.
+  compras: ['painel', 'documentos', 'almoxarifado', 'suprimentos', 'recebimentos', 'fornecedores'],
   // Almoxarifado atende a manutenção: quem entrega a peça e quem a consome
   // olham o mesmo estoque.
   almoxarifado: ['painel', 'almoxarifado', 'manutencao'],

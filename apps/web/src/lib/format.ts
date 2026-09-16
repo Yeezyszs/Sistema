@@ -83,3 +83,9 @@ export function nomeArquivoSeguro(nome: string): string {
   const seguro = baseLimpa || 'arquivo';
   return extLimpa ? `${seguro}.${extLimpa}` : seguro;
 }
+
+/** Valor em reais, ou travessão quando não dá para calcular. */
+export function formatarReais(valor: number | null): string {
+  if (valor == null || !Number.isFinite(valor)) return '—';
+  return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}

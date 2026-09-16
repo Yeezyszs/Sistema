@@ -2036,6 +2036,15 @@ export async function listPrevisaoDaSemana(semana: string): Promise<PrevisaoSema
   );
 }
 
+// Previsões de várias semanas de uma vez — o painel compara o combinado com o
+// que chegou ao longo de um período, não só na semana corrente.
+export async function listPrevisaoDeSemanas(semanas: string[]): Promise<PrevisaoSemana[]> {
+  if (semanas.length === 0) return [];
+  return unwrap<PrevisaoSemana[]>(
+    await producao().from('suprimento_previsao').select('*').in('semana_inicio', semanas),
+  );
+}
+
 export async function listDiasDaPrevisao(previsaoIds: string[]): Promise<PrevisaoDia[]> {
   if (previsaoIds.length === 0) return [];
   return unwrap<PrevisaoDia[]>(

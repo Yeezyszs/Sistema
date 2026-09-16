@@ -19,6 +19,7 @@ import { Kpi } from './comum';
 import { PainelAlmoxarifado } from './PainelAlmoxarifado';
 import { PainelCompras } from './PainelCompras';
 import { PainelManutencao } from './PainelManutencao';
+import { PainelSuprimentos } from './PainelSuprimentos';
 
 const reais = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const kg = (n: number) => formatarQuantidade(n);
@@ -50,12 +51,13 @@ const COR_STATUS: Record<StatusLote, string> = {
 // O painel de operação não serve a quem não acessa produção: os atalhos dele
 // levam a lotes, NCs e calibração, que compras e almoxarifado não abrem.
 // Cada perfil abre no painel que responde à pergunta dele.
-type Visao = 'operacao' | 'almoxarifado' | 'compras' | 'manutencao';
+type Visao = 'operacao' | 'almoxarifado' | 'compras' | 'suprimentos' | 'manutencao';
 
 const VISAO_LABEL: Record<Visao, string> = {
   operacao: 'Operação',
   almoxarifado: 'Almoxarifado',
   compras: 'Compras',
+  suprimentos: 'Suprimentos',
   manutencao: 'Manutenção',
 };
 
@@ -63,6 +65,7 @@ const SUBTITULO: Record<Visao, string> = {
   operacao: 'Operação da fábrica — dia e semana',
   almoxarifado: 'O que vai faltar e o que saiu da minha mão',
   compras: 'O que precisa comprar e de quem pode comprar',
+  suprimentos: 'O combinado, o que chegou e a que preço',
   manutencao: 'O que está parado, o que atrasou e o que fazer hoje',
 };
 
@@ -70,12 +73,14 @@ const SUBTITULO: Record<Visao, string> = {
 // A tupla garante ao menos uma visão: sem isso a primeira posição seria
 // opcional e a página poderia ficar sem nada para mostrar.
 function visoesDoUsuario(perfis: Perfil[]): [Visao, ...Visao[]] {
-  if (perfis.includes('gestao')) return ['operacao', 'manutencao', 'almoxarifado', 'compras'];
+  if (perfis.includes('gestao')) return ['operacao', 'manutencao', 'almoxarifado', 'compras', 'suprimentos'];
   const visoes: Visao[] = [];
   if (perfis.some((p) => p === 'operador' || p === 'qualidade')) visoes.push('operacao');
   if (perfis.includes('manutencao')) visoes.push('manutencao');
   if (perfis.includes('almoxarifado')) visoes.push('almoxarifado');
-  if (perfis.includes('compras')) visoes.push('compras');
+  if (perfis.includes('compras')) visoes.push('compras', 'suprimentos');
+  // Comercial acompanha o abastecimento sem ver a compra de consumíveis.
+  if (perfis.includes('comercial')) visoes.push('suprimentos');
   const [primeira, ...resto] = visoes;
   return primeira ? [primeira, ...resto] : ['operacao'];
 }
@@ -110,6 +115,7 @@ export function PainelPage() {
       {atual === 'operacao' && <PainelOperacao />}
       {atual === 'almoxarifado' && <PainelAlmoxarifado />}
       {atual === 'compras' && <PainelCompras />}
+      {atual === 'suprimentos' && <PainelSuprimentos />}
       {atual === 'manutencao' && <PainelManutencao />}
     </>
   );

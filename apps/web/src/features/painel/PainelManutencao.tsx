@@ -9,6 +9,8 @@ import { useAsync } from '../../lib/useAsync';
 import { formatarData, hojeLocalISO } from '../../lib/format';
 import {
   calcularIndicadores, situacaoCalibracao, abaixoDoMinimo,
+  situacaoLubrificacao, lubrificacaoPedeAcao, compararUrgenciaLubrificacao,
+  SITUACAO_LUBRIFICACAO_LABEL, SITUACAO_LUBRIFICACAO_TOM,
   TIPO_PARADA, TRIMESTRE_PCM,
 } from '@sistema/domain';
 import type { OrdemPcm, LuExecucao, TipoParada, TrimestrePcm } from '@sistema/domain';
@@ -31,6 +33,17 @@ const COR_PARADA: Record<TipoParada, string> = {
   'Queda de Energia': '#64748b',
   Outro: '#cbd5e1',
 };
+
+// Texto curto do prazo, do jeito que o mantenedor fala.
+function textoPrazo(situacao: string, diasRestantes: number | null): string {
+  if (situacao === 'sem_registro') return 'sem registro';
+  if (situacao === 'sem_frequencia') return 'sem frequência';
+  if (diasRestantes == null) return SITUACAO_LUBRIFICACAO_LABEL[situacao as 'em_dia'];
+  if (diasRestantes < 0) return `${Math.abs(diasRestantes)} d de atraso`;
+  if (diasRestantes === 0) return 'vence hoje';
+  if (diasRestantes === 1) return 'vence amanhã';
+  return `vence em ${diasRestantes} d`;
+}
 
 function diasDesde(iso: string | null): number | null {
   if (!iso) return null;
@@ -56,9 +69,12 @@ function trimestreAtual(): TrimestrePcm {
 }
 
 // Chave de um ponto da rota de lubrificação. O cadastro e a execução não têm
-// vínculo por id — são duas planilhas — então casamos por equipamento + item.
-function chaveRota(equip: string | null, item: string | null): string {
-  return `${(equip ?? '').trim().toLowerCase()}|${(item ?? '').trim().toLowerCase()}`;
+// vínculo por id — são duas planilhas — então casamos por setor + equipamento +
+// item. O setor faz parte da chave porque o mesmo equipamento se repete entre
+// setores: ENSAQUE 1 e ENSAQUE 2 têm o mesmo moinho, e sem o setor a execução
+// de um zeraria o prazo do outro.
+function chaveRota(setor: string | null, equip: string | null, item: string | null): string {
+  return [setor, equip, item].map((v) => (v ?? '').trim().toLowerCase()).join('|');
 }
 
 export function PainelManutencao() {
@@ -127,17 +143,20 @@ export function PainelManutencao() {
   // ── Rota de lubrificação ──
   const ultimaExecucao = new Map<string, LuExecucao>();
   for (const e of data.execucoes) {
-    const k = chaveRota(e.equip, e.item);
+    const k = chaveRota(e.setor, e.equip, e.item);
     const atual = ultimaExecucao.get(k);
     if (!atual || e.data > atual.data) ultimaExecucao.set(k, e);
   }
   const rota = data.rotas
     .map((r) => {
-      const ult = ultimaExecucao.get(chaveRota(r.equip, r.item));
-      return { r, ultima: ult?.data ?? null, dias: diasDesde(ult?.data ?? null) };
+      const ult = ultimaExecucao.get(chaveRota(r.setor, r.equip, r.item));
+      return { r, ultima: ult?.data ?? null, s: situacaoLubrificacao(ult?.data ?? null, r.frequencia, hoje) };
     })
-    // Sem execução nenhuma primeiro, depois da mais antiga para a mais recente.
-    .sort((a, b) => (b.dias ?? 99_999) - (a.dias ?? 99_999));
+    .sort((a, b) => compararUrgenciaLubrificacao(a.s, b.s));
+  const lubVencidas = rota.filter((x) => x.s.situacao === 'vencida').length;
+  const lubVencendo = rota.filter((x) => x.s.situacao === 'vencendo').length;
+  const lubSemRegistro = rota.filter((x) => x.s.situacao === 'sem_registro').length;
+  const lubPendentes = rota.filter((x) => lubrificacaoPedeAcao(x.s.situacao));
 
   // ── Peças de manutenção em falta ──
   const pecas = data.itens
@@ -153,7 +172,7 @@ export function PainelManutencao() {
 
   return (
     <>
-      <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <Kpi label="Equipamento parado" valor={String(paradas_equip.length)}
           sub={parandoProducao > 0 ? `${parandoProducao} parando produção` : 'nenhuma parando produção'}
           tom={paradas_equip.length > 0 ? 'critico' : 'neutro'} />
@@ -169,6 +188,17 @@ export function PainelManutencao() {
           valor={doTrimestre.length > 0 ? `${realizadas} / ${doTrimestre.length}` : '—'}
           sub={pctPreventiva != null ? `${pctPreventiva}% do plano` : 'nada planejado no trimestre'}
           tom={pctPreventiva != null && pctPreventiva < 100 ? 'alerta' : 'neutro'} />
+        {/* Vencida e vencendo somam no número: as duas pedem que alguém vá
+            lubrificar esta semana. O detalhe de quantas já passaram do prazo
+            fica no subtítulo. */}
+        <Kpi label="Lubrificação"
+          valor={rota.length > 0 ? String(lubVencidas + lubVencendo) : '—'}
+          sub={rota.length === 0 ? 'nenhum ponto na rota'
+            : lubVencidas > 0 ? `${lubVencidas} vencida(s) · ${lubVencendo} vencendo`
+            : lubVencendo > 0 ? `vencem nos próximos dias`
+            : lubSemRegistro > 0 ? `em dia · ${lubSemRegistro} sem registro`
+            : 'toda a rota em dia'}
+          tom={lubVencidas > 0 ? 'critico' : lubVencendo > 0 ? 'alerta' : 'neutro'} />
       </div>
 
       <div className="mt-3.5 grid gap-3.5 lg:grid-cols-[1.55fr_1fr] lg:items-start">
@@ -394,14 +424,20 @@ export function PainelManutencao() {
 
           {/* Rota de lubrificação */}
           <Card className="p-[18px]">
-            <CardTitle sub="Há quanto tempo cada ponto não é lubrificado.">Rota de lubrificação</CardTitle>
+            <CardTitle sub="Quem passou do prazo e quem vence nos próximos dias.">
+              Rota de lubrificação
+            </CardTitle>
             {rota.length === 0 ? (
               <p className="rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-500">
                 Nenhum ponto cadastrado na rota.
               </p>
+            ) : lubPendentes.length === 0 ? (
+              <p className="rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                Toda a rota em dia — {rota.length} ponto(s).
+              </p>
             ) : (
               <ul className="divide-y divide-slate-100">
-                {rota.slice(0, 6).map(({ r, dias }) => (
+                {lubPendentes.slice(0, 6).map(({ r, s }) => (
                   <li key={r.id} className="flex items-baseline justify-between gap-3 py-2">
                     <span className="min-w-0">
                       <span className="block truncate text-[13px] font-semibold text-slate-800">
@@ -411,19 +447,19 @@ export function PainelManutencao() {
                         {[r.setor, r.lubrificante, r.frequencia].filter(Boolean).join(' · ') || '—'}
                       </span>
                     </span>
-                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums ${
-                      dias == null ? 'bg-slate-100 text-slate-500'
-                        : dias >= 30 ? 'bg-amber-100 text-amber-800'
-                        : 'bg-slate-100 text-slate-600'
-                    }`}>
-                      {dias == null ? 'sem registro' : dias === 0 ? 'hoje' : `há ${dias} d`}
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums ${SITUACAO_LUBRIFICACAO_TOM[s.situacao]}`}>
+                      {textoPrazo(s.situacao, s.diasRestantes)}
                     </span>
                   </li>
                 ))}
               </ul>
             )}
             <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
-              <span>{rota.length} ponto(s) na rota</span>
+              <span>
+                {lubPendentes.length > 6
+                  ? `+${lubPendentes.length - 6} pendente(s) não exibido(s) · ${rota.length} na rota`
+                  : `${rota.length} ponto(s) na rota`}
+              </span>
               <Link to="/lubrificacao" className="font-semibold text-brand-700 hover:underline">Ver lubrificação →</Link>
             </div>
           </Card>
@@ -491,9 +527,10 @@ export function PainelManutencao() {
 
           {/* O painel não pode fingir que enxerga o que não foi lançado. */}
           <div className="rounded-[10px] border border-dashed border-slate-300 bg-white px-4 py-3.5 text-xs leading-relaxed text-slate-600">
-            <strong className="font-semibold text-slate-800">Lubrificação:</strong> a frequência é
-            texto livre no cadastro, então o sistema não decide o que está vencido — mostra há
-            quantos dias foi a última e deixa a leitura com o mantenedor.
+            <strong className="font-semibold text-slate-800">Lubrificação:</strong> o prazo sai da
+            frequência do plano contada a partir da última execução lançada. O aviso aparece antes
+            do vencimento, com antecedência proporcional ao ciclo — um dia no semanal, três no
+            quinzenal. Ponto cuja frequência o sistema não reconhece não recebe prazo inventado.
             {horasPlan === 0 && (
               <>
                 {' '}<strong className="font-semibold text-slate-800">Disponibilidade:</strong> sem

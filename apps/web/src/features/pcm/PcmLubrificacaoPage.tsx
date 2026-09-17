@@ -4,29 +4,22 @@ import {
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { formatarData, hojeLocalISO } from '../../lib/format';
-import type { LubrificacaoPcm, LuExecucao, ColaboradorPcm } from '@sistema/domain';
+import {
+  situacaoLubrificacao, lubrificacaoPedeAcao, compararUrgenciaLubrificacao,
+  SITUACAO_LUBRIFICACAO_LABEL, SITUACAO_LUBRIFICACAO_TOM,
+} from '@sistema/domain';
+import type {
+  LubrificacaoPcm, LuExecucao, ColaboradorPcm, SituacaoLubrificacao, SituacaoPonto,
+} from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconSearch } from '../../components/icons';
 import { useToast } from '../../components/Toast';
-
-// Converte a frequência textual do plano em dias (para calcular vencimento).
-function frequenciaDias(freq: string | null): number | null {
-  if (!freq) return null;
-  const f = freq.toUpperCase();
-  if (f.includes('SEMANAL')) return 7;
-  if (f.includes('QUINZEN')) return 15;
-  if (f.includes('MENSAL')) return 30;
-  if (f.includes('TRIMESTRAL')) return 90;
-  return null;
-}
-
-type Situacao = 'sem_registro' | 'vencida' | 'em_dia';
 
 export function PcmLubrificacaoPage() {
   const [recarregar, setRecarregar] = useState(0);
   const [executando, setExecutando] = useState<LubrificacaoPcm | null>(null);
   const [busca, setBusca] = useState('');
-  const [filtroSit, setFiltroSit] = useState<'todas' | Situacao>('todas');
+  const [filtroSit, setFiltroSit] = useState<'todas' | 'pendentes' | SituacaoLubrificacao>('pendentes');
   const { sucesso, erro } = useToast();
 
   const { data, loading, error } = useAsync(async () => {
@@ -48,32 +41,33 @@ export function PcmLubrificacaoPage() {
     return m;
   }, [data?.execucoes]);
 
-  function situacao(p: LubrificacaoPcm): { sit: Situacao; ultima: LuExecucao | null; proxima: Date | null } {
+  const hoje = hojeLocalISO();
+
+  function avaliar(p: LubrificacaoPcm): { ultima: LuExecucao | null; s: SituacaoPonto } {
     const ultima = ultimaExec.get(`${p.setor}|${p.equip}|${p.item}`) ?? null;
-    const dias = frequenciaDias(p.frequencia);
-    if (!ultima) return { sit: 'sem_registro', ultima: null, proxima: null };
-    if (dias == null) return { sit: 'em_dia', ultima, proxima: null };
-    const prox = new Date(`${ultima.data}T00:00:00`);
-    prox.setDate(prox.getDate() + dias);
-    return { sit: new Date() >= prox ? 'vencida' : 'em_dia', ultima, proxima: prox };
+    return { ultima, s: situacaoLubrificacao(ultima?.data ?? null, p.frequencia, hoje) };
   }
 
-  const linhas = (data?.pontos ?? [])
-    .map((p) => ({ p, ...situacao(p) }))
-    .filter(({ p, sit }) => {
-      if (filtroSit !== 'todas' && sit !== filtroSit) return false;
+  const todos = (data?.pontos ?? []).map((p) => ({ p, ...avaliar(p) }));
+  const linhas = todos
+    .filter(({ p, s }) => {
+      if (filtroSit === 'pendentes' && !lubrificacaoPedeAcao(s.situacao)) return false;
+      if (filtroSit !== 'todas' && filtroSit !== 'pendentes' && s.situacao !== filtroSit) return false;
       if (!busca.trim()) return true;
       const q = busca.toLowerCase();
       return [p.setor, p.equip, p.item, p.lubrificante].some((v) => (v ?? '').toLowerCase().includes(q));
-    });
+    })
+    // O que já venceu primeiro, e dentro disso o mais atrasado.
+    .sort((a, b) => compararUrgenciaLubrificacao(a.s, b.s));
 
-  const vencidas = (data?.pontos ?? []).filter((p) => situacao(p).sit !== 'em_dia').length;
+  const vencidas = todos.filter((x) => x.s.situacao === 'vencida').length;
+  const vencendo = todos.filter((x) => x.s.situacao === 'vencendo').length;
 
   return (
     <>
       <PageHeader grupo="Manutenção"
         title="Lubrificação"
-        subtitle={`Rota de lubrificação — ${vencidas} ponto(s) a lubrificar`}
+        subtitle={`Rota de lubrificação — ${vencidas} vencida(s) e ${vencendo} vencendo`}
       />
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -84,8 +78,10 @@ export function PcmLubrificacaoPage() {
         </div>
         <div className="w-44">
           <Select value={filtroSit} onChange={(e) => setFiltroSit(e.target.value as typeof filtroSit)}>
+            <option value="pendentes">A lubrificar</option>
             <option value="todas">Todas</option>
             <option value="vencida">Vencidas</option>
+            <option value="vencendo">Vencendo</option>
             <option value="sem_registro">Sem registro</option>
             <option value="em_dia">Em dia</option>
           </Select>
@@ -108,13 +104,16 @@ export function PcmLubrificacaoPage() {
                 <th className="hidden px-3 py-[11px] lg:table-cell">Bombadas</th>
                 <th className="px-3 py-[11px]">Frequência</th>
                 <th className="px-3 py-[11px]">Última</th>
+                <th className="px-3 py-[11px]">Próxima</th>
                 <th className="px-3 py-[11px]">Situação</th>
                 <th className="px-3 py-[11px]" />
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {linhas.map(({ p, sit, ultima }) => (
-                <tr key={p.id} className={`hover:bg-slate-50 ${sit === 'vencida' ? 'bg-red-50/40' : ''}`}>
+              {linhas.map(({ p, s, ultima }) => (
+                <tr key={p.id} className={`hover:bg-slate-50 ${
+                  s.situacao === 'vencida' ? 'bg-red-50/40' : s.situacao === 'vencendo' ? 'bg-amber-50/40' : ''
+                }`}>
                   <td className="px-3 py-2.5 text-slate-500">{p.setor ?? '—'}</td>
                   <td className="px-3 py-2.5 text-slate-700"><span className="line-clamp-1">{p.equip ?? '—'}</span></td>
                   <td className="px-3 py-2.5 text-slate-600">{p.item ?? '—'}</td>
@@ -122,10 +121,20 @@ export function PcmLubrificacaoPage() {
                   <td className="hidden px-3 py-2.5 text-slate-500 lg:table-cell">{p.bombadas || '—'}</td>
                   <td className="px-3 py-2.5 text-slate-500">{p.frequencia ?? '—'}</td>
                   <td className="px-3 py-2.5 text-slate-500">{ultima ? formatarData(ultima.data) : '—'}</td>
+                  <td className="px-3 py-2.5 text-slate-500">
+                    {s.proxima ? formatarData(s.proxima) : '—'}
+                    {s.diasRestantes != null && (
+                      <span className="block text-[11px] text-slate-400">
+                        {s.diasRestantes < 0 ? `${Math.abs(s.diasRestantes)} d de atraso`
+                          : s.diasRestantes === 0 ? 'hoje'
+                          : `em ${s.diasRestantes} d`}
+                      </span>
+                    )}
+                  </td>
                   <td className="px-3 py-2.5">
-                    {sit === 'em_dia' && <span className="rounded-full bg-brand-100 px-2 py-0.5 text-xs font-medium text-brand-700">Em dia</span>}
-                    {sit === 'vencida' && <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">Vencida</span>}
-                    {sit === 'sem_registro' && <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">Sem registro</span>}
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${SITUACAO_LUBRIFICACAO_TOM[s.situacao]}`}>
+                      {SITUACAO_LUBRIFICACAO_LABEL[s.situacao]}
+                    </span>
                   </td>
                   <td className="px-3 py-2.5 text-right">
                     <button onClick={() => setExecutando(p)} className="text-xs font-medium text-brand-600 hover:text-brand-700">Lubrificar</button>

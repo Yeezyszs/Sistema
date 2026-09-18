@@ -1796,6 +1796,65 @@ export async function criarLuExecucao(payload: NovaLuExecucao): Promise<void> {
   if (res.error) throw new Error(res.error.message);
 }
 
+// ── Pontos da rota de lubrificação ─────────────────────────────
+// A execução não referencia o ponto por id: ela guarda setor, equipamento e
+// item em texto, herança das duas planilhas de origem. Isso obriga a tratar a
+// identidade do ponto com cuidado nas três operações abaixo.
+
+export type CamposPontoLubrificacao = {
+  setor: string | null;
+  equip: string | null;
+  item: string | null;
+  lubrificante: string | null;
+  bombadas: string | null;
+  frequencia: string | null;
+};
+
+export async function criarPontoLubrificacao(payload: CamposPontoLubrificacao): Promise<void> {
+  const res = await manutencao().from('lubrificacao').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+/**
+ * Atualiza o ponto e, quando setor/equipamento/item mudam, leva junto as
+ * execuções já lançadas. Sem isso, renomear um ponto faria o histórico dele
+ * desaparecer e o prazo voltar a "sem registro".
+ */
+export async function atualizarPontoLubrificacao(
+  id: string,
+  antes: Pick<CamposPontoLubrificacao, 'setor' | 'equip' | 'item'>,
+  depois: CamposPontoLubrificacao,
+): Promise<void> {
+  const res = await manutencao().from('lubrificacao').update(depois).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+
+  const mudouIdentidade =
+    antes.setor !== depois.setor || antes.equip !== depois.equip || antes.item !== depois.item;
+  if (!mudouIdentidade) return;
+
+  const resExec = await manutencao()
+    .from('lu_execucoes')
+    .update({ setor: depois.setor, equip: depois.equip, item: depois.item })
+    .match(chaveDoPonto(antes));
+  if (resExec.error) throw new Error(resExec.error.message);
+}
+
+/**
+ * Exclui o ponto do plano. As execuções ficam: elas são registro do que foi
+ * feito, e apagar histórico de manutenção para tirar uma linha do plano seria
+ * perder evidência.
+ */
+export async function excluirPontoLubrificacao(id: string): Promise<void> {
+  const res = await manutencao().from('lubrificacao').delete().eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// `null` não casa com `eq` no PostgREST — vira `is null`. O `.match` já faz
+// isso, mas só quando o valor é de fato null, então normalizamos antes.
+function chaveDoPonto(p: Pick<CamposPontoLubrificacao, 'setor' | 'equip' | 'item'>) {
+  return { setor: p.setor ?? null, equip: p.equip ?? null, item: p.item ?? null };
+}
+
 // ── PCM: Indicadores (paradas, produção, custos) ───────────────
 export async function listParadas(): Promise<Parada[]> {
   return unwrap<Parada[]>(

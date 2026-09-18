@@ -1,23 +1,28 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import {
   listLubrificacaoPcm, listLuExecucoes, listColaboradoresPcm, criarLuExecucao,
+  criarPontoLubrificacao, atualizarPontoLubrificacao, excluirPontoLubrificacao,
 } from '../../lib/db';
+import type { CamposPontoLubrificacao } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { formatarData, hojeLocalISO } from '../../lib/format';
 import {
   situacaoLubrificacao, lubrificacaoPedeAcao, compararUrgenciaLubrificacao,
-  SITUACAO_LUBRIFICACAO_LABEL, SITUACAO_LUBRIFICACAO_TOM,
+  SITUACAO_LUBRIFICACAO_LABEL, SITUACAO_LUBRIFICACAO_TOM, frequenciaEmDias, janelaDeAviso,
 } from '@sistema/domain';
 import type {
   LubrificacaoPcm, LuExecucao, ColaboradorPcm, SituacaoLubrificacao, SituacaoPonto,
 } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
-import { IconSearch } from '../../components/icons';
+import { IconSearch, IconPlus } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
 export function PcmLubrificacaoPage() {
   const [recarregar, setRecarregar] = useState(0);
   const [executando, setExecutando] = useState<LubrificacaoPcm | null>(null);
+  // `null` = fechado; `'novo'` = cadastro; um ponto = edição.
+  const [editando, setEditando] = useState<LubrificacaoPcm | 'novo' | null>(null);
+  const [excluindo, setExcluindo] = useState<LubrificacaoPcm | null>(null);
   const [busca, setBusca] = useState('');
   const [filtroSit, setFiltroSit] = useState<'todas' | 'pendentes' | SituacaoLubrificacao>('pendentes');
   const { sucesso, erro } = useToast();
@@ -68,6 +73,12 @@ export function PcmLubrificacaoPage() {
       <PageHeader grupo="Manutenção"
         title="Lubrificação"
         subtitle={`Rota de lubrificação — ${vencidas} vencida(s) e ${vencendo} vencendo`}
+        action={
+          <Button onClick={() => setEditando('novo')}>
+            <IconPlus width={16} height={16} />
+            Novo ponto
+          </Button>
+        }
       />
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -136,8 +147,10 @@ export function PcmLubrificacaoPage() {
                       {SITUACAO_LUBRIFICACAO_LABEL[s.situacao]}
                     </span>
                   </td>
-                  <td className="px-3 py-2.5 text-right">
-                    <button onClick={() => setExecutando(p)} className="text-xs font-medium text-brand-600 hover:text-brand-700">Lubrificar</button>
+                  <td className="px-3 py-2.5 text-right whitespace-nowrap">
+                    <button onClick={() => setExecutando(p)} className="text-xs font-semibold text-brand-600 hover:text-brand-700">Lubrificar</button>
+                    <button onClick={() => setEditando(p)} className="ml-3 text-xs font-medium text-slate-500 hover:text-slate-800">Editar</button>
+                    <button onClick={() => setExcluindo(p)} className="ml-3 text-xs font-medium text-slate-400 hover:text-red-600">Excluir</button>
                   </td>
                 </tr>
               ))}
@@ -149,6 +162,25 @@ export function PcmLubrificacaoPage() {
       {executando && (
         <ModalExecutar ponto={executando} colaboradores={data?.colaboradores ?? []}
           onClose={() => setExecutando(null)} onSaved={() => { setExecutando(null); rec(); }} sucesso={sucesso} erro={erro} />
+      )}
+
+      {editando && (
+        <ModalPonto
+          ponto={editando === 'novo' ? null : editando}
+          pontos={data?.pontos ?? []}
+          onClose={() => setEditando(null)}
+          onSaved={() => { setEditando(null); rec(); }}
+          sucesso={sucesso} erro={erro}
+        />
+      )}
+
+      {excluindo && (
+        <ModalExcluir ponto={excluindo}
+          execucoes={(data?.execucoes ?? []).filter((e) =>
+            mesmoTexto(e.setor, excluindo.setor) && mesmoTexto(e.equip, excluindo.equip) && mesmoTexto(e.item, excluindo.item)).length}
+          onClose={() => setExcluindo(null)}
+          onDone={() => { setExcluindo(null); rec(); }}
+          sucesso={sucesso} erro={erro} />
       )}
     </>
   );
@@ -199,4 +231,163 @@ function ModalExecutar({ ponto, colaboradores, onClose, onSaved, sucesso, erro }
       </form>
     </Modal>
   );
+}
+
+// Frequências que o sistema sabe converter em prazo. Não é uma lista fechada —
+// o campo aceita qualquer texto, mas avisa quando o que foi digitado não vira
+// prazo nenhum, que é a diferença entre um ponto controlado e um ponto solto.
+const FREQUENCIAS = ['DIÁRIA', 'SEMANAL', 'QUINZENAL', 'MENSAL', 'BIMESTRAL', 'TRIMESTRAL'];
+
+function ModalPonto({ ponto, pontos, onClose, onSaved, sucesso, erro }: {
+  ponto: LubrificacaoPcm | null;
+  pontos: LubrificacaoPcm[];
+  onClose: () => void; onSaved: () => void;
+  sucesso: (m: string) => void; erro: (m: string) => void;
+}) {
+  const [salvando, setSalvando] = useState(false);
+  const [frequencia, setFrequencia] = useState(ponto?.frequencia ?? '');
+  const dias = frequenciaEmDias(frequencia);
+
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    const txt = (k: string) => String(f.get(k) ?? '').trim() || null;
+    const campos: CamposPontoLubrificacao = {
+      setor: txt('setor'), equip: txt('equip'), item: txt('item'),
+      lubrificante: txt('lubrificante'), bombadas: txt('bombadas'), frequencia: txt('frequencia'),
+    };
+    if (!campos.equip || !campos.item) { erro('Equipamento e item são obrigatórios.'); return; }
+
+    // Dois pontos com a mesma identidade se confundiriam: a execução casa por
+    // setor + equipamento + item, então o histórico de um cairia no outro.
+    const duplicado = pontos.some((p) =>
+      p.id !== ponto?.id &&
+      mesmoTexto(p.setor, campos.setor) && mesmoTexto(p.equip, campos.equip) && mesmoTexto(p.item, campos.item));
+    if (duplicado) { erro('Já existe um ponto com este setor, equipamento e item.'); return; }
+
+    setSalvando(true);
+    try {
+      if (ponto) {
+        await atualizarPontoLubrificacao(ponto.id, ponto, campos);
+        sucesso('Ponto atualizado.');
+      } else {
+        await criarPontoLubrificacao(campos);
+        sucesso('Ponto cadastrado.');
+      }
+      onSaved();
+    } catch (err) { erro(err instanceof Error ? err.message : 'Falha ao salvar.'); }
+    finally { setSalvando(false); }
+  }
+
+  return (
+    <Modal open onClose={onClose} title={ponto ? 'Editar ponto' : 'Novo ponto de lubrificação'} size="lg">
+      <form onSubmit={onSubmit} className="space-y-4">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Field label="Setor">
+            <TextInput name="setor" list="setores-lu" defaultValue={ponto?.setor ?? ''} placeholder="ENSAQUE 1" />
+            <datalist id="setores-lu">
+              {[...new Set(pontos.map((p) => p.setor).filter(Boolean))].map((s) => (
+                <option key={s as string} value={s as string} />
+              ))}
+            </datalist>
+          </Field>
+          <Field label="Equipamento">
+            <TextInput name="equip" defaultValue={ponto?.equip ?? ''} placeholder="MOINHO" required />
+          </Field>
+          <Field label="Item">
+            <TextInput name="item" defaultValue={ponto?.item ?? ''} placeholder="MANCAL ROLAMENTO" required />
+          </Field>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Field label="Lubrificante">
+            <TextInput name="lubrificante" list="lubrificantes-lu" defaultValue={ponto?.lubrificante ?? ''} placeholder="PREMALUBE FG" />
+            <datalist id="lubrificantes-lu">
+              {[...new Set(pontos.map((p) => p.lubrificante).filter(Boolean))].map((s) => (
+                <option key={s as string} value={s as string} />
+              ))}
+            </datalist>
+          </Field>
+          <Field label="Bombadas">
+            <TextInput name="bombadas" defaultValue={ponto?.bombadas ?? ''} placeholder="3 A 4" />
+          </Field>
+          <Field label="Frequência">
+            <TextInput name="frequencia" list="frequencias-lu" value={frequencia}
+              onChange={(e) => setFrequencia(e.target.value)} placeholder="SEMANAL" />
+            <datalist id="frequencias-lu">
+              {FREQUENCIAS.map((f) => <option key={f} value={f} />)}
+            </datalist>
+          </Field>
+        </div>
+
+        {/* O prazo do painel nasce daqui: vale dizer na hora o que o sistema entendeu. */}
+        <p className={`rounded-lg px-3 py-2 text-xs ${
+          dias != null ? 'bg-slate-50 text-slate-600' : 'bg-amber-50 text-amber-800'
+        }`}>
+          {frequencia.trim() === ''
+            ? 'Sem frequência, o ponto entra na rota mas não recebe prazo — não aparecerá como vencido nem vencendo.'
+            : dias != null
+              ? `O sistema entende: lubrificar a cada ${dias} dia(s). O aviso começa ${janelaDeAviso(dias)} dia(s) antes do vencimento.`
+              : 'O sistema não reconhece esta frequência, então não calculará prazo para este ponto. Use uma das sugeridas se quiser acompanhamento automático.'}
+        </p>
+
+        {ponto && (
+          <p className="text-xs text-slate-400">
+            Mudar setor, equipamento ou item leva junto as lubrificações já registradas deste ponto.
+          </p>
+        )}
+
+        <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
+          <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button type="submit" loading={salvando}>{ponto ? 'Salvar alterações' : 'Cadastrar ponto'}</Button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+function ModalExcluir({ ponto, execucoes, onClose, onDone, sucesso, erro }: {
+  ponto: LubrificacaoPcm;
+  // Quantas lubrificações já foram lançadas neste ponto — a pessoa merece saber
+  // o tamanho do histórico antes de tirar a linha do plano. O número sai da
+  // lista que a tela já carregou; não vale uma consulta só para isto.
+  execucoes: number;
+  onClose: () => void; onDone: () => void;
+  sucesso: (m: string) => void; erro: (m: string) => void;
+}) {
+  const [excluindo, setExcluindo] = useState(false);
+
+  async function excluir() {
+    setExcluindo(true);
+    try {
+      await excluirPontoLubrificacao(ponto.id);
+      sucesso('Ponto removido da rota.');
+      onDone();
+    } catch (err) { erro(err instanceof Error ? err.message : 'Falha ao excluir.'); }
+    finally { setExcluindo(false); }
+  }
+
+  return (
+    <Modal open onClose={onClose} title="Excluir ponto da rota">
+      <p className="text-sm text-slate-600">
+        Remover <span className="font-semibold text-slate-900">
+          {[ponto.setor, ponto.equip, ponto.item].filter(Boolean).join(' · ')}
+        </span> do plano de lubrificação?
+      </p>
+      {execucoes > 0 && (
+        <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">
+          Este ponto tem <span className="font-semibold">{execucoes} lubrificação(ões)</span> registrada(s).
+          Elas continuam no histórico — o que sai é a linha do plano, não o registro do que foi feito.
+        </p>
+      )}
+      <div className="mt-5 flex justify-end gap-3">
+        <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
+        <Button type="button" variant="perigo" loading={excluindo} onClick={() => void excluir()}>Excluir</Button>
+      </div>
+    </Modal>
+  );
+}
+
+function mesmoTexto(a: string | null, b: string | null): boolean {
+  return (a ?? '').trim().toLowerCase() === (b ?? '').trim().toLowerCase();
 }

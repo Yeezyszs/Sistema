@@ -120,6 +120,8 @@ import type {
   StatusPedido,
   SituacaoPedido,
   Carregamento,
+  Devolucao,
+  NovaDevolucao,
   NovoCarregamento,
   Pallet,
   MovimentoPallet,
@@ -1517,6 +1519,28 @@ export async function excluirPedido(id: string): Promise<void> {
 }
 
 // ── ERP: Expedição & Carregamentos ─────────────────────────────
+// ── Devoluções de cliente ─────────────────────────────────────
+export async function listDevolucoes(): Promise<Devolucao[]> {
+  return unwrap<Devolucao[]>(
+    await producao().from('devolucoes').select('*').order('data', { ascending: false }),
+  );
+}
+
+export async function criarDevolucao(payload: NovaDevolucao): Promise<void> {
+  const res = await producao().from('devolucoes').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function atualizarDevolucao(id: string, patch: Partial<NovaDevolucao>): Promise<void> {
+  const res = await producao().from('devolucoes').update(patch).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function excluirDevolucao(id: string): Promise<void> {
+  const res = await producao().from('devolucoes').delete().eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
 export async function listCarregamentos(): Promise<Carregamento[]> {
   return unwrap<Carregamento[]>(
     await producao().from('carregamentos').select('*').order('numero', { ascending: false }),

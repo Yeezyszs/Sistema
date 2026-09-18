@@ -47,6 +47,7 @@ export * from './entities/Apontamento';
 export * from './entities/Estoque';
 export * from './entities/Pedido';
 export * from './entities/Carregamento';
+export * from './entities/Devolucao';
 export * from './entities/Embalagem';
 export * from './entities/Pallet';
 export * from './entities/Reprocesso';

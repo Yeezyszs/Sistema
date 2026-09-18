@@ -45,6 +45,7 @@ const ITENS_SUPRIMENTOS: SubItem[] = [
 const ITENS_COMERCIAL: SubItem[] = [
   { to: '/carteira', icon: <IconDoc width={16} height={16} />, label: 'Carteira de pedidos', modulo: 'comercial' },
   { to: '/pedidos', icon: <IconDoc width={16} height={16} />, label: 'Pedidos', modulo: 'pedidos' },
+  { to: '/devolucoes', icon: <IconDoc width={16} height={16} />, label: 'Devoluções', modulo: 'comercial' },
   { to: '/analise-vendas', icon: <IconGrid width={16} height={16} />, label: 'Análise de vendas', modulo: 'comercial' },
   { to: '/clientes', icon: <IconUser width={16} height={16} />, label: 'Clientes', modulo: 'comercial' },
 ];

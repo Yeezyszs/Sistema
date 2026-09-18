@@ -22,6 +22,7 @@ import { PainelPage } from '../features/painel/PainelPage';
 import { ClientesPage } from '../features/comercial/ClientesPage';
 import { CarteiraPage } from '../features/comercial/CarteiraPage';
 import { AnaliseVendasPage } from '../features/comercial/AnaliseVendasPage';
+import { DevolucoesPage } from '../features/comercial/DevolucoesPage';
 import { AlmoxarifadoPage } from '../features/almoxarifado/AlmoxarifadoPage';
 import { EmbalagensPage } from '../features/embalagens/EmbalagensPage';
 import { UsuariosPage } from '../features/usuarios/UsuariosPage';
@@ -189,6 +190,7 @@ export default function App() {
             <Route path="/clientes" element={<ModuloGuard modulo="comercial"><ClientesPage /></ModuloGuard>} />
             <Route path="/carteira" element={<ModuloGuard modulo="comercial"><CarteiraPage /></ModuloGuard>} />
             <Route path="/analise-vendas" element={<ModuloGuard modulo="comercial"><AnaliseVendasPage /></ModuloGuard>} />
+            <Route path="/devolucoes" element={<ModuloGuard modulo="comercial"><DevolucoesPage /></ModuloGuard>} />
             <Route path="/semana" element={<ModuloGuard modulo="suprimentos"><SemanaPage /></ModuloGuard>} />
             <Route path="/produtores" element={<ModuloGuard modulo="suprimentos"><ProdutoresPage /></ModuloGuard>} />
             <Route path="/almoxarifado" element={<ModuloGuard modulo="almoxarifado"><AlmoxarifadoPage /></ModuloGuard>} />

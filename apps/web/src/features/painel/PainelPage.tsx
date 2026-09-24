@@ -78,7 +78,10 @@ const SUBTITULO: Record<Visao, string> = {
 function visoesDoUsuario(perfis: Perfil[]): [Visao, ...Visao[]] {
   if (perfis.includes('gestao')) return ['operacao', 'comercial', 'manutencao', 'almoxarifado', 'compras', 'suprimentos'];
   const visoes: Visao[] = [];
-  if (perfis.some((p) => p === 'operador' || p === 'qualidade')) visoes.push('operacao');
+  if (perfis.some((p) => p === 'operador' || p === 'qualidade' || p === 'encarregado')) visoes.push('operacao');
+  // O encarregado responde pela produção do turno e abre a O.S. quando quebra:
+  // as duas visões que ele usa são operação e manutenção.
+  if (perfis.includes('encarregado')) visoes.push('manutencao');
   if (perfis.includes('manutencao')) visoes.push('manutencao');
   if (perfis.includes('almoxarifado')) visoes.push('almoxarifado');
   if (perfis.includes('compras')) visoes.push('compras', 'suprimentos');

@@ -10,6 +10,7 @@ import { useToast } from '../../components/Toast';
 
 const TOM_PERFIL: Record<Perfil, string> = {
   gestao: 'bg-brand-600 text-white',
+  encarregado: 'bg-indigo-600 text-white',
   qualidade: 'bg-emerald-600 text-white',
   operador: 'bg-sky-600 text-white',
   manutencao: 'bg-amber-600 text-white',

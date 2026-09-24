@@ -1,9 +1,10 @@
 // Perfis de acesso (core.perfis) — definem quais módulos cada usuário vê.
-export const PERFIL = ['gestao', 'operador', 'qualidade', 'manutencao', 'compras', 'almoxarifado', 'comercial', 'administrador'] as const;
+export const PERFIL = ['gestao', 'encarregado', 'operador', 'qualidade', 'manutencao', 'compras', 'almoxarifado', 'comercial', 'administrador'] as const;
 export type Perfil = (typeof PERFIL)[number];
 
 export const PERFIL_LABEL: Record<Perfil, string> = {
   gestao: 'Gestão',
+  encarregado: 'Encarregado',
   operador: 'Operador',
   qualidade: 'Qualidade',
   manutencao: 'Manutenção',
@@ -32,6 +33,15 @@ export type Modulo = (typeof MODULO)[number];
 // poder mudar o acesso dos outros.
 export const MODULOS_POR_PERFIL: Record<Perfil, Modulo[]> = {
   gestao: MODULO.filter((m) => m !== 'usuarios'),
+  // Encarregado de turno: responde pelo que a fábrica produz no dia. Enxerga a
+  // produção inteira, tira peça do almoxarifado e abre O.S. — as três coisas
+  // que ele resolve sem pedir para ninguém. Fica de fora o que é decisão de
+  // outra mesa: pedido, expedição, comercial e qualidade.
+  encarregado: [
+    'painel',
+    'pcp', 'produtos', 'ordens', 'lotes', 'estoque', 'pallets', 'reprocesso', 'recebimentos',
+    'almoxarifado', 'manutencao',
+  ],
   operador: [
     'painel',
     'pcp', 'produtos', 'pedidos', 'expedicao', 'estoque', 'pallets', 'reprocesso',

@@ -109,7 +109,7 @@ export function ModalVerOs({ os, onClose, onEditar, onConcluir, onExcluir, onMud
       <div className="mt-4">
         <p className="mb-1.5 text-[10.5px] font-semibold uppercase tracking-wide text-slate-400">Fotos e vídeos</p>
         <GaleriaAnexos osId={os.id} recarregar={recarregarGaleria} onErro={erro}
-          podeExcluir={emAberto} />
+          podeExcluir={emAberto} podeDetalhar={!ehQualidade || perfis.includes('manutencao')} />
       </div>
 
       {/* Liberação já feita */}

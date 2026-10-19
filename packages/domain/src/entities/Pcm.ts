@@ -164,6 +164,8 @@ export interface OsAnexo {
   nome: string | null;
   mime: string | null;
   tamanho: number | null;
+  /** O que a foto mostra — a operação feita naquele ponto. */
+  descricao: string | null;
   created_at: string;
   created_by: string | null;
 }

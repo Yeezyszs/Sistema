@@ -2,7 +2,7 @@
 // anexado. Separados em dois componentes porque o primeiro trabalha com
 // arquivos ainda no aparelho, e o segundo com o que já está no Storage.
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { listAnexosDaOs, urlDoAnexo, excluirAnexoDaOs } from '../../lib/db';
+import { listAnexosDaOs, urlDoAnexo, excluirAnexoDaOs, detalharAnexoDaOs } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { problemaNoAnexo, ETAPA_ANEXO_OS, ETAPA_ANEXO_OS_LABEL } from '@sistema/domain';
 import type { OsAnexo, EtapaAnexoOs } from '@sistema/domain';
@@ -84,10 +84,12 @@ function tamanho(bytes: number): string {
 }
 
 // ── Galeria do que já foi anexado ──────────────────────────────
-export function GaleriaAnexos({ osId, recarregar = 0, podeExcluir = false, onErro }: {
+export function GaleriaAnexos({ osId, recarregar = 0, podeExcluir = false, podeDetalhar = false, onErro }: {
   osId: string;
   recarregar?: number;
   podeExcluir?: boolean;
+  /** Manutenção descreve a operação mostrada na foto. */
+  podeDetalhar?: boolean;
   onErro?: (m: string) => void;
 }) {
   const [versao, setVersao] = useState(0);
@@ -100,6 +102,27 @@ export function GaleriaAnexos({ osId, recarregar = 0, podeExcluir = false, onErr
   }, [osId, recarregar, versao]);
 
   const [aberto, setAberto] = useState<{ anexo: OsAnexo; url: string } | null>(null);
+  const [texto, setTexto] = useState('');
+  const [salvando, setSalvando] = useState(false);
+
+  function abrir(anexo: OsAnexo, url: string) {
+    setAberto({ anexo, url });
+    setTexto(anexo.descricao ?? '');
+  }
+
+  async function salvarDetalhe() {
+    if (!aberto) return;
+    setSalvando(true);
+    try {
+      await detalharAnexoDaOs(aberto.anexo.id, texto);
+      setAberto(null);
+      setVersao((v) => v + 1);
+    } catch (e) {
+      onErro?.(e instanceof Error ? e.message : 'Falha ao salvar o detalhe.');
+    } finally {
+      setSalvando(false);
+    }
+  }
 
   if (loading) return <div className="py-3"><Spinner className="h-5 w-5 text-brand-600" /></div>;
   if (error) return <p className="text-xs text-red-600">Não foi possível carregar os anexos: {error}</p>;
@@ -122,7 +145,7 @@ export function GaleriaAnexos({ osId, recarregar = 0, podeExcluir = false, onErr
               {itens.map(({ anexo, url }) => (
                 <li key={anexo.id} className="relative overflow-hidden rounded-md border border-slate-200 bg-slate-50">
                   {url ? (
-                    <button type="button" onClick={() => setAberto({ anexo, url })} className="block w-full">
+                    <button type="button" onClick={() => abrir(anexo, url)} className="block w-full">
                       {anexo.mime?.startsWith('video/') ? (
                         <video src={url} className="aspect-square w-full object-cover" muted preload="metadata" />
                       ) : (
@@ -143,6 +166,16 @@ export function GaleriaAnexos({ osId, recarregar = 0, podeExcluir = false, onErr
                       ×
                     </button>
                   )}
+                  {anexo.descricao ? (
+                    <p className="line-clamp-2 px-1.5 py-1 text-[10.5px] leading-snug text-slate-600" title={anexo.descricao}>
+                      {anexo.descricao}
+                    </p>
+                  ) : podeDetalhar && url ? (
+                    <button type="button" onClick={() => abrir(anexo, url)}
+                      className="w-full px-1.5 py-1 text-left text-[10.5px] font-semibold text-brand-700 hover:underline">
+                      + Detalhar operação
+                    </button>
+                  ) : null}
                 </li>
               ))}
             </ul>
@@ -160,6 +193,24 @@ export function GaleriaAnexos({ osId, recarregar = 0, podeExcluir = false, onErr
             ) : (
               <img src={aberto.url} alt={aberto.anexo.nome ?? 'anexo'} className="max-h-[80vh] w-auto rounded-lg" />
             )}
+            {podeDetalhar ? (
+              <div className="mt-3 rounded-lg bg-white p-3">
+                <label className="block text-xs font-semibold text-slate-700" htmlFor="detalhe-anexo">
+                  Que operação foi feita nesta imagem?
+                </label>
+                <textarea id="detalhe-anexo" rows={2} value={texto} onChange={(e) => setTexto(e.target.value)}
+                  placeholder="Ex.: troca do rolamento do mancal lado acionado; limpeza da área depois do serviço"
+                  className="mt-1.5 w-full rounded-md border border-slate-300 px-2.5 py-1.5 text-sm text-slate-800 focus:border-brand-500 focus:outline-none" />
+                <div className="mt-2 flex justify-end">
+                  <button type="button" disabled={salvando} onClick={() => void salvarDetalhe()}
+                    className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700 disabled:opacity-60">
+                    {salvando ? 'Salvando…' : 'Salvar detalhe'}
+                  </button>
+                </div>
+              </div>
+            ) : aberto.anexo.descricao ? (
+              <p className="mt-3 rounded-lg bg-white/95 px-3 py-2 text-sm text-slate-800">{aberto.anexo.descricao}</p>
+            ) : null}
             <div className="mt-2 flex items-center justify-between gap-3 text-xs text-slate-300">
               <span className="truncate">{aberto.anexo.nome}</span>
               <span className="flex shrink-0 gap-4">

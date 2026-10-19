@@ -1802,6 +1802,12 @@ export async function nomeDoUsuario(id: string): Promise<string | null> {
   return (res.data as { nome: string } | null)?.nome ?? null;
 }
 
+export async function detalharAnexoDaOs(id: string, descricao: string): Promise<void> {
+  const texto = descricao.trim();
+  const res = await manutencao().from('os_anexos').update({ descricao: texto || null }).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
 export async function excluirAnexoDaOs(anexo: OsAnexo): Promise<void> {
   const res = await manutencao().from('os_anexos').delete().eq('id', anexo.id);
   if (res.error) throw new Error(res.error.message);

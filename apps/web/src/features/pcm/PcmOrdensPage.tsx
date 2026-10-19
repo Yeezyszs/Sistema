@@ -2,12 +2,18 @@ import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import {
   listOrdensPcm, listEquipamentosPcm, listColaboradoresPcm,
-  criarOrdemPcm, atualizarOrdemPcm, excluirOrdemPcm, salvarExecucoesDaOs,
+  criarOrdemPcm, atualizarOrdemPcm, excluirOrdemPcm, salvarExecucoesDaOs, anexarVariosNaOs,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
+import { useAuth } from '../../lib/auth';
 import { formatarData, hojeLocalISO } from '../../lib/format';
-import { TIPO_OS_PCM, NATUREZA_OS, PRIORIDADE_OS_PCM, PRIORIDADE_OS_PCM_TOM, SETORES_PCM } from '@sistema/domain';
-import type { OrdemPcm, NovaOsExecucao, ColaboradorPcm, SetorPcm } from '@sistema/domain';
+import {
+  TIPO_OS_PCM, NATUREZA_OS, PRIORIDADE_OS_PCM, PRIORIDADE_OS_PCM_TOM, SETORES_PCM,
+  STATUS_OS_PCM, STATUS_OS_PCM_TOM, statusAoEncerrarServico, podeConcluirOs, podeRetirarRisco,
+} from '@sistema/domain';
+import type { OrdemPcm, NovaOsExecucao, ColaboradorPcm, SetorPcm, StatusOs } from '@sistema/domain';
+import { ModalVerOs } from './OsDetalhe';
+import { EscolherAnexos } from './AnexosOs';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus, IconSearch, IconDoc } from '../../components/icons';
 import { useToast } from '../../components/Toast';
@@ -19,7 +25,8 @@ export function PcmOrdensPage() {
   const [concluindo, setConcluindo] = useState<OrdemPcm | null>(null);
   const [vendo, setVendo] = useState<OrdemPcm | null>(null);
   const [busca, setBusca] = useState('');
-  const [filtroStatus, setFiltroStatus] = useState<'todas' | 'Em Aberto' | 'Concluído'>('Em Aberto');
+  const [filtroStatus, setFiltroStatus] = useState<'todas' | StatusOs>('Em Aberto');
+  const { perfis } = useAuth();
   const { sucesso, erro } = useToast();
 
   const { data, loading, error } = useAsync(async () => {
@@ -45,6 +52,7 @@ export function PcmOrdensPage() {
   });
 
   const abertas = (data?.ordens ?? []).filter((o) => o.status === 'Em Aberto').length;
+  const aguardando = (data?.ordens ?? []).filter((o) => o.status === 'Aguardando Qualidade').length;
 
   async function remover(id: string) {
     try { await excluirOrdemPcm(id); sucesso('O.S. excluída.'); rec(); }
@@ -55,7 +63,7 @@ export function PcmOrdensPage() {
     <>
       <PageHeader grupo="Manutenção"
         title="Ordens de Serviço"
-        subtitle={`Manutenção (PCM) — ${abertas} em aberto`}
+        subtitle={`Manutenção (PCM) — ${abertas} em aberto${aguardando > 0 ? ` · ${aguardando} aguardando a Qualidade` : ''}`}
         action={<Button onClick={() => setModal(true)}><IconPlus width={16} height={16} />Nova O.S.</Button>}
       />
 
@@ -65,10 +73,11 @@ export function PcmOrdensPage() {
           <input type="search" placeholder="Buscar nº, setor, requisitante, descrição…" value={busca} onChange={(e) => setBusca(e.target.value)}
             className="w-full rounded-[7px] border border-slate-300 bg-white py-2 pl-9 pr-3 text-[12.5px] outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
         </div>
-        <div className="w-40">
+        <div className="w-52">
           <Select value={filtroStatus} onChange={(e) => setFiltroStatus(e.target.value as typeof filtroStatus)}>
-            <option value="Em Aberto">Em aberto</option>
-            <option value="Concluído">Concluídas</option>
+            {STATUS_OS_PCM.map((st) => (
+              <option key={st} value={st}>{st === 'Concluído' ? 'Concluídas' : st}</option>
+            ))}
             <option value="todas">Todas</option>
           </Select>
         </div>
@@ -100,9 +109,12 @@ export function PcmOrdensPage() {
                     {o.prioridade}
                   </span>
                 )}
-                <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${o.status === 'Concluído' ? 'bg-brand-100 text-brand-700' : 'bg-amber-100 text-amber-700'}`}>
+                <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${STATUS_OS_PCM_TOM[o.status]}`}>
                   {o.status}
                 </span>
+                {o.risco_seguranca_alimentos && (
+                  <span className="rounded-full bg-red-600 px-2 py-0.5 text-[11px] font-semibold text-white">Seg. alimentos</span>
+                )}
                 {o.parada_equip && (
                   <span className="rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-medium text-red-700">Equip. parado</span>
                 )}
@@ -143,9 +155,15 @@ export function PcmOrdensPage() {
                     ) : '—'}
                   </td>
                   <td className="px-3 py-2.5">
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${o.status === 'Concluído' ? 'bg-brand-100 text-brand-700' : 'bg-amber-100 text-amber-700'}`}>
+                    <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_OS_PCM_TOM[o.status]}`}>
                       {o.status}
                     </span>
+                    {o.risco_seguranca_alimentos && (
+                      <span title="Risco à segurança de alimentos — só a Qualidade libera"
+                        className="ml-1 whitespace-nowrap rounded-full bg-red-600 px-2 py-0.5 text-[11px] font-semibold text-white">
+                        Seg. alim.
+                      </span>
+                    )}
                   </td>
                   <td onClick={(e) => e.stopPropagation()} className="px-3 py-2.5 text-right whitespace-nowrap">
                     <Link to={`/pcm-os/${o.id}/imprimir`} className="mr-3 inline-flex align-middle text-slate-400 hover:text-slate-700" title="Imprimir O.S.">
@@ -153,7 +171,9 @@ export function PcmOrdensPage() {
                     </Link>
                     <button onClick={() => setEditando(o)} className="mr-3 text-xs font-medium text-slate-500 hover:text-brand-600">Editar</button>
                     {o.status === 'Em Aberto' && (
-                      <button onClick={() => setConcluindo(o)} className="mr-3 text-xs font-medium text-brand-600 hover:text-brand-700">Concluir</button>
+                      <button onClick={() => setConcluindo(o)} className="mr-3 text-xs font-medium text-brand-600 hover:text-brand-700">
+                        {podeConcluirOs(o, perfis) ? 'Concluir' : 'Encerrar'}
+                      </button>
                     )}
                     <button onClick={() => void remover(o.id)} className="text-xs font-medium text-slate-400 hover:text-red-600">Excluir</button>
                   </td>
@@ -170,6 +190,7 @@ export function PcmOrdensPage() {
           onEditar={() => { setEditando(vendo); setVendo(null); }}
           onConcluir={() => { setConcluindo(vendo); setVendo(null); }}
           onExcluir={async () => { const alvo = vendo; setVendo(null); await remover(alvo.id); }}
+          onMudou={rec}
         />
       )}
 
@@ -193,14 +214,22 @@ function ModalNovaOs({ setores, editando, onClose, onSaved, sucesso, erro }: {
   setores: string[]; editando?: OrdemPcm | null;
   onClose: () => void; onSaved: () => void; sucesso: ToastFn; erro: ToastFn;
 }) {
+  const { perfis } = useAuth();
   const [salvando, setSalvando] = useState(false);
   const [paradaEquip, setParadaEquip] = useState(editando?.parada_equip ?? false);
   const [paradaProd, setParadaProd] = useState(editando?.parada_prod ?? false);
+  // Sem valor inicial na O.S. nova: obriga a pessoa a responder. Um "Não" já
+  // marcado de fábrica vira resposta automática de quem tem pressa.
+  const [risco, setRisco] = useState<boolean | null>(editando ? editando.risco_seguranca_alimentos : null);
+  const [anexos, setAnexos] = useState<File[]>([]);
+  // Uma O.S. que já nasceu com risco só a Qualidade pode desmarcar.
+  const riscoTravado = !!editando?.risco_seguranca_alimentos && !podeRetirarRisco(perfis);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     const txt = (k: string) => String(f.get(k) ?? '').trim() || null;
+    if (risco === null) { erro('Informe se o serviço tem risco à segurança de alimentos.'); return; }
     setSalvando(true);
     try {
       const payload = {
@@ -223,9 +252,21 @@ function ModalNovaOs({ setores, editando, onClose, onSaved, sucesso, erro }: {
         parada_prod_ini_h: paradaProd ? txt('pp_ini_h') : null,
         parada_prod_ret: paradaProd ? txt('pp_ret') : null,
         parada_prod_ret_h: paradaProd ? txt('pp_ret_h') : null,
+        risco_seguranca_alimentos: risco,
       };
-      if (editando) await atualizarOrdemPcm(editando.id, payload);
-      else await criarOrdemPcm(payload);
+      let osId: string;
+      if (editando) { await atualizarOrdemPcm(editando.id, payload); osId = editando.id; }
+      else osId = (await criarOrdemPcm(payload)).id;
+      // A O.S. já existe nesta altura: se um vídeo falhar, ela não se perde —
+      // o aviso diz qual arquivo não subiu e dá para anexar de novo.
+      if (anexos.length > 0) {
+        try { await anexarVariosNaOs(osId, 'abertura', anexos); }
+        catch (e) {
+          erro(`O.S. salva, mas nem todos os anexos subiram. ${e instanceof Error ? e.message : ''}`);
+          onSaved();
+          return;
+        }
+      }
       sucesso(editando ? 'O.S. atualizada.' : 'O.S. aberta.'); onSaved();
     } catch (err) { erro(err instanceof Error ? err.message : 'Falha.'); }
     finally { setSalvando(false); }
@@ -258,6 +299,35 @@ function ModalNovaOs({ setores, editando, onClose, onSaved, sucesso, erro }: {
           <Field label="Data programada"><TextInput name="data_prog" type="date" defaultValue={editando?.data_prog ?? ''} /></Field>
         </div>
         <Field label="Descrição do serviço"><TextInput name="descricao" defaultValue={editando?.descricao ?? ''} required placeholder="O que precisa ser feito" /></Field>
+
+        {/* Risco à segurança de alimentos */}
+        <div className={`rounded-lg border p-3 ${risco ? 'border-red-300 bg-red-50' : 'border-slate-200'}`}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm font-semibold text-slate-800">Risco à segurança de alimentos?</p>
+            <div className="flex gap-2" role="radiogroup" aria-label="Risco à segurança de alimentos">
+              {([[true, 'Sim'], [false, 'Não']] as const).map(([valor, rotulo]) => (
+                <button key={rotulo} type="button" role="radio" aria-checked={risco === valor}
+                  disabled={valor === false && riscoTravado}
+                  onClick={() => setRisco(valor)}
+                  className={`min-w-[64px] rounded-lg border px-3 py-1.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-40 ${
+                    risco === valor
+                      ? valor ? 'border-red-600 bg-red-600 text-white' : 'border-slate-800 bg-slate-800 text-white'
+                      : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+                  }`}>
+                  {rotulo}
+                </button>
+              ))}
+            </div>
+          </div>
+          <p className="mt-1.5 text-xs text-slate-500">
+            {risco
+              ? 'Só a Qualidade conclui esta O.S. A manutenção encerra o serviço e o equipamento volta à produção depois da liberação.'
+              : 'Marque "Sim" quando o serviço puder deixar contaminante no produto: peça solta, cavaco, graxa, solda, vidro.'}
+            {riscoTravado && ' Só a Qualidade pode retirar este risco.'}
+          </p>
+        </div>
+
+        <EscolherAnexos arquivos={anexos} onChange={setAnexos} onErro={erro} titulo="Fotos e vídeos do problema" />
 
         {/* Paradas */}
         <div className="grid gap-3 sm:grid-cols-2">
@@ -319,6 +389,12 @@ function ModalConcluirOs({ os, colaboradores, onClose, onSaved, sucesso, erro }:
   ]);
   const [realizado, setRealizado] = useState('');
   const [salvando, setSalvando] = useState(false);
+  const [anexos, setAnexos] = useState<File[]>([]);
+  const { perfis } = useAuth();
+  // A Qualidade que conclui está liberando; os demais encerram o serviço e,
+  // se houver risco, a O.S. vai para a fila de liberação.
+  const novoStatus: StatusOs = podeConcluirOs(os, perfis) ? 'Concluído' : statusAoEncerrarServico(os.risco_seguranca_alimentos);
+  const vaiParaQualidade = novoStatus === 'Aguardando Qualidade';
 
   function mudar(i: number, campo: keyof LinhaExec, v: string) {
     setLinhas((ls) => ls.map((l, x) => (x === i ? { ...l, [campo]: v } : l)));
@@ -338,20 +414,33 @@ function ModalConcluirOs({ os, colaboradores, onClose, onSaved, sucesso, erro }:
         data_fech: hoje,
       }));
       await salvarExecucoesDaOs(os.id, execs);
+      // Anexos antes do status: depois de concluída a O.S., o fechamento já
+      // tem de estar documentado.
+      if (anexos.length > 0) await anexarVariosNaOs(os.id, 'fechamento', anexos);
       await atualizarOrdemPcm(os.id, {
-        status: 'Concluído',
+        status: novoStatus,
         realizado: realizado.trim() || null,
         exec: validas.map((l) => l.mantenedor.trim()).join(' / ') || null,
       });
-      sucesso(`O.S. #${os.numero} concluída.`); onSaved();
+      sucesso(vaiParaQualidade
+        ? `Serviço da O.S. #${os.numero} encerrado — enviada à Qualidade para liberação.`
+        : `O.S. #${os.numero} concluída.`);
+      onSaved();
     } catch (err) { erro(err instanceof Error ? err.message : 'Falha.'); }
     finally { setSalvando(false); }
   }
 
   return (
-    <Modal open onClose={onClose} title={`Concluir O.S. #${os.numero}`} size="xl">
+    <Modal open onClose={onClose} title={`${vaiParaQualidade ? 'Encerrar serviço' : 'Concluir'} — O.S. #${os.numero}`} size="xl">
       <form onSubmit={onSubmit} className="space-y-4">
         <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">{os.descricao}</p>
+        {vaiParaQualidade && (
+          <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800">
+            <span className="font-semibold">Risco à segurança de alimentos.</span> Ao encerrar, a O.S. vai para a
+            Qualidade, que inspeciona e libera o equipamento. Fotografe o local limpo e as peças conferidas — é
+            a evidência que a Qualidade vai olhar.
+          </p>
+        )}
         <Field label="O que foi realizado">
           <TextInput value={realizado} onChange={(e) => setRealizado(e.target.value)} placeholder="Serviço executado" />
         </Field>
@@ -382,98 +471,13 @@ function ModalConcluirOs({ os, colaboradores, onClose, onSaved, sucesso, erro }:
           </button>
         </div>
 
+        <EscolherAnexos arquivos={anexos} onChange={setAnexos} onErro={erro} titulo="Fotos e vídeos do serviço feito" />
+
         <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
           <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button type="submit" loading={salvando}>Concluir O.S.</Button>
+          <Button type="submit" loading={salvando}>{vaiParaQualidade ? 'Encerrar e enviar à Qualidade' : 'Concluir O.S.'}</Button>
         </div>
       </form>
     </Modal>
-  );
-}
-
-// ── Ver O.S. ───────────────────────────────────────────────────
-// Tocar na O.S. abre ela por inteiro. No celular a tabela escondia metade dos
-// campos, e a única forma de ver o resto era o formulário de impressão — que é
-// uma folha A4 e não cabe numa tela de 390px.
-function ModalVerOs({ os, onClose, onEditar, onConcluir, onExcluir }: {
-  os: OrdemPcm;
-  onClose: () => void;
-  onEditar: () => void;
-  onConcluir: () => void;
-  onExcluir: () => void;
-}) {
-  const emAberto = os.status === 'Em Aberto';
-
-  return (
-    <Modal open onClose={onClose} title={`O.S. ${os.numero}`} size="lg">
-      <div className="flex flex-wrap items-center gap-1.5">
-        <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${emAberto ? 'bg-amber-100 text-amber-700' : 'bg-brand-100 text-brand-700'}`}>
-          {os.status}
-        </span>
-        {os.prioridade && (
-          <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${PRIORIDADE_OS_PCM_TOM[os.prioridade]}`}>
-            {os.prioridade}
-          </span>
-        )}
-        {os.parada_equip && (
-          <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700">
-            Equipamento parado
-          </span>
-        )}
-        {os.parada_prod && (
-          <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700">
-            Produção parada
-          </span>
-        )}
-      </div>
-
-      {/* Duas colunas no celular, quatro a partir do tablet. */}
-      <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
-        <Dado t="Data" v={formatarData(os.data)} />
-        <Dado t="Hora" v={os.hora?.slice(0, 5) ?? '—'} />
-        <Dado t="Setor" v={os.setor ?? '—'} />
-        <Dado t="Requisitante" v={os.req ?? '—'} />
-        <Dado t="Tipo" v={os.tipo ?? '—'} />
-        <Dado t="Demanda" v={os.natureza ?? '—'} />
-        <Dado t="Programada para" v={os.data_prog ? formatarData(os.data_prog) : '—'} />
-        <Dado t="Concluída em" v={os.data_concl ? formatarData(os.data_concl) : '—'} />
-      </dl>
-
-      <Texto titulo="Descrição do serviço">{os.descricao}</Texto>
-      <Texto titulo="Serviço realizado" vazio="Ainda não preenchido.">{os.realizado}</Texto>
-      {os.exec && <Texto titulo="Executante">{os.exec}</Texto>}
-
-      <div className="mt-5 flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-4">
-        <Button type="button" variant="ghost" onClick={onExcluir}>Excluir</Button>
-        <Link to={`/pcm-os/${os.id}/imprimir`}
-          className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
-          <IconDoc width={15} height={15} /> Imprimir
-        </Link>
-        <Button type="button" variant="outline" onClick={onEditar}>Editar</Button>
-        {emAberto && <Button type="button" onClick={onConcluir}>Concluir</Button>}
-      </div>
-    </Modal>
-  );
-}
-
-function Dado({ t, v }: { t: string; v: string }) {
-  return (
-    <div className="min-w-0">
-      <dt className="text-[10.5px] font-semibold uppercase tracking-wide text-slate-400">{t}</dt>
-      <dd className="mt-0.5 break-words text-[13px] font-medium text-slate-800">{v}</dd>
-    </div>
-  );
-}
-
-function Texto({ titulo, children, vazio = '—' }: {
-  titulo: string; children: string | null; vazio?: string;
-}) {
-  return (
-    <div className="mt-4">
-      <p className="text-[10.5px] font-semibold uppercase tracking-wide text-slate-400">{titulo}</p>
-      <p className={`mt-1 whitespace-pre-wrap rounded-lg bg-slate-50 p-3 text-[13px] ${children ? 'text-slate-800' : 'text-slate-400'}`}>
-        {children || vazio}
-      </p>
-    </div>
   );
 }

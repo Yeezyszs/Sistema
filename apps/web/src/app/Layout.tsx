@@ -71,6 +71,7 @@ const ITENS_QUALIDADE: SubItem[] = [
   { to: '/auditoria', icon: <IconCheck width={16} height={16} />, label: 'Auditoria & PPR', modulo: 'auditoria' },
   { to: '/ambiental', icon: <IconLeaf width={16} height={16} />, label: 'Ambiental & Pragas', modulo: 'ambiental' },
   { to: '/nao-conformidades', icon: <IconDoc width={16} height={16} />, label: 'Não conformidades', modulo: 'nao_conformidades' },
+  { to: '/liberacao-os', icon: <IconCheck width={16} height={16} />, label: 'Liberação pós-manutenção', modulo: 'qualidade' },
   { to: '/reprocesso', icon: <IconClock width={16} height={16} />, label: 'Retidos', modulo: 'reprocesso' },
 ];
 

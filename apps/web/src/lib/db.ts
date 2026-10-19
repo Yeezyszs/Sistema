@@ -149,6 +149,8 @@ import type {
   ComponenteEquipamento,
   PlanoPcm,
   LubrificacaoPcm,
+  OsAnexo,
+  EtapaAnexoOs,
   FerramentaPcm,
   EstadoChecklistFerramenta,
   EstadoChecklist,
@@ -1737,9 +1739,11 @@ export async function getOrdemPcm(id: string): Promise<OrdemPcm | null> {
   return (res.data as OrdemPcm | null) ?? null;
 }
 
-export async function criarOrdemPcm(payload: NovaOrdemPcm): Promise<void> {
-  const res = await manutencao().from('ordens').insert(payload);
+// Devolve a O.S. criada: os anexos da abertura precisam do id para subir.
+export async function criarOrdemPcm(payload: NovaOrdemPcm): Promise<OrdemPcm> {
+  const res = await manutencao().from('ordens').insert(payload).select('*').single();
   if (res.error) throw new Error(res.error.message);
+  return res.data as OrdemPcm;
 }
 
 export async function atualizarOrdemPcm(id: string, patch: Partial<NovaOrdemPcm>): Promise<void> {
@@ -1750,6 +1754,58 @@ export async function atualizarOrdemPcm(id: string, patch: Partial<NovaOrdemPcm>
 export async function excluirOrdemPcm(id: string): Promise<void> {
   const res = await manutencao().from('ordens').delete().eq('id', id);
   if (res.error) throw new Error(res.error.message);
+}
+
+// ── Anexos da O.S. (fotos e vídeos) ───────────────────────────
+const BUCKET_OS = 'os-anexos';
+
+export async function listAnexosDaOs(osId: string): Promise<OsAnexo[]> {
+  return unwrap<OsAnexo[]>(
+    await manutencao().from('os_anexos').select('*').eq('os_id', osId).order('created_at'),
+  );
+}
+
+/**
+ * Sobe um arquivo e registra o anexo. Se o registro falhar, o arquivo é
+ * removido: arquivo no Storage sem linha na tabela é lixo que ninguém acha.
+ */
+export async function anexarNaOs(osId: string, etapa: EtapaAnexoOs, arquivo: File): Promise<void> {
+  const caminho = `${osId}/${etapa}/${Date.now()}-${nomeArquivoSeguro(arquivo.name)}`;
+  const up = await supabase.storage.from(BUCKET_OS).upload(caminho, arquivo, {
+    contentType: arquivo.type, upsert: false,
+  });
+  if (up.error) throw new Error(`Falha ao enviar "${arquivo.name}": ${up.error.message}`);
+  const res = await manutencao().from('os_anexos').insert({
+    os_id: osId, etapa, caminho, nome: arquivo.name, mime: arquivo.type, tamanho: arquivo.size,
+  });
+  if (res.error) {
+    await supabase.storage.from(BUCKET_OS).remove([caminho]);
+    throw new Error(res.error.message);
+  }
+}
+
+export async function anexarVariosNaOs(osId: string, etapa: EtapaAnexoOs, arquivos: File[]): Promise<void> {
+  // Um de cada vez: vídeo de celular é grande, e subir vários em paralelo
+  // numa rede de fábrica é como nenhum termina.
+  for (const a of arquivos) await anexarNaOs(osId, etapa, a);
+}
+
+export async function urlDoAnexo(caminho: string): Promise<string> {
+  const { data, error } = await supabase.storage.from(BUCKET_OS).createSignedUrl(caminho, 3600);
+  if (error) throw new Error(error.message);
+  return data.signedUrl;
+}
+
+export async function nomeDoUsuario(id: string): Promise<string | null> {
+  const res = await core().from('usuarios').select('nome').eq('id', id).maybeSingle();
+  if (res.error) return null;
+  return (res.data as { nome: string } | null)?.nome ?? null;
+}
+
+export async function excluirAnexoDaOs(anexo: OsAnexo): Promise<void> {
+  const res = await manutencao().from('os_anexos').delete().eq('id', anexo.id);
+  if (res.error) throw new Error(res.error.message);
+  await supabase.storage.from(BUCKET_OS).remove([anexo.caminho]);
 }
 
 export async function getExecucoesDaOs(osId: string): Promise<OsExecucao[]> {

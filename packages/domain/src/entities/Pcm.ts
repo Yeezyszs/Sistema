@@ -114,7 +114,77 @@ export const PRIORIDADE_OS_PCM_TOM: Record<PrioridadeOs, string> = {
   Emergente: 'bg-red-100 text-red-700',
 };
 
-export type StatusOs = 'Em Aberto' | 'Concluído';
+export const STATUS_OS_PCM = ['Em Aberto', 'Aguardando Qualidade', 'Concluído'] as const;
+export type StatusOs = (typeof STATUS_OS_PCM)[number];
+
+export const STATUS_OS_PCM_TOM: Record<StatusOs, string> = {
+  'Em Aberto': 'bg-amber-100 text-amber-700',
+  'Aguardando Qualidade': 'bg-violet-100 text-violet-800',
+  Concluído: 'bg-brand-100 text-brand-700',
+};
+
+// ── Risco à segurança de alimentos ─────────────────────────────
+// Manutenção em equipamento que toca o produto pode deixar parafuso, cavaco,
+// graxa ou resto de solda na linha. Nesses casos a O.S. não se fecha na mão da
+// manutenção: ela encerra o serviço e a Qualidade inspeciona e libera. A trava
+// de verdade mora no banco (trigger); estas funções só fazem a tela concordar
+// com ela, para ninguém clicar num botão que vai dar erro.
+
+/** Para onde a O.S. vai quando a manutenção termina o serviço. */
+export function statusAoEncerrarServico(risco: boolean): StatusOs {
+  return risco ? 'Aguardando Qualidade' : 'Concluído';
+}
+
+/** Quem pode dar a O.S. por concluída. */
+export function podeConcluirOs(os: { risco_seguranca_alimentos: boolean }, perfis: readonly string[]): boolean {
+  return !os.risco_seguranca_alimentos || perfis.includes('qualidade');
+}
+
+/** Quem pode retirar o risco de uma O.S. que já o tinha. */
+export function podeRetirarRisco(perfis: readonly string[]): boolean {
+  return perfis.includes('qualidade');
+}
+
+// ── Anexos (fotos e vídeos) ────────────────────────────────────
+export const ETAPA_ANEXO_OS = ['abertura', 'fechamento', 'liberacao'] as const;
+export type EtapaAnexoOs = (typeof ETAPA_ANEXO_OS)[number];
+
+export const ETAPA_ANEXO_OS_LABEL: Record<EtapaAnexoOs, string> = {
+  abertura: 'Abertura',
+  fechamento: 'Fechamento',
+  liberacao: 'Liberação da Qualidade',
+};
+
+export interface OsAnexo {
+  id: string;
+  org_id: string;
+  os_id: string;
+  etapa: EtapaAnexoOs;
+  caminho: string;
+  nome: string | null;
+  mime: string | null;
+  tamanho: number | null;
+  created_at: string;
+  created_by: string | null;
+}
+
+/** 50 MB — o mesmo limite configurado no bucket. */
+export const TAMANHO_MAX_ANEXO = 50 * 1024 * 1024;
+
+/**
+ * Motivo para recusar o arquivo, ou null se ele pode subir.
+ * Conferir aqui evita mandar 200 MB pela rede para o Storage recusar no fim.
+ */
+export function problemaNoAnexo(arquivo: { type: string; size: number; name: string }): string | null {
+  if (!arquivo.type.startsWith('image/') && !arquivo.type.startsWith('video/')) {
+    return `"${arquivo.name}" não é foto nem vídeo.`;
+  }
+  if (arquivo.size > TAMANHO_MAX_ANEXO) {
+    const mb = (arquivo.size / 1024 / 1024).toLocaleString('pt-BR', { maximumFractionDigits: 0 });
+    return `"${arquivo.name}" tem ${mb} MB — o limite é 50 MB. Grave um vídeo mais curto.`;
+  }
+  return null;
+}
 
 export interface OrdemPcm {
   id: string;
@@ -143,11 +213,15 @@ export interface OrdemPcm {
   parada_prod_ini_h: string | null;
   parada_prod_ret: string | null;
   parada_prod_ret_h: string | null;
+  risco_seguranca_alimentos: boolean;
+  liberado_em: string | null;
+  liberado_por: string | null;
+  liberacao_obs: string | null;
   created_at: string;
   created_by: string | null;
 }
 
-export type NovaOrdemPcm = Partial<Omit<OrdemPcm, 'id' | 'org_id' | 'numero' | 'created_at' | 'created_by'>> & { data: string };
+export type NovaOrdemPcm = Partial<Omit<OrdemPcm, 'id' | 'org_id' | 'numero' | 'created_at' | 'created_by' | 'liberado_em' | 'liberado_por'>> & { data: string };
 
 export interface OsExecucao {
   id: string;

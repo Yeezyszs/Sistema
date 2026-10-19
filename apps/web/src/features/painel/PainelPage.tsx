@@ -183,6 +183,9 @@ function PainelOperacao() {
   const opsAbertas = ops.filter((o) => o.status !== 'concluida').length;
   const ncsAbertas = ncs.filter(ncEstaAberta).length;
   const osAbertas = osPcm.filter((o) => o.status !== 'Concluído').length;
+  // Equipamento parado esperando a Qualidade: é produção perdida enquanto
+  // ninguém olha, por isso entra como crítico.
+  const osParaLiberar = osPcm.filter((o) => o.status === 'Aguardando Qualidade').length;
   const paradasHoje = paradas.filter((p) => p.data === hoje);
   const horasParadasHoje = paradasHoje.reduce((s, p) => s + (p.horas ?? 0), 0);
   const calibVencendo = calibracoes.filter((c) => ['a_vencer', 'vencida'].includes(situacaoCalibracao(c.valido_ate))).length;
@@ -193,6 +196,7 @@ function PainelOperacao() {
   const acoes = ([
     { modulo: 'lotes', n: aguardando, label: 'Lotes aguardando liberação', to: '/lotes', tom: 'alerta' },
     { modulo: 'lotes', n: bloqueados, label: 'Lotes bloqueados', to: '/lotes', tom: 'critico' },
+    { modulo: 'qualidade', n: osParaLiberar, label: 'Equipamentos aguardando liberação', to: '/liberacao-os', tom: 'critico' },
     { modulo: 'nao_conformidades', n: ncsAbertas, label: 'Não conformidades abertas', to: '/nao-conformidades', tom: 'critico' },
     { modulo: 'manutencao', n: osAbertas, label: 'O.S. de manutenção abertas', to: '/manutencao', tom: 'alerta' },
     { modulo: 'manutencao', n: horasParadasHoje > 0 ? `${horasParadasHoje.toFixed(1)} h` : 0,

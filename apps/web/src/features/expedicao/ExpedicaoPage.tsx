@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import {
   listCarregamentos, listPedidos, listClientes, listProdutos, listLotes,
   listPosicoesEstoque, listLocaisEstoque,
@@ -60,10 +60,19 @@ export function ExpedicaoPage() {
   }, [data?.posicoes, pedidoSel?.lote_id]);
 
   // Retorno do PCP: ao escolher o pedido, a posição do lote vem sozinha.
+  // Depende do id, não do objeto: a lista se atualiza ao vivo quando outra
+  // pessoa grava algo, e cada atualização traz objetos novos. Olhando o objeto,
+  // a posição que a pessoa escolheu voltaria para a primeira a cada lançamento
+  // feito em outro computador.
+  const pedidoSelId = pedidoSel?.id ?? null;
+  const ultimoPedido = useRef<string | null>(null);
   useEffect(() => {
-    if (!pedidoSel) { setPosicaoId(''); return; }
-    setPosicaoId(posicoesDoLote[0]?.id ?? '');
-  }, [pedidoSel, posicoesDoLote]);
+    if (!pedidoSelId) { ultimoPedido.current = null; setPosicaoId(''); return; }
+    const trocouPedido = ultimoPedido.current !== pedidoSelId;
+    ultimoPedido.current = pedidoSelId;
+    setPosicaoId((atual) =>
+      !trocouPedido && posicoesDoLote.some((p) => p.id === atual) ? atual : (posicoesDoLote[0]?.id ?? ''));
+  }, [pedidoSelId, posicoesDoLote]);
 
   const posicaoSel = posicoesDoLote.find((p) => p.id === posicaoId) ?? null;
 

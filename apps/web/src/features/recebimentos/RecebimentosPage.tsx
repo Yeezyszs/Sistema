@@ -6,11 +6,12 @@ import {
 import { useAsync } from '../../lib/useAsync';
 import { formatarData, formatarQuantidade, formatarReais, hojeLocalISO } from '../../lib/format';
 import {
-  TURNO, TURNO_LABEL, VARIEDADES_MANDIOCA,
+  TURNO, TURNO_LABEL, VARIEDADES_MANDIOCA, TIPO_MP, TIPO_MP_LABEL, ITENS_INSPECAO_CARGA,
+  mediaRendas, itensNaoConformes, situacaoInspecaoCarga,
   custoTFarinha, valorDaCarga, tetoCusto, segundaDaSemana,
 } from '@sistema/domain';
 import type {
-  Turno, Recebimento, NovoRecebimento, Produto, Fornecedor, ParametrosSemana,
+  Turno, TipoMp, InspecaoCarga, Recebimento, NovoRecebimento, Produto, Fornecedor, ParametrosSemana,
 } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconRecebimento, IconSearch } from '../../components/icons';
@@ -23,6 +24,13 @@ function montarPayload(form: FormData, fornecedores: Fornecedor[]): NovoRecebime
     return v ? Number(v) : null;
   };
   const txt = (k: string) => String(form.get(k) ?? '').trim() || null;
+  const rendas = [1, 2, 3, 4, 5].map((i) => num(`renda_${i}`));
+  const preenchidas = rendas.filter((v): v is number => v != null);
+  const inspecao: InspecaoCarga = {};
+  for (const item of ITENS_INSPECAO_CARGA) {
+    const v = form.get(`insp_${item.chave}`);
+    if (v === 'c' || v === 'nc') inspecao[item.chave] = v;
+  }
   const dataStr = String(form.get('data') ?? '').trim();
   const recebido_em = dataStr ? new Date(`${dataStr}T12:00:00`).toISOString() : new Date().toISOString();
   // O produtor é escolhido na lista: antes era texto livre casado por nome
@@ -39,11 +47,98 @@ function montarPayload(form: FormData, fornecedores: Fornecedor[]): NovoRecebime
     ticket: txt('ticket'),
     cancha: txt('cancha'),
     quantidade: num('quantidade'),
-    renda: num('renda'),
+    // A renda da carga é a média das amostras — é ela que entra no custo.
+    renda: mediaRendas(rendas),
+    rendas: preenchidas.length > 0 ? preenchidas : null,
+    impureza: num('impureza'),
+    placa: txt('placa')?.toUpperCase() ?? null,
+    tipo_mp: txt('tipo_mp') as TipoMp | null,
+    inspecao: Object.keys(inspecao).length > 0 ? inspecao : null,
+    inspecao_obs: txt('inspecao_obs'),
     hora_inicio: txt('hora_inicio'),
     hora_fim: txt('hora_fim'),
     recebido_em,
   };
+}
+
+// O checklist é exigido na carga nova. Numa carga antiga, editar sem tocar no
+// checklist é permitido; começou a responder, tem de terminar.
+function problemaNaInspecao(p: NovoRecebimento, exigir: boolean): string | null {
+  const respondidos = ITENS_INSPECAO_CARGA.filter((i) => p.inspecao?.[i.chave]).length;
+  if ((exigir || respondidos > 0) && respondidos < ITENS_INSPECAO_CARGA.length) {
+    return 'Responda todos os itens da inspeção da carga.';
+  }
+  if (itensNaoConformes(p.inspecao).length > 0 && !p.inspecao_obs) {
+    return 'Item não conforme: descreva a ocorrência em Observações da inspeção.';
+  }
+  return null;
+}
+
+// As 5 amostras de renda, com a média aparecendo enquanto se digita.
+function CamposRenda({ carga }: { carga?: Recebimento }) {
+  // Carga antiga só tem a renda final: ela vira a 1ª amostra.
+  const inicial = carga?.rendas ?? (carga?.renda != null ? [carga.renda] : []);
+  const [valores, setValores] = useState<string[]>(
+    [0, 1, 2, 3, 4].map((i) => (inicial[i] != null ? String(inicial[i]) : '')),
+  );
+  const media = mediaRendas(valores.map((v) => (v.trim() ? Number(v) : null)));
+  return (
+    <Field label="Renda — amostras">
+      <div className="grid grid-cols-6 gap-1.5">
+        {valores.map((v, i) => (
+          <TextInput key={i} name={`renda_${i + 1}`} type="number" step="any" min="0" value={v}
+            aria-label={`Renda ${i + 1}`} placeholder={`R${i + 1}`}
+            onChange={(e) => setValores((ant) => ant.map((x, j) => (j === i ? e.target.value : x)))} />
+        ))}
+        <div className="flex flex-col justify-center rounded-[7px] bg-slate-100 px-2 text-center" title="Renda média — usada no custo">
+          <span className="text-[9.5px] font-semibold uppercase text-slate-400">Média</span>
+          <span className="text-sm font-semibold text-slate-800">{media ?? '—'}</span>
+        </div>
+      </div>
+    </Field>
+  );
+}
+
+// Checklist de inspeção da carga (FOR POP 09 1.5).
+function CamposInspecao({ carga }: { carga?: Recebimento }) {
+  const [respostas, setRespostas] = useState<InspecaoCarga>(carga?.inspecao ?? {});
+  const temNc = itensNaoConformes(respostas).length > 0;
+  return (
+    <div className="rounded-lg border border-slate-200 p-3">
+      <p className="text-sm font-semibold text-slate-700">Inspeção da carga</p>
+      <p className="mb-2 text-[11px] text-slate-400">FOR POP 09 1.5 — inspeção visual pelo operador da descarga.</p>
+      <ul className="divide-y divide-slate-100">
+        {ITENS_INSPECAO_CARGA.map((item, n) => (
+          <li key={item.chave} className="flex flex-wrap items-center justify-between gap-2 py-1.5">
+            <span className="min-w-0 flex-1 text-[12.5px] text-slate-700">{n + 1}. {item.texto}</span>
+            <span className="flex shrink-0 gap-1">
+              {(['c', 'nc'] as const).map((v) => {
+                const ativo = respostas[item.chave] === v;
+                return (
+                  <label key={v} className={`cursor-pointer rounded-md border px-2 py-1 text-[11px] font-semibold transition ${
+                    ativo
+                      ? v === 'c' ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-red-600 bg-red-600 text-white'
+                      : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50'
+                  }`}>
+                    <input type="radio" name={`insp_${item.chave}`} value={v} checked={ativo} className="sr-only"
+                      onChange={() => setRespostas((r) => ({ ...r, [item.chave]: v }))} />
+                    {v === 'c' ? 'Conforme' : 'Não conforme'}
+                  </label>
+                );
+              })}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <Field label={temNc ? 'Observações da inspeção (obrigatório)' : 'Observações da inspeção'}>
+        <textarea name="inspecao_obs" rows={2} defaultValue={carga?.inspecao_obs ?? ''}
+          placeholder={temNc ? 'Descreva a ocorrência. Comunique o encarregado e a Qualidade.' : ''}
+          className={`w-full rounded-[7px] border px-3 py-2 text-[12.5px] outline-none focus:ring-2 ${
+            temNc ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-slate-300 focus:border-brand-500 focus:ring-brand-100'
+          }`} />
+      </Field>
+    </div>
+  );
 }
 
 // Campos do formulário — reutilizados no cadastro e na edição.
@@ -62,6 +157,16 @@ function CamposCarga({ materiasPrimas, fornecedores, carga }: {
         </Field>
         <Field label="Data">
           <TextInput name="data" type="date" defaultValue={dataDefault} />
+        </Field>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Placa do veículo">
+          <TextInput name="placa" defaultValue={carga?.placa ?? ''} placeholder="ABC1D23" />
+        </Field>
+        <Field label="Tipo de matéria-prima">
+          <Select name="tipo_mp" defaultValue={carga?.tipo_mp ?? 'convencional'}>
+            {TIPO_MP.map((t) => <option key={t} value={t}>{TIPO_MP_LABEL[t]}</option>)}
+          </Select>
         </Field>
       </div>
       <Field label="Produto (matéria-prima)">
@@ -99,8 +204,8 @@ function CamposCarga({ materiasPrimas, fornecedores, carga }: {
         <Field label="Peso (kg)">
           <TextInput name="quantidade" type="number" step="any" min="0" defaultValue={carga?.quantidade ?? ''} placeholder="0" />
         </Field>
-        <Field label="Renda">
-          <TextInput name="renda" type="number" step="any" min="0" defaultValue={carga?.renda ?? ''} placeholder="618" />
+        <Field label="Impureza (%)">
+          <TextInput name="impureza" type="number" step="any" min="0" max="100" defaultValue={carga?.impureza ?? ''} placeholder="0" />
         </Field>
         <Field label="Cancha">
           <Select name="cancha" defaultValue={carga?.cancha ?? ''}>
@@ -110,6 +215,8 @@ function CamposCarga({ materiasPrimas, fornecedores, carga }: {
           </Select>
         </Field>
       </div>
+      <CamposRenda carga={carga} />
+      <CamposInspecao carga={carga} />
     </>
   );
 }
@@ -121,6 +228,9 @@ export function RecebimentosPage() {
   const [filtroTurno, setFiltroTurno] = useState<'todos' | Turno>('todos');
   const [editando, setEditando] = useState<Recebimento | null>(null);
   const [excluindo, setExcluindo] = useState<Recebimento | null>(null);
+  // Os campos com estado (rendas, inspeção) não são limpos pelo form.reset():
+  // trocar a key remonta o formulário em branco.
+  const [formNovo, setFormNovo] = useState(0);
   const { sucesso, erro } = useToast();
 
   const { data, loading, error } = useAsync(async () => {
@@ -198,11 +308,16 @@ export function RecebimentosPage() {
     const payload = montarPayload(form, data?.fornecedores ?? []);
     if (!payload.produto_id) { erro('Selecione o produto.'); return; }
     if (!payload.fornecedor_id) { erro('Selecione o produtor.'); return; }
+    const problema = problemaNaInspecao(payload, true);
+    if (problema) { erro(problema); return; }
     setSalvando(true);
     try {
       await criarRecebimento(await completarComASemana(payload));
       (e.target as HTMLFormElement).reset();
-      sucesso('Carga registrada.');
+      setFormNovo((n) => n + 1);
+      sucesso(itensNaoConformes(payload.inspecao).length > 0
+        ? 'Carga registrada com item não conforme — a Qualidade foi sinalizada no painel.'
+        : 'Carga registrada.');
       setRecarregar((n) => n + 1);
     } catch (err) { erro(err instanceof Error ? err.message : 'Falha ao salvar.'); }
     finally { setSalvando(false); }
@@ -214,6 +329,8 @@ export function RecebimentosPage() {
     const form = new FormData(e.currentTarget);
     const payload = montarPayload(form, data?.fornecedores ?? []);
     if (!payload.produto_id) { erro('Selecione o produto.'); return; }
+    const problema = problemaNaInspecao(payload, false);
+    if (problema) { erro(problema); return; }
     setSalvando(true);
     try {
       await atualizarRecebimento(editando.id, payload);
@@ -252,7 +369,7 @@ export function RecebimentosPage() {
               Defina na Previsão da semana.
             </p>
           )}
-          <form onSubmit={onCriar} className="space-y-4">
+          <form key={formNovo} onSubmit={onCriar} className="space-y-4">
             <CamposCarga materiasPrimas={materiasPrimas} fornecedores={produtoresAtivos} />
             <Button type="submit" loading={salvando} className="w-full">Registrar carga</Button>
           </form>
@@ -309,6 +426,7 @@ export function RecebimentosPage() {
                     <th className="px-3 py-[11px] text-right">R$/t farinha</th>
                     <th className="px-3 py-[11px] text-right">Valor</th>
                     <th className="hidden px-3 py-[11px] text-center 2xl:table-cell">Cancha</th>
+                    <th className="px-3 py-[11px] text-center">Inspeção</th>
                     <th className="px-3 py-[11px]" />
                   </tr>
                 </thead>
@@ -342,6 +460,7 @@ export function RecebimentosPage() {
                         {formatarReais(valorDaCarga(r.quantidade, r.renda, r.preco_renda))}
                       </td>
                       <td className="hidden px-3 py-2.5 text-center text-slate-500 2xl:table-cell">{r.cancha ?? '—'}</td>
+                      <td className="px-3 py-2.5 text-center"><SeloInspecao r={r} /></td>
                       <td className="px-3 py-2.5 text-right whitespace-nowrap">
                         <button onClick={() => setEditando(r)} className="text-xs font-medium text-slate-500 hover:text-brand-600">Editar</button>
                         <button onClick={() => setExcluindo(r)} className="ml-3 text-xs font-medium text-slate-400 hover:text-red-600">Excluir</button>
@@ -395,4 +514,22 @@ export function RecebimentosPage() {
       </Modal>
     </>
   );
+}
+
+function SeloInspecao({ r }: { r: Recebimento }) {
+  const sit = situacaoInspecaoCarga(r.inspecao);
+  if (sit === 'sem_inspecao') return <span className="text-xs text-slate-300">—</span>;
+  if (sit === 'nao_conforme') {
+    const n = itensNaoConformes(r.inspecao).length;
+    return (
+      <span title={r.inspecao_obs ?? undefined}
+        className="whitespace-nowrap rounded bg-red-100 px-1.5 py-0.5 text-[11px] font-semibold text-red-700">
+        {n} NC
+      </span>
+    );
+  }
+  if (sit === 'incompleta') {
+    return <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[11px] font-semibold text-amber-700">Incompleta</span>;
+  }
+  return <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-700">OK</span>;
 }

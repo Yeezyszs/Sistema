@@ -71,6 +71,10 @@ import type {
   Ima,
   VerificacaoIma,
   NovaVerificacaoIma,
+  FornoRegistro,
+  NovoFornoRegistro,
+  FornoLeitura,
+  NovaFornoLeitura,
   QuebraVidro,
   NovaQuebraVidro,
   Checklist,
@@ -796,6 +800,23 @@ export async function listDetectoresMetais(): Promise<DetectorMetais[]> {
   );
 }
 
+export async function listVerificacoesDMDesde(desdeISO: string): Promise<VerificacaoDM[]> {
+  return unwrap<VerificacaoDM[]>(
+    await qualidade().from('verificacoes_dm').select('*').gte('registrado_em', desdeISO).order('registrado_em', { ascending: false }),
+  );
+}
+
+// Validação da Qualidade: o banco carimba quem e quando (trigger), e recusa
+// quem não é do perfil qualidade.
+export async function validarRegistrosQualidade(
+  tabela: 'verificacoes_dm' | 'verificacoes_ima' | 'forno_registros',
+  ids: string[],
+): Promise<void> {
+  if (ids.length === 0) return;
+  const res = await qualidade().from(tabela).update({ validado_em: new Date().toISOString() }).in('id', ids);
+  if (res.error) throw new Error(res.error.message);
+}
+
 export async function listVerificacoesDM(limite = 30): Promise<VerificacaoDM[]> {
   return unwrap<VerificacaoDM[]>(
     await qualidade().from('verificacoes_dm').select('*').order('registrado_em', { ascending: false }).limit(limite),
@@ -809,13 +830,62 @@ export async function criarVerificacaoDM(payload: NovaVerificacaoDM): Promise<vo
 
 // ── PCC Físico: imãs ───────────────────────────────────────────
 export async function listImas(): Promise<Ima[]> {
-  return unwrap<Ima[]>(await qualidade().from('imas').select('*').eq('ativo', true).order('local'));
+  return unwrap<Ima[]>(
+    await qualidade().from('imas').select('*').eq('ativo', true).order('area').order('ordem').order('local'),
+  );
 }
 
 export async function listVerificacoesIma(limite = 30): Promise<VerificacaoIma[]> {
   return unwrap<VerificacaoIma[]>(
     await qualidade().from('verificacoes_ima').select('*').order('registrado_em', { ascending: false }).limit(limite),
   );
+}
+
+export async function listVerificacoesImaDesde(desdeISO: string): Promise<VerificacaoIma[]> {
+  return unwrap<VerificacaoIma[]>(
+    await qualidade().from('verificacoes_ima').select('*').gte('registrado_em', desdeISO).order('registrado_em', { ascending: false }),
+  );
+}
+
+export async function criarVerificacoesIma(payload: NovaVerificacaoIma[]): Promise<void> {
+  if (payload.length === 0) return;
+  const res = await qualidade().from('verificacoes_ima').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// ── Forno (FOR PQSA 8) ─────────────────────────────────────────
+export async function listFornoRegistros(limite = 40): Promise<FornoRegistro[]> {
+  return unwrap<FornoRegistro[]>(
+    await qualidade().from('forno_registros').select('*').order('data', { ascending: false }).order('created_at', { ascending: false }).limit(limite),
+  );
+}
+
+export async function criarFornoRegistro(payload: NovoFornoRegistro): Promise<FornoRegistro> {
+  const res = await qualidade().from('forno_registros').insert(payload).select('*').single();
+  if (res.error) throw new Error(res.error.message);
+  return res.data as FornoRegistro;
+}
+
+export async function atualizarFornoRegistro(id: string, patch: NovoFornoRegistro): Promise<void> {
+  const res = await qualidade().from('forno_registros').update(patch).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function listLeiturasForno(registroIds: string[]): Promise<FornoLeitura[]> {
+  if (registroIds.length === 0) return [];
+  return unwrap<FornoLeitura[]>(
+    await qualidade().from('forno_leituras').select('*').in('registro_id', registroIds).order('registrado_em'),
+  );
+}
+
+export async function criarLeituraForno(payload: NovaFornoLeitura): Promise<void> {
+  const res = await qualidade().from('forno_leituras').insert(payload);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function excluirLeituraForno(id: string): Promise<void> {
+  const res = await qualidade().from('forno_leituras').delete().eq('id', id);
+  if (res.error) throw new Error(res.error.message);
 }
 
 export async function criarVerificacaoIma(payload: NovaVerificacaoIma): Promise<void> {

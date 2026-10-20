@@ -36,16 +36,17 @@ export const MODULOS_POR_PERFIL: Record<Perfil, Modulo[]> = {
   // Encarregado de turno: responde pelo que a fábrica produz no dia. Enxerga a
   // produção inteira, tira peça do almoxarifado e abre O.S. — as três coisas
   // que ele resolve sem pedir para ninguém. Fica de fora o que é decisão de
-  // outra mesa: pedido, expedição, comercial e qualidade.
+  // outra mesa: pedido, expedição, comercial e qualidade. A exceção é o
+  // monitoramento de PCC (forno, detector, ímãs): quem preenche é a linha.
   encarregado: [
     'painel',
     'pcp', 'produtos', 'ordens', 'lotes', 'estoque', 'pallets', 'reprocesso', 'recebimentos',
-    'almoxarifado', 'manutencao',
+    'almoxarifado', 'manutencao', 'pcc_fisico',
   ],
   operador: [
     'painel',
     'pcp', 'produtos', 'pedidos', 'expedicao', 'estoque', 'pallets', 'reprocesso',
-    'ordens', 'lotes', 'recebimentos', 'almoxarifado',
+    'ordens', 'lotes', 'recebimentos', 'almoxarifado', 'pcc_fisico',
   ],
   qualidade: [
     'painel',

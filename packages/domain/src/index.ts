@@ -34,6 +34,7 @@ export * from './entities/Laudo';
 export * from './entities/NaoConformidade';
 export * from './entities/AvaliacaoFornecedor';
 export * from './entities/PccFisico';
+export * from './entities/Forno';
 export * from './entities/Checklist';
 export * from './entities/Ppho';
 export * from './entities/Manutencao';

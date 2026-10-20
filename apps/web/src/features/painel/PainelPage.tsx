@@ -3,11 +3,12 @@ import {
   listApontamentos, listLinhas, listRecebimentos, listProgramacao, listLotes,
   listOrdensProducao, listNaoConformidades, listOrdensPcm, listParadas,
   listCalibracoes, listPedidos, listCarregamentos, getDocumentosVencendo, mapBy,
+  listDetectoresMetais, listVerificacoesDMDesde, listImas, listVerificacoesImaDesde, listFornoRegistros,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { formatarData, formatarQuantidade, hojeLocalISO } from '../../lib/format';
 import {
-  calcularRendimento, ncEstaAberta, situacaoCalibracao, itensNaoConformes,
+  calcularRendimento, ncEstaAberta, situacaoCalibracao, itensNaoConformes, situacaoDetector, imasPendentesNoDia,
   STATUS_LOTE, STATUS_LOTE_LABEL,
 } from '@sistema/domain';
 import type { Perfil, StatusLote } from '@sistema/domain';
@@ -135,14 +136,22 @@ function PainelOperacao() {
   const { podeAcessarModulo } = useAuth();
   const veComercial = podeAcessarModulo('comercial');
 
+  const vePcc = podeAcessarModulo('pcc_fisico');
+
   const { data, loading, error } = useAsync(async () => {
-    const [apontSemana, linhas, recebimentos, prog, lotes, ops, ncs, osPcm, paradas, calibracoes, pedidos, cargas] =
+    const seteDias = new Date(Date.now() - 7 * 86_400_000).toISOString();
+    const [apontSemana, linhas, recebimentos, prog, lotes, ops, ncs, osPcm, paradas, calibracoes, pedidos, cargas, pcc] =
       await Promise.all([
         listApontamentos(de, ate), listLinhas(), listRecebimentos(), listProgramacao(de, ate),
         listLotes(), listOrdensProducao(), listNaoConformidades(), listOrdensPcm(),
         listParadas(), listCalibracoes(), listPedidos(), listCarregamentos(),
+        // Monitoramento de PCC só para quem o acessa; falha aqui não derruba o painel.
+        vePcc
+          ? Promise.all([listDetectoresMetais(), listVerificacoesDMDesde(seteDias), listImas(), listVerificacoesImaDesde(seteDias), listFornoRegistros()])
+              .catch(() => null)
+          : Promise.resolve(null),
       ]);
-    return { apontSemana, recebimentos, prog, lotes, ops, ncs, osPcm, paradas, calibracoes, pedidos, cargas, linhas, linhasMap: mapBy(linhas, 'id') };
+    return { apontSemana, recebimentos, prog, lotes, ops, ncs, osPcm, paradas, calibracoes, pedidos, cargas, pcc, linhas, linhasMap: mapBy(linhas, 'id') };
   }, [de, ate]);
 
   if (error || (loading === false && !data)) return <ErroCarregamento mensagem={error} />;
@@ -189,6 +198,13 @@ function PainelOperacao() {
   // Carga com item não conforme na inspeção (FOR POP 09 1.5): o formulário
   // manda comunicar a Qualidade — o painel é esse aviso.
   const seteDiasAtras = new Date(Date.now() - 7 * 86_400_000).toISOString();
+  // ── Monitoramento de PCC ──
+  const [detectores, verifsDm, imas, verifsIma, fornoRegs] = data.pcc ?? [[], [], [], [], []];
+  const detectoresAtrasados = detectores.filter((d) =>
+    situacaoDetector(verifsDm.find((v) => v.detector_id === d.id) ?? null).situacao === 'atrasado').length;
+  const imasPendentes = imasPendentesNoDia(imas.filter((i) => i.area), verifsIma, hoje).length;
+  const pccAValidar = verifsDm.filter((v) => !v.validado_em).length + verifsIma.filter((v) => !v.validado_em).length
+    + fornoRegs.filter((r) => !r.validado_em && r.data < hoje).length;
   const cargasComNc = recebimentos.filter(
     (r) => r.recebido_em >= seteDiasAtras && itensNaoConformes(r.inspecao).length > 0,
   ).length;
@@ -202,6 +218,9 @@ function PainelOperacao() {
   const acoes = ([
     { modulo: 'lotes', n: aguardando, label: 'Lotes aguardando liberação', to: '/lotes', tom: 'alerta' },
     { modulo: 'lotes', n: bloqueados, label: 'Lotes bloqueados', to: '/lotes', tom: 'critico' },
+    { modulo: 'pcc_fisico', n: detectoresAtrasados, label: 'Detector de metais com teste atrasado', to: '/pcc-fisico?aba=detector', tom: 'critico' },
+    { modulo: 'pcc_fisico', n: imasPendentes, label: 'Ímãs a verificar hoje', to: '/pcc-fisico?aba=imas', tom: 'info' },
+    { modulo: 'qualidade', n: pccAValidar, label: 'Registros de PCC a validar (7 dias)', to: '/pcc-fisico', tom: 'alerta' },
     { modulo: 'recebimentos', n: cargasComNc, label: 'Cargas com inspeção não conforme (7 dias)', to: '/recebimentos', tom: 'critico' },
     { modulo: 'qualidade', n: osParaLiberar, label: 'Equipamentos aguardando liberação', to: '/liberacao-os', tom: 'critico' },
     { modulo: 'nao_conformidades', n: ncsAbertas, label: 'Não conformidades abertas', to: '/nao-conformidades', tom: 'critico' },

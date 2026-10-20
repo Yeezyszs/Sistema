@@ -12,8 +12,7 @@ export function formatarData(iso: string | null): string {
 }
 
 // Data de hoje no fuso local, como YYYY-MM-DD (para default de <input type=date>).
-export function hojeLocalISO(): string {
-  const d = new Date();
+export function hojeLocalISO(d: Date = new Date()): string {
   const off = d.getTimezoneOffset() * 60000;
   return new Date(d.getTime() - off).toISOString().slice(0, 10);
 }

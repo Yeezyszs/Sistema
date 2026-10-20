@@ -1,20 +1,21 @@
 import { useState, type FormEvent } from 'react';
 import {
   listInspecoesRecebimento, garantirChecklist, registrarExecucaoChecklist, registrarInspecaoRecebimento,
-  listHomologacoes, criarHomologacao,
+  listHomologacoes,
   listDocumentosFornecedor, getDocumentosDoFornecedor, enviarDocumentoFornecedor, atualizarResultadoDocumento, urlAssinadaDocumento,
   listFornecedores, mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
+import { FormQuestionarioHomologacao, VerQuestionarioHomologacao } from './QuestionarioHomologacao';
 import { formatarData, formatarDataHora } from '../../lib/format';
 import {
   TIPO_INSPECAO, TIPO_INSPECAO_LABEL, ITENS_INSPECAO,
-  STATUS_HOMOLOGACAO_LABEL, STATUS_HOMOLOGACAO_TOM, classificarFornecedor, execucaoConforme,
+  STATUS_HOMOLOGACAO_LABEL, STATUS_HOMOLOGACAO_TOM, execucaoConforme,
   CATEGORIA_ANALISE, CATEGORIA_ANALISE_LABEL, RESULTADO_DOCUMENTO, RESULTADO_DOCUMENTO_LABEL,
 } from '@sistema/domain';
 import type {
   TipoInspecao, RespostaChecklist, ChecklistItem,
-  DocumentoFornecedor, CategoriaAnalise, ResultadoDocumento,
+  DocumentoFornecedor, CategoriaAnalise, ResultadoDocumento, Homologacao,
 } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus, IconDoc, IconDownload } from '../../components/icons';
@@ -37,7 +38,9 @@ export function FornecedoresPage() {
   const [aba, setAba] = useAbaUrl('aba', ['inspecoes', 'homologacao'] as const, 'inspecoes');
   const [recarregar, setRecarregar] = useState(0);
   const [modalInsp, setModalInsp] = useState(false);
-  const [modalHom, setModalHom] = useState(false);
+  // `true` = nova sem produtor escolhido; string = já para aquele produtor.
+  const [modalHom, setModalHom] = useState<boolean | string>(false);
+  const [vendo, setVendo] = useState<{ h: Homologacao; nome: string } | null>(null);
   const [laudosDe, setLaudosDe] = useState<{ id: string; razao_social: string } | null>(null);
 
   const { data, loading, error } = useAsync(async () => {
@@ -131,13 +134,24 @@ export function FornecedoresPage() {
                     {atual ? (
                       <p className="mt-1 text-xs text-slate-400">
                         <span className={`rounded-full px-2 py-0.5 font-medium ${TOM_CLASS[STATUS_HOMOLOGACAO_TOM[atual.status]]}`}>{STATUS_HOMOLOGACAO_LABEL[atual.status]}</span>
-                        {atual.classificacao ? ` · Classe ${atual.classificacao}` : ''}{atual.pontuacao != null ? ` · ${atual.pontuacao} pts` : ''}
+                        {atual.classificacao ? ` · Classe ${atual.classificacao}` : ''}{atual.pontuacao != null ? ` · ${atual.pontuacao}% conforme` : ''}
                         {atual.validade ? ` · validade ${formatarData(atual.validade)}` : ''}
                       </p>
                     ) : (
                       <p className="mt-1 text-xs text-slate-400">Sem homologação registrada</p>
                     )}
                   </div>
+                  <div className="flex shrink-0 flex-wrap justify-end gap-2">
+                  {atual?.questionario && (
+                    <button onClick={() => setVendo({ h: atual, nome: f.razao_social })}
+                      className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50">
+                      Questionário
+                    </button>
+                  )}
+                  <button onClick={() => setModalHom(f.id)}
+                    className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50">
+                    {atual ? 'Reavaliar' : 'Homologar'}
+                  </button>
                   <button
                     onClick={() => setLaudosDe({ id: f.id, razao_social: f.razao_social })}
                     className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
@@ -146,6 +160,7 @@ export function FornecedoresPage() {
                     Laudos
                     <span className="text-slate-400">{docs.length}{aprovados > 0 ? ` · ${aprovados} aprov.` : ''}</span>
                   </button>
+                  </div>
                 </div>
               </Card>
             );
@@ -157,8 +172,16 @@ export function FornecedoresPage() {
 
       {laudosDe && <ModalLaudos fornecedor={laudosDe} onClose={() => setLaudosDe(null)} onSaved={rec} />}
 
-      <Modal open={modalHom} onClose={() => setModalHom(false)} title="Nova homologação" size="lg">
-        <FormHomologacao fornecedores={data?.fornecedores ?? []} onClose={() => setModalHom(false)} onSaved={rec} />
+      <Modal open={modalHom !== false} onClose={() => setModalHom(false)} title="Homologação de matéria-prima — FOR POP 07 1.1" size="lg">
+        {modalHom !== false && (
+          <FormQuestionarioHomologacao fornecedores={data?.fornecedores ?? []}
+            fornecedorInicial={typeof modalHom === 'string' ? modalHom : undefined}
+            onClose={() => setModalHom(false)} onSaved={rec} />
+        )}
+      </Modal>
+
+      <Modal open={vendo != null} onClose={() => setVendo(null)} title={`Homologação — ${vendo?.nome ?? ''}`} size="lg">
+        {vendo && <VerQuestionarioHomologacao h={vendo.h} />}
       </Modal>
     </>
   );
@@ -244,61 +267,6 @@ function ModalInspecao({
         <div className="flex justify-end gap-3"><Button type="button" variant="outline" onClick={onClose}>Cancelar</Button><Button type="submit" loading={salvando}>Registrar inspeção</Button></div>
       </form>
     </Modal>
-  );
-}
-
-// ── Homologação ────────────────────────────────────────────────
-function FormHomologacao({
-  fornecedores, onClose, onSaved,
-}: {
-  fornecedores: { id: string; razao_social: string }[]; onClose: () => void; onSaved: () => void;
-}) {
-  const [nota, setNota] = useState('');
-  const [salvando, setSalvando] = useState(false);
-  const { sucesso, erro } = useToast();
-  const calc = nota.trim() ? classificarFornecedor(Number(nota)) : null;
-
-  async function onSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const f = new FormData(e.currentTarget);
-    const fornecedor_id = String(f.get('fornecedor_id') ?? '');
-    if (!fornecedor_id) return;
-    setSalvando(true);
-    try {
-      await criarHomologacao({
-        fornecedor_id,
-        status: calc ? calc.status : 'em_analise',
-        pontuacao: nota.trim() ? Number(nota) : null,
-        classificacao: calc?.letra ?? null,
-        validade: String(f.get('validade') ?? '').trim() || null,
-        observacao: String(f.get('observacao') ?? '').trim() || null,
-      });
-      sucesso('Homologação registrada.'); onSaved(); onClose();
-    } catch (err) { erro(err instanceof Error ? err.message : 'Falha.'); }
-    finally { setSalvando(false); }
-  }
-
-  return (
-    <form onSubmit={onSubmit} className="space-y-4">
-      <Field label="Fornecedor">
-        <Select name="fornecedor_id" defaultValue="" required>
-          <option value="" disabled>Selecione…</option>
-          {fornecedores.map((f) => <option key={f.id} value={f.id}>{f.razao_social}</option>)}
-        </Select>
-      </Field>
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="Nota (0–100)"><TextInput type="number" min="0" max="100" value={nota} onChange={(e) => setNota(e.target.value)} placeholder="85" /></Field>
-        <Field label="Validade"><TextInput name="validade" type="date" /></Field>
-      </div>
-      {calc && (
-        <div className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3 text-sm">
-          <span className="text-slate-600">Classe <span className="font-semibold text-slate-900">{calc.letra}</span></span>
-          <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${TOM_CLASS[STATUS_HOMOLOGACAO_TOM[calc.status]]}`}>{STATUS_HOMOLOGACAO_LABEL[calc.status]}</span>
-        </div>
-      )}
-      <Field label="Observação"><TextInput name="observacao" placeholder="—" /></Field>
-      <div className="flex justify-end gap-3"><Button type="button" variant="outline" onClick={onClose}>Cancelar</Button><Button type="submit" loading={salvando}>Registrar</Button></div>
-    </form>
   );
 }
 

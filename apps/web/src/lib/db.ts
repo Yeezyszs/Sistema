@@ -1118,6 +1118,16 @@ export async function criarHomologacao(payload: NovaHomologacao): Promise<void> 
   if (res.error) throw new Error(res.error.message);
 }
 
+// Questionário assinado (foto ou PDF) — mesmo bucket privado dos laudos.
+export async function enviarQuestionarioAssinado(fornecedorId: string, arquivo: File): Promise<string> {
+  const path = `homologacao/${fornecedorId}/${Date.now()}-${nomeArquivoSeguro(arquivo.name)}`;
+  const up = await supabase.storage
+    .from('fornecedores')
+    .upload(path, arquivo, { upsert: false, contentType: arquivo.type || undefined });
+  if (up.error) throw new Error(up.error.message);
+  return path;
+}
+
 // ── Fornecedores: laudos / documentos (PDF no Storage) ─────────
 export async function listDocumentosFornecedor(): Promise<DocumentoFornecedor[]> {
   return unwrap<DocumentoFornecedor[]>(

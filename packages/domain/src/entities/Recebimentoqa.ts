@@ -71,6 +71,13 @@ export interface Homologacao {
   classificacao: string | null;
   validade: string | null;
   observacao: string | null;
+  // ── Questionário FOR POP 07 1.1 ──
+  questionario: Record<string, 'c' | 'nc' | 'na'> | null;
+  citacoes: Record<string, string> | null;
+  dados: DadosHomologacao | null;
+  agrotoxicos: string[] | null;
+  arquivo_path: string | null;
+  arquivo_nome: string | null;
   avaliado_em: string;
   created_at: string;
   created_by: string | null;
@@ -83,6 +90,24 @@ export interface NovaHomologacao {
   classificacao?: string | null;
   validade?: string | null;
   observacao?: string | null;
+  questionario?: Record<string, 'c' | 'nc' | 'na'> | null;
+  citacoes?: Record<string, string> | null;
+  dados?: DadosHomologacao | null;
+  agrotoxicos?: string[] | null;
+  arquivo_path?: string | null;
+  arquivo_nome?: string | null;
+  avaliado_em?: string;
+}
+
+/** Cabeçalho do questionário de homologação (FOR POP 07 1.1). */
+export interface DadosHomologacao {
+  propriedade?: string;
+  codigo_produtor?: string;
+  localizacao?: string;
+  variedades?: string;
+  comprador?: string;
+  tipo_producao?: 'convencional' | 'organica';
+  area_cultivada?: string;
 }
 
 // Classificação A/B/C/D a partir da nota (índice de qualidade do fornecedor).

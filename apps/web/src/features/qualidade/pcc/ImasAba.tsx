@@ -20,9 +20,8 @@ export function ImasAba() {
   const [area, setArea] = useState<string>(AREAS_IMA[0]);
   const rec = () => setRecarregar((n) => n + 1);
   const hoje = hojeLocalISO();
-  const desde = new Date(Date.now() - 7 * 86_400_000).toISOString();
-
   const { data, loading, error } = useAsync(async () => {
+    const desde = new Date(Date.now() - 7 * 86_400_000).toISOString();
     const [imas, verifs] = await Promise.all([listImas(), listVerificacoesImaDesde(desde)]);
     return { imas: imas.filter((i) => i.area), verifs };
   }, [recarregar]);

@@ -139,6 +139,7 @@ function PainelOperacao() {
   const vePcc = podeAcessarModulo('pcc_fisico');
 
   const { data, loading, error } = useAsync(async () => {
+    // Calculado na busca, não no render: o render tem de ser puro.
     const seteDias = new Date(Date.now() - 7 * 86_400_000).toISOString();
     const [apontSemana, linhas, recebimentos, prog, lotes, ops, ncs, osPcm, paradas, calibracoes, pedidos, cargas, pcc] =
       await Promise.all([
@@ -151,7 +152,7 @@ function PainelOperacao() {
               .catch(() => null)
           : Promise.resolve(null),
       ]);
-    return { apontSemana, recebimentos, prog, lotes, ops, ncs, osPcm, paradas, calibracoes, pedidos, cargas, pcc, linhas, linhasMap: mapBy(linhas, 'id') };
+    return { apontSemana, recebimentos, prog, lotes, ops, ncs, osPcm, paradas, calibracoes, pedidos, cargas, pcc, seteDiasAtras: seteDias, linhas, linhasMap: mapBy(linhas, 'id') };
   }, [de, ate]);
 
   if (error || (loading === false && !data)) return <ErroCarregamento mensagem={error} />;
@@ -197,7 +198,7 @@ function PainelOperacao() {
   const osParaLiberar = osPcm.filter((o) => o.status === 'Aguardando Qualidade').length;
   // Carga com item não conforme na inspeção (FOR POP 09 1.5): o formulário
   // manda comunicar a Qualidade — o painel é esse aviso.
-  const seteDiasAtras = new Date(Date.now() - 7 * 86_400_000).toISOString();
+  const seteDiasAtras = data.seteDiasAtras;
   // ── Monitoramento de PCC ──
   const [detectores, verifsDm, imas, verifsIma, fornoRegs] = data.pcc ?? [[], [], [], [], []];
   const detectoresAtrasados = detectores.filter((d) =>

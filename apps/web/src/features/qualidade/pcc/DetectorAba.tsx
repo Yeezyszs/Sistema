@@ -27,8 +27,8 @@ export function DetectorAba() {
   const [recarregar, setRecarregar] = useState(0);
   const rec = () => setRecarregar((n) => n + 1);
   // Últimos 7 dias: o bastante para a Qualidade validar a semana.
-  const desde = new Date(Date.now() - 7 * 86_400_000).toISOString();
   const { data, loading, error } = useAsync(async () => {
+    const desde = new Date(Date.now() - 7 * 86_400_000).toISOString();
     const [detectores, verifs, lotes] = await Promise.all([
       listDetectoresMetais(), listVerificacoesDMDesde(desde), listLotes(),
     ]);
@@ -224,22 +224,6 @@ function FormTeste({ detectores, lotes, onSaved }: {
     finally { setSalvando(false); }
   }
 
-  const Corpo = ({ label, v, set }: { label: string; v: boolean; set: (b: boolean) => void }) => (
-    <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 px-3 py-2">
-      <span className="text-[12.5px] text-slate-700">{label}</span>
-      <span className="flex gap-1">
-        {([true, false] as const).map((b) => (
-          <button key={String(b)} type="button" aria-pressed={v === b} onClick={() => set(b)}
-            className={`rounded-md border px-2 py-1 text-[11px] font-semibold transition ${
-              v === b ? (b ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-red-600 bg-red-600 text-white')
-                : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50'
-            }`}>
-            {b ? 'Detecta e rejeita' : 'Não detecta'}
-          </button>
-        ))}
-      </span>
-    </div>
-  );
 
   return (
     <form key={versao} onSubmit={onSubmit} className="space-y-3">
@@ -293,5 +277,25 @@ function FormTeste({ detectores, lotes, onSaved }: {
           title="Não houve produção neste horário">NHP</Button>
       </div>
     </form>
+  );
+}
+
+// Um corpo de prova: detecta e rejeita, ou não.
+function Corpo({ label, v, set }: { label: string; v: boolean; set: (b: boolean) => void }) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 px-3 py-2">
+      <span className="text-[12.5px] text-slate-700">{label}</span>
+      <span className="flex gap-1">
+        {([true, false] as const).map((b) => (
+          <button key={String(b)} type="button" aria-pressed={v === b} onClick={() => set(b)}
+            className={`rounded-md border px-2 py-1 text-[11px] font-semibold transition ${
+              v === b ? (b ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-red-600 bg-red-600 text-white')
+                : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50'
+            }`}>
+            {b ? 'Detecta e rejeita' : 'Não detecta'}
+          </button>
+        ))}
+      </span>
+    </div>
   );
 }

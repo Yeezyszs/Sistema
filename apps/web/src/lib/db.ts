@@ -1688,10 +1688,17 @@ export async function lancarMovimentoPallet(payload: NovoMovimentoPallet): Promi
 }
 
 // ── ERP/Qualidade: Reprocesso ──────────────────────────────────
+// Em páginas de 1000: o histórico importado da planilha passa do limite de
+// linhas que a API devolve numa resposta só.
 export async function listReprocessos(): Promise<Reprocesso[]> {
-  return unwrap<Reprocesso[]>(
-    await producao().from('reprocessos').select('*').order('numero', { ascending: false }),
-  );
+  const todos: Reprocesso[] = [];
+  for (let de = 0; ; de += 1000) {
+    const pagina = unwrap<Reprocesso[]>(
+      await producao().from('reprocessos').select('*').order('numero', { ascending: false }).range(de, de + 999),
+    );
+    todos.push(...pagina);
+    if (pagina.length < 1000) return todos;
+  }
 }
 
 export async function criarReprocesso(payload: NovoReprocesso): Promise<void> {

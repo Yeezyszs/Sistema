@@ -159,3 +159,16 @@ export const AMOSTRAGEM_VISUAL_PADRAO =
 export function resultadoVisualConforme(resultado: string): boolean {
   return resultado === 'Ausente' || resultado === 'Não identificado';
 }
+
+// PDF do laboratório externo (microbiológico) anexado ao laudo interno.
+// Só-inclusão, como o próprio laudo.
+export interface LaudoAnexo {
+  id: string;
+  org_id: string;
+  laudo_id: string;
+  tipo: 'microbiologico' | 'outro';
+  caminho: string;
+  nome: string | null;
+  created_at: string;
+  created_by: string | null;
+}

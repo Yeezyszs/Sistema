@@ -1,3 +1,4 @@
+import type { ChecklistExpedicao, LiberacaoCarga } from './ChecklistExpedicao';
 // ERP — Expedição & Carregamentos. Fecha o ciclo pedido → lote → carga.
 // Registrar um carregamento dá baixa no estoque e marca o pedido carregado.
 export const STATUS_CARGA = ['carregado', 'cancelado'] as const;
@@ -30,6 +31,15 @@ export interface Carregamento {
   status: StatusCarga;
   data: string;
   observacoes: string | null;
+  // ── Checklist de expedição (FOR POP 14 1.1) ──
+  ultimo_produto: string | null;
+  checklist: ChecklistExpedicao | null;
+  checklist_obs: string | null;
+  inspecao_obs: string | null;
+  liberacao: LiberacaoCarga | null;
+  liberacao_justificativa: string | null;
+  liberado_em: string | null;
+  liberado_por: string | null;
   created_at: string;
   created_by: string | null;
 }
@@ -48,4 +58,7 @@ export interface NovoCarregamento {
   nota_fiscal?: string | null;
   data: string;
   observacoes?: string | null;
+  ultimo_produto?: string | null;
+  checklist?: ChecklistExpedicao | null;
+  checklist_obs?: string | null;
 }

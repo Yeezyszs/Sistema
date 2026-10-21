@@ -6,8 +6,9 @@ import {
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { formatarData, formatarQuantidade, hojeLocalISO } from '../../lib/format';
-import { STATUS_CARGA_LABEL, STATUS_CARGA_TOM, posicaoLabel } from '@sistema/domain';
-import type { Carregamento } from '@sistema/domain';
+import { STATUS_CARGA_LABEL, STATUS_CARGA_TOM, posicaoLabel, pendentesExpedicao, situacaoExpedicao, LIBERACAO_CARGA_LABEL } from '@sistema/domain';
+import type { Carregamento, ChecklistExpedicao } from '@sistema/domain';
+import { SecoesChecklist, ModalInspecaoCarga } from './ChecklistExpedicao';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus, IconSearch } from '../../components/icons';
 import { useToast } from '../../components/Toast';
@@ -24,6 +25,8 @@ export function ExpedicaoPage() {
   const [busca, setBusca] = useState('');
   const [pedidoId, setPedidoId] = useState('');
   const [posicaoId, setPosicaoId] = useState('');
+  const [checklistNovo, setChecklistNovo] = useState<ChecklistExpedicao>({});
+  const [inspecionando, setInspecionando] = useState<Carregamento | null>(null);
   const { sucesso, erro } = useToast();
 
   const { data, loading, error } = useAsync(async () => {
@@ -96,6 +99,9 @@ export function ExpedicaoPage() {
     const num = (k: string) => { const v = String(f.get(k) ?? '').trim(); return v ? Number(v) : null; };
     const txt = (k: string) => String(f.get(k) ?? '').trim() || null;
     if (!pedidoSel) { erro('Selecione um pedido aprovado.'); return; }
+    if (pendentesExpedicao(checklistNovo, 'logistica').length > 0) {
+      erro('Responda o checklist de expedição (seções 1 e 2).'); return;
+    }
     setSalvando(true);
     try {
       await criarCarregamento({
@@ -112,8 +118,11 @@ export function ExpedicaoPage() {
         transportadora: txt('transportadora'),
         nota_fiscal: txt('nota_fiscal'),
         observacoes: txt('observacoes'),
+        ultimo_produto: txt('ultimo_produto'),
+        checklist: checklistNovo,
+        checklist_obs: txt('checklist_obs'),
       });
-      sucesso('Carga registrada — estoque baixado e pedido carregado.');
+      sucesso('Carga registrada — aguardando a inspeção da Qualidade.');
       setModal(false); setPedidoId(''); rec();
     } catch (err) { erro(err instanceof Error ? err.message : 'Falha.'); }
     finally { setSalvando(false); }
@@ -147,7 +156,7 @@ export function ExpedicaoPage() {
     catch (err) { erro(err instanceof Error ? err.message : 'Falha.'); }
   }
 
-  function abrir() { setPedidoId(''); setPosicaoId(''); setModal(true); }
+  function abrir() { setPedidoId(''); setPosicaoId(''); setChecklistNovo({}); setModal(true); }
 
   return (
     <>
@@ -186,6 +195,7 @@ export function ExpedicaoPage() {
                 <th className="hidden px-3 py-[11px] lg:table-cell">Transportadora</th>
                 <th className="hidden px-3 py-[11px] md:table-cell">NF</th>
                 <th className="px-3 py-[11px]">Status</th>
+                <th className="px-3 py-[11px]">Checklist</th>
                 <th className="px-3 py-[11px]" />
               </tr>
             </thead>
@@ -206,7 +216,11 @@ export function ExpedicaoPage() {
                       {STATUS_CARGA_LABEL[c.status]}
                     </span>
                   </td>
+                  <td className="px-3 py-2.5"><SeloChecklist c={c} /></td>
                   <td className="px-3 py-2.5 text-right whitespace-nowrap">
+                    {c.status === 'carregado' && (
+                      <button onClick={() => setInspecionando(c)} className="mr-3 text-xs font-semibold text-brand-600 hover:text-brand-700">Checklist</button>
+                    )}
                     <button onClick={() => setEditando(c)} className="mr-3 text-xs font-medium text-slate-500 hover:text-brand-600">Editar</button>
                     {c.status === 'carregado' && (
                       <button onClick={() => void cancelar(c.id)} className="mr-3 text-xs font-medium text-slate-400 hover:text-amber-600">Cancelar</button>
@@ -282,12 +296,31 @@ export function ExpedicaoPage() {
 
           <Field label="Observações"><TextInput name="observacoes" placeholder="—" /></Field>
 
+          <div className="space-y-3 border-t border-slate-100 pt-4">
+            <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Checklist de expedição — FOR POP 14 1.1 (Logística)</p>
+            <Field label="Último produto transportado pelo veículo">
+              <TextInput name="ultimo_produto" placeholder="Ex.: farinha, grãos, ração…" />
+            </Field>
+            <SecoesChecklist quem="logistica" respostas={checklistNovo} onChange={setChecklistNovo} />
+            <Field label="Observação da Logística"><TextInput name="checklist_obs" placeholder="—" /></Field>
+          </div>
+
           <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
             <Button type="button" variant="outline" onClick={() => setModal(false)}>Cancelar</Button>
             <Button type="submit" loading={salvando}>Registrar carga</Button>
           </div>
         </form>
       </Modal>
+
+      {inspecionando && data && (
+        <ModalInspecaoCarga
+          carga={inspecionando}
+          cliente={inspecionando.cliente_id ? data.clientesMap.get(inspecionando.cliente_id)?.nome ?? '—' : '—'}
+          lote={inspecionando.lote_id ? data.lotesMap.get(inspecionando.lote_id)?.codigo ?? null : null}
+          onClose={() => setInspecionando(null)}
+          onSaved={() => { setInspecionando(null); rec(); }}
+        />
+      )}
 
       {/* Edição de carreta/motorista/NF */}
       <Modal open={!!editando} onClose={() => setEditando(null)} title={editando ? `Editar carga #${editando.numero}` : ''} size="lg">
@@ -311,4 +344,21 @@ export function ExpedicaoPage() {
       </Modal>
     </>
   );
+}
+
+function SeloChecklist({ c }: { c: Carregamento }) {
+  const sit = situacaoExpedicao(c);
+  const estilo: Record<string, string> = {
+    cancelada: 'text-slate-300',
+    logistica_pendente: 'bg-slate-100 text-slate-600',
+    aguardando_qualidade: 'bg-amber-100 text-amber-800',
+    aprovado: 'bg-emerald-100 text-emerald-700',
+    aprovado_restricao: 'bg-amber-100 text-amber-800',
+    reprovado: 'bg-red-100 text-red-700',
+  };
+  const texto = sit === 'cancelada' ? '—'
+    : sit === 'logistica_pendente' ? 'Sem checklist'
+      : sit === 'aguardando_qualidade' ? 'Aguardando Qualidade'
+        : LIBERACAO_CARGA_LABEL[sit];
+  return <span className={`whitespace-nowrap rounded px-1.5 py-0.5 text-[11px] font-semibold ${estilo[sit]}`}>{texto}</span>;
 }

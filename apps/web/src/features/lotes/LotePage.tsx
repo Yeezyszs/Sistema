@@ -24,6 +24,7 @@ import {
   mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
+import { MicroDoLaudo } from './MicroDoLaudo';
 import { formatarData, formatarHora, formatarQuantidade, formatarDuracao } from '../../lib/format';
 import {
   etapaConcluida,
@@ -538,6 +539,7 @@ export function LotePage() {
                       <span className={`text-xs font-semibold ${l.conforme ? 'text-brand-600' : 'text-red-600'}`}>
                         {l.conforme ? 'Aprovado' : 'Reprovado'}
                       </span>
+                      {l.tipo === 'fisico_quimico' && <MicroDoLaudo laudoId={l.id} />}
                       <Link
                         to={`/laudos/${l.id}/imprimir`}
                         className="text-xs font-medium text-brand-600 hover:text-brand-700"

@@ -8,7 +8,7 @@ import {
 import { useAsync } from '../../lib/useAsync';
 import { formatarData, formatarQuantidade, hojeLocalISO } from '../../lib/format';
 import {
-  calcularRendimento, ncEstaAberta, situacaoCalibracao, itensNaoConformes, situacaoDetector, imasPendentesNoDia,
+  calcularRendimento, ncEstaAberta, situacaoCalibracao, itensNaoConformes, situacaoDetector, situacaoExpedicao, imasPendentesNoDia,
   STATUS_LOTE, STATUS_LOTE_LABEL,
 } from '@sistema/domain';
 import type { Perfil, StatusLote } from '@sistema/domain';
@@ -214,6 +214,8 @@ function PainelOperacao() {
   const calibVencendo = calibracoes.filter((c) => ['a_vencer', 'vencida'].includes(situacaoCalibracao(c.valido_ate))).length;
   const carteira = pedidos.filter((p) => p.status === 'aprovado' && p.situacao !== 'carregado');
   const cargasHoje = cargas.filter((c) => c.data === hoje).length;
+  // Carga com checklist da Logística feito e sem resultado da Qualidade.
+  const cargasAInspecionar = cargas.filter((c) => situacaoExpedicao(c) === 'aguardando_qualidade').length;
 
   // Cada tile declara o módulo que ele abre, para sumir de quem não o acessa.
   const acoes = ([
@@ -223,6 +225,7 @@ function PainelOperacao() {
     { modulo: 'pcc_fisico', n: imasPendentes, label: 'Ímãs a verificar hoje', to: '/pcc-fisico?aba=imas', tom: 'info' },
     { modulo: 'qualidade', n: pccAValidar, label: 'Registros de PCC a validar (7 dias)', to: '/pcc-fisico', tom: 'alerta' },
     { modulo: 'recebimentos', n: cargasComNc, label: 'Cargas com inspeção não conforme (7 dias)', to: '/recebimentos', tom: 'critico' },
+    { modulo: 'qualidade', n: cargasAInspecionar, label: 'Cargas aguardando inspeção da Qualidade', to: '/expedicao', tom: 'critico' },
     { modulo: 'qualidade', n: osParaLiberar, label: 'Equipamentos aguardando liberação', to: '/liberacao-os', tom: 'critico' },
     { modulo: 'nao_conformidades', n: ncsAbertas, label: 'Não conformidades abertas', to: '/nao-conformidades', tom: 'critico' },
     { modulo: 'manutencao', n: osAbertas, label: 'O.S. de manutenção abertas', to: '/manutencao', tom: 'alerta' },

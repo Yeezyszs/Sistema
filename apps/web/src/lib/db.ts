@@ -58,6 +58,7 @@ import type {
   NovoParametro,
   LaudoInterno,
   LaudoResultado,
+  LaudoAnexo,
   NovoLaudo,
   NovoResultadoLaudo,
   NaoConformidade,
@@ -707,6 +708,24 @@ export async function criarLaudo(
     if (resR.error) throw new Error(resR.error.message);
   }
   return novo;
+}
+
+// Laudo microbiológico externo (PDF) anexado ao laudo interno.
+export async function listAnexosDosLaudos(laudoIds: string[]): Promise<LaudoAnexo[]> {
+  if (laudoIds.length === 0) return [];
+  return unwrap<LaudoAnexo[]>(
+    await qualidade().from('laudo_anexos').select('*').in('laudo_id', laudoIds).order('created_at'),
+  );
+}
+
+export async function anexarMicroNoLaudo(laudoId: string, arquivo: File): Promise<void> {
+  const caminho = `laudos-micro/${laudoId}/${Date.now()}-${nomeArquivoSeguro(arquivo.name)}`;
+  const up = await supabase.storage
+    .from('fornecedores')
+    .upload(caminho, arquivo, { upsert: false, contentType: arquivo.type || undefined });
+  if (up.error) throw new Error(up.error.message);
+  const res = await qualidade().from('laudo_anexos').insert({ laudo_id: laudoId, caminho, nome: arquivo.name });
+  if (res.error) throw new Error(res.error.message);
 }
 
 // ── Não Conformidades ──────────────────────────────────────────
@@ -1635,7 +1654,10 @@ export async function criarCarregamento(payload: NovoCarregamento): Promise<void
   if (res.error) throw new Error(res.error.message);
 }
 
-export async function atualizarCarregamento(id: string, patch: Partial<NovoCarregamento>): Promise<void> {
+export async function atualizarCarregamento(
+  id: string,
+  patch: Partial<NovoCarregamento & Pick<Carregamento, 'inspecao_obs' | 'liberacao' | 'liberacao_justificativa'>>,
+): Promise<void> {
   const res = await producao().from('carregamentos').update(patch).eq('id', id);
   if (res.error) throw new Error(res.error.message);
 }

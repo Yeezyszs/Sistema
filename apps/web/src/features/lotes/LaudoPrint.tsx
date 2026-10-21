@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { getLaudo, getResultadosDoLaudo, getLote, getProduto, getCliente } from '../../lib/db';
+import { getLaudo, getResultadosDoLaudo, getLote, getProduto, getCliente, listAnexosDosLaudos } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { formatarData, formatarQuantidade } from '../../lib/format';
 import { TIPO_LAUDO_LABEL } from '@sistema/domain';
@@ -22,13 +22,14 @@ export function LaudoPrint() {
   const { data, loading, error } = useAsync(async () => {
     const laudo = await getLaudo(id);
     if (!laudo) return { laudo: null } as const;
-    const [resultados, lote, produto] = await Promise.all([
+    const [resultados, lote, produto, anexos] = await Promise.all([
       getResultadosDoLaudo(id),
       getLote(laudo.lote_id),
       getProduto(laudo.produto_id),
+      listAnexosDosLaudos([id]).catch(() => []),
     ]);
     const cliente = lote?.cliente_id ? await getCliente(lote.cliente_id) : null;
-    return { laudo, resultados, lote, produto, cliente };
+    return { laudo, resultados, lote, produto, cliente, anexos };
   }, [id]);
 
   if (error) return <ErroCarregamento mensagem={error} />;
@@ -42,7 +43,7 @@ export function LaudoPrint() {
   if (error || !data || !data.laudo)
     return <div className="p-10 text-sm text-red-600">Laudo não encontrado.</div>;
 
-  const { laudo, resultados, lote, produto, cliente } = data;
+  const { laudo, resultados, lote, produto, cliente, anexos } = data;
   const dados = (laudo.dados ?? {}) as LaudoDados;
   const isVisual = laudo.tipo === 'verificacao_visual';
 
@@ -144,6 +145,7 @@ export function LaudoPrint() {
         {isVisual === false && (
           <p className="mt-4 text-xs text-slate-400">
             Análises microbiológicas realizadas em laboratório externo acreditado conforme a ISO/IEC 17025.
+            {anexos.length > 0 && <> Laudo externo anexo: {anexos.at(-1)!.nome ?? 'documento anexado'}.</>}
           </p>
         )}
 

@@ -53,6 +53,8 @@ export const MODULOS_POR_PERFIL: Record<Perfil, Modulo[]> = {
     'lotes', 'recebimentos', 'fornecedores', 'qualidade', 'acompanhamento', 'monitoramento_agua', 'insumos_lab', 'contraprovas', 'pcc_fisico', 'ppho',
     'especificacoes', 'calibracao', 'analise_risco', 'auditoria', 'ambiental',
     'nao_conformidades', 'reprocesso', 'documentos',
+    // Inspeção e liberação da carga (FOR POP 14 1.1, seções 3 e 4).
+    'expedicao',
   ],
   manutencao: ['painel', 'manutencao', 'calibracao', 'pcc_fisico', 'almoxarifado'],
   // Compras cuida da documentação de homologação e do estoque de consumíveis

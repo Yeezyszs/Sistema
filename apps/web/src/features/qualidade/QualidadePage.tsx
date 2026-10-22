@@ -12,12 +12,13 @@ import {
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { formatarHora } from '../../lib/format';
-import { TIPO_PCC_LABEL, limiteLabel } from '@sistema/domain';
+import { limiteLabel } from '@sistema/domain';
 import type { PontoControle } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, Select, TextInput, TextArea, ErroCarregamento } from '../../components/ui';
 import { StatusChip } from '../../components/StatusChip';
-import { IconShield, IconFlask } from '../../components/icons';
+import { IconShield } from '../../components/icons';
 import { useToast } from '../../components/Toast';
+import { LimitesPcc } from './LimitesPcc';
 
 export function QualidadePage() {
   const [recarregar, setRecarregar] = useState(0);
@@ -95,43 +96,8 @@ export function QualidadePage() {
         </div>
       </div>
 
-      {/* Catálogo de pontos de controle */}
-      <Card className="mt-6 overflow-hidden">
-        <div className="flex items-center gap-3 border-b border-slate-200 px-5 py-4">
-          <IconFlask width={18} height={18} className="text-slate-400" />
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
-            Pontos de controle (FSSC 22000)
-          </h2>
-        </div>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
-              <th className="px-5 py-[11px]">Código</th>
-              <th className="px-5 py-[11px]">Nome</th>
-              <th className="hidden px-5 py-[11px] sm:table-cell">Tipo</th>
-              <th className="hidden px-5 py-[11px] md:table-cell">Parâmetro</th>
-              <th className="hidden px-5 py-[11px] md:table-cell">Limite</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {(data?.pontosControle ?? []).map((pc) => (
-              <tr key={pc.codigo} className="hover:bg-slate-50">
-                <td className="px-5 py-3 font-mono text-xs text-slate-500">{pc.codigo}</td>
-                <td className="px-5 py-3 font-medium text-slate-800">{pc.nome}</td>
-                <td className="hidden px-5 py-3 sm:table-cell">
-                  <TipoBadge tipo={pc.tipo} />
-                </td>
-                <td className="hidden px-5 py-3 text-slate-500 md:table-cell">
-                  {pc.parametro ?? '—'}
-                </td>
-                <td className="hidden px-5 py-3 text-slate-500 md:table-cell">
-                  {limiteLabel(pc)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Card>
+      {/* Pontos de controle: limites editáveis pela Qualidade */}
+      <LimitesPcc pontos={data?.pontosControle ?? []} onSaved={() => setRecarregar((n) => n + 1)} />
     </>
   );
 }
@@ -375,19 +341,6 @@ function LotePendente({
         </div>
       )}
     </Card>
-  );
-}
-
-function TipoBadge({ tipo }: { tipo: string }) {
-  const colors: Record<string, string> = {
-    ccp: 'bg-red-100 text-red-700',
-    prp: 'bg-amber-100 text-amber-700',
-    prpo: 'bg-sky-100 text-sky-700',
-  };
-  return (
-    <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${colors[tipo] ?? 'bg-slate-100 text-slate-600'}`}>
-      {TIPO_PCC_LABEL[tipo as keyof typeof TIPO_PCC_LABEL] ?? tipo.toUpperCase()}
-    </span>
   );
 }
 

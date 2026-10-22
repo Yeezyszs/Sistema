@@ -545,6 +545,27 @@ export async function listPontosControle(): Promise<PontoControle[]> {
   );
 }
 
+// Limite de PCC: só a Qualidade altera, com motivo; o banco grava o histórico.
+export async function alterarLimitePontoControle(
+  codigo: string, min: number | null, max: number | null, acao: string | null, motivo: string,
+): Promise<void> {
+  const res = await qualidade().rpc('alterar_limite_pc', { p_codigo: codigo, p_min: min, p_max: max, p_acao: acao, p_motivo: motivo });
+  if (res.error) throw new Error(res.error.message);
+}
+
+export interface HistoricoPontoControle {
+  id: string; codigo: string;
+  limite_min_ant: number | null; limite_max_ant: number | null;
+  limite_min: number | null; limite_max: number | null;
+  motivo: string; alterado_por: string | null; alterado_em: string;
+}
+
+export async function listHistoricoPontosControle(): Promise<HistoricoPontoControle[]> {
+  return unwrap<HistoricoPontoControle[]>(
+    await qualidade().from('pontos_controle_historico').select('*').order('alterado_em', { ascending: false }).limit(50),
+  );
+}
+
 export async function getMonitoramentosDoLote(loteId: string): Promise<Monitoramento[]> {
   return unwrap<Monitoramento[]>(
     await qualidade()
@@ -588,6 +609,13 @@ export async function criarEspecificacao(payload: NovaEspecificacao): Promise<Es
   const res = await qualidade().from('especificacoes').insert(payload).select('*').single();
   if (res.error) throw new Error(res.error.message);
   return res.data as Especificacao;
+}
+
+// Revisão de especificação: a versão antiga deixa de valer, mas fica gravada
+// (os laudos já emitidos apontam para ela).
+export async function encerrarEspecificacao(id: string): Promise<void> {
+  const res = await qualidade().from('especificacoes').update({ vigente: false }).eq('id', id);
+  if (res.error) throw new Error(res.error.message);
 }
 
 export async function criarParametro(payload: NovoParametro): Promise<void> {

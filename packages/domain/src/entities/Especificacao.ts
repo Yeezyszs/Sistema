@@ -29,6 +29,7 @@ export interface NovaEspecificacao {
   cliente_id?: string | null;
   nome?: string | null;
   shelf_life_dias?: number | null;
+  versao?: number;
 }
 
 export interface NovoParametro {

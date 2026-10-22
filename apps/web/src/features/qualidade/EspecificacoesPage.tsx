@@ -4,13 +4,14 @@ import {
   getParametrosDaEspecificacao,
   criarEspecificacao,
   criarParametro,
+  encerrarEspecificacao,
   listProdutos,
   listClientes,
   mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { limiteTexto, TEMPLATE_FISICO_QUIMICO } from '@sistema/domain';
-import type { EspecificacaoParametro } from '@sistema/domain';
+import type { Especificacao, EspecificacaoParametro } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconFlask, IconPlus, IconChevronRight } from '../../components/icons';
 import { useToast } from '../../components/Toast';
@@ -31,6 +32,8 @@ export function EspecificacoesPage() {
   const [salvando, setSalvando] = useState(false);
   const [expandida, setExpandida] = useState<string | null>(null);
   const [linhas, setLinhas] = useState<LinhaParam[]>([{ ...LINHA_VAZIA }]);
+  // Revisão: a especificação vigente que vai virar a versão anterior.
+  const [revisando, setRevisando] = useState<Especificacao | null>(null);
   const { sucesso, erro } = useToast();
 
   const { data, loading, error } = useAsync(async () => {
@@ -55,7 +58,20 @@ export function EspecificacoesPage() {
   }
 
   function abrirModal() {
+    setRevisando(null);
     setLinhas([{ ...LINHA_VAZIA }]);
+    setModalAberto(true);
+  }
+
+  function revisar(esp: Especificacao, params: EspecificacaoParametro[]) {
+    setRevisando(esp);
+    setLinhas(params.map((p) => ({
+      ensaio: p.ensaio,
+      limite_min: p.limite_min != null ? String(p.limite_min) : '',
+      limite_max: p.limite_max != null ? String(p.limite_max) : '',
+      unidade: p.unidade ?? '',
+      metodologia: p.metodologia ?? '',
+    })));
     setModalAberto(true);
   }
 
@@ -73,6 +89,7 @@ export function EspecificacoesPage() {
     setSalvando(true);
     try {
       const esp = await criarEspecificacao({
+        versao: revisando ? revisando.versao + 1 : 1,
         produto_id,
         cliente_id: String(form.get('cliente_id') ?? '') || null,
         nome: String(form.get('nome') ?? '').trim() || null,
@@ -90,7 +107,9 @@ export function EspecificacoesPage() {
           ordem: ordem++,
         });
       }
-      sucesso('Especificação cadastrada.');
+      // A anterior só deixa de valer depois que a nova está completa.
+      if (revisando) await encerrarEspecificacao(revisando.id);
+      sucesso(revisando ? `Versão ${revisando.versao + 1} em vigor — a anterior fica no histórico.` : 'Especificação cadastrada.');
       setModalAberto(false);
       setRecarregar((n) => n + 1);
     } catch (err) {
@@ -140,17 +159,20 @@ export function EspecificacoesPage() {
               aberta={expandida === esp.id}
               onToggle={() => setExpandida((v) => (v === esp.id ? null : esp.id))}
               especId={esp.id}
+              versao={esp.versao}
+              onRevisar={(params) => revisar(esp, params)}
             />
           ))}
         </div>
       )}
 
-      <Modal open={modalAberto} onClose={() => setModalAberto(false)} title="Nova especificação" size="xl">
-        <form onSubmit={onSubmit} className="space-y-4">
+      <Modal open={modalAberto} onClose={() => setModalAberto(false)}
+        title={revisando ? `Revisar especificação — versão ${revisando.versao + 1}` : 'Nova especificação'} size="xl">
+        <form key={revisando?.id ?? 'nova'} onSubmit={onSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div className="col-span-2">
               <Field label="Produto">
-                <Select name="produto_id" defaultValue="" required>
+                <Select name="produto_id" defaultValue={revisando?.produto_id ?? ''} required>
                   <option value="" disabled>Selecione…</option>
                   {(data?.produtosList ?? []).map((p) => (
                     <option key={p.id} value={p.id}>{p.nome}</option>
@@ -159,7 +181,7 @@ export function EspecificacoesPage() {
               </Field>
             </div>
             <Field label="Cliente">
-              <Select name="cliente_id" defaultValue="">
+              <Select name="cliente_id" defaultValue={revisando?.cliente_id ?? ''}>
                 <option value="">Padrão (interna)</option>
                 {(data?.clientesList ?? []).map((c) => (
                   <option key={c.id} value={c.id}>{c.nome}</option>
@@ -167,11 +189,11 @@ export function EspecificacoesPage() {
               </Select>
             </Field>
             <Field label="Shelf life (dias)">
-              <TextInput name="shelf_life_dias" type="number" min="0" placeholder="180" />
+              <TextInput name="shelf_life_dias" type="number" min="0" placeholder="180" defaultValue={revisando?.shelf_life_dias ?? ''} />
             </Field>
           </div>
           <Field label="Rótulo (opcional)">
-            <TextInput name="nome" placeholder="Ex.: GM Farinha Crua 5%" />
+            <TextInput name="nome" placeholder="Ex.: GM Farinha Crua 5%" defaultValue={revisando?.nome ?? ''} />
           </Field>
 
           <div className="flex items-center justify-between">
@@ -217,10 +239,11 @@ export function EspecificacoesPage() {
 }
 
 function EspecCard({
-  titulo, produto, cliente, shelf, aberta, onToggle, especId,
+  titulo, produto, cliente, shelf, aberta, onToggle, especId, versao, onRevisar,
 }: {
   titulo: string; produto: string; cliente: string | null; shelf: number | null;
-  aberta: boolean; onToggle: () => void; especId: string;
+  aberta: boolean; onToggle: () => void; especId: string; versao: number;
+  onRevisar: (params: EspecificacaoParametro[]) => void;
 }) {
   const { data: params, error: erroParams } = useAsync(async () => (aberta ? getParametrosDaEspecificacao(especId) : null), [especId, aberta]);
   return (
@@ -229,7 +252,7 @@ function EspecCard({
         <div>
           <p className="font-semibold text-slate-900">{titulo}</p>
           <p className="text-xs text-slate-400">
-            {produto}{cliente ? ` · ${cliente}` : ' · interna'}{shelf != null ? ` · shelf ${shelf}d` : ''}
+            {produto}{cliente ? ` · ${cliente}` : ' · interna'}{shelf != null ? ` · shelf ${shelf}d` : ''} · versão {versao}
           </p>
         </div>
         <IconChevronRight className={`text-slate-300 transition-transform ${aberta ? 'rotate-90' : ''}`} />
@@ -242,6 +265,7 @@ function EspecCard({
           ) : params.length === 0 ? (
             <p className="text-sm text-slate-400">Sem parâmetros.</p>
           ) : (
+            <>
             <table className="w-full text-sm">
               <tbody className="divide-y divide-slate-100">
                 {params.map((p: EspecificacaoParametro) => (
@@ -253,6 +277,11 @@ function EspecCard({
                 ))}
               </tbody>
             </table>
+            <button type="button" onClick={() => onRevisar(params)}
+              className="mt-3 text-xs font-semibold text-brand-600 hover:text-brand-700">
+              Revisar limites (nova versão)
+            </button>
+            </>
           )}
         </div>
       )}

@@ -19,6 +19,7 @@ import { StatusChip } from '../../components/StatusChip';
 import { IconShield } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 import { LimitesPcc } from './LimitesPcc';
+import { CentralQualidade } from './CentralQualidade';
 
 export function QualidadePage() {
   const [recarregar, setRecarregar] = useState(0);
@@ -52,8 +53,10 @@ export function QualidadePage() {
     <>
       <PageHeader grupo="Qualidade"
         title="Qualidade"
-        subtitle="Monitoramentos FSSC 22000 e liberação de lotes"
+        subtitle="Pendências, formulários, monitoramentos FSSC 22000 e liberação de lotes"
       />
+
+      <CentralQualidade />
 
       <div className="grid gap-6 lg:grid-cols-5">
         {/* Formulário de monitoramento */}

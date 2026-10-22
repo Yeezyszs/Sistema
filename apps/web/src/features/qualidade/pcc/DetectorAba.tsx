@@ -6,6 +6,7 @@
 // verso de correção: o banco já abre a NC (e bloqueia o lote vinculado), e
 // daqui sai a O.S. para a manutenção com risco à segurança de alimentos.
 import { useState, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 import {
   listDetectoresMetais, listVerificacoesDMDesde, criarVerificacaoDM, listLotes, criarOrdemPcm,
 } from '../../../lib/db';
@@ -92,7 +93,10 @@ export function DetectorAba() {
             <div className="space-y-3">
               {[...porDia.entries()].map(([dia, vs]) => (
                 <Card key={dia} className="overflow-x-auto">
-                  <p className="border-b border-slate-100 bg-slate-50 px-4 py-2 text-[11.5px] font-bold uppercase tracking-wide text-slate-500">{formatarData(dia)}</p>
+                  <p className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-4 py-2 text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                    {formatarData(dia)}
+                    <Link to={`/imprimir/detector/${dia}`} className="normal-case text-brand-600 hover:text-brand-700">Imprimir</Link>
+                  </p>
                   <table className="w-full text-sm">
                     <tbody className="divide-y divide-slate-100">
                       {vs.map((v) => (

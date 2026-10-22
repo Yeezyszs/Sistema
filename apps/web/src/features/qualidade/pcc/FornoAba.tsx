@@ -2,6 +2,7 @@
 // leitura. Fora do limite do PCC a leitura fica vermelha e pede ação
 // corretiva na hora; a Qualidade valida a folha no fim.
 import { useState, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 import {
   listFornoRegistros, listLeiturasForno, criarFornoRegistro, criarLeituraForno, excluirLeituraForno,
   atualizarFornoRegistro, listPontosControle, listLotes,
@@ -204,6 +205,7 @@ function Folha({ registro, leituras, limites, lote, onSaved }: {
           <p className="mt-1 text-[11px] text-slate-400">Limites do PCC: {textoLimites(limites)} (cadastro CCP-01 / CCP-02)</p>
         </div>
         <div className="flex items-center gap-2">
+          <Link to={`/imprimir/forno/${registro.id}`} className="text-xs font-semibold text-brand-600 hover:text-brand-700">Imprimir</Link>
           <SeloValidacao validadoEm={registro.validado_em} />
           {!fechada && <BotaoValidar tabela="forno_registros" ids={[registro.id]} rotulo="Validar folha" onFeito={onSaved} />}
         </div>

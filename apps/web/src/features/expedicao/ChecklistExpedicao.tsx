@@ -2,6 +2,7 @@
 // e 2; a Qualidade, as seções 3 e 4 e o resultado. Só a Qualidade libera — o
 // banco recusa qualquer outro perfil.
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { atualizarCarregamento, getLaudosDoLote } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { useAuth } from '../../lib/auth';
@@ -190,6 +191,7 @@ export function ModalInspecaoCarga({ carga, cliente, lote, onClose, onSaved }: {
         )}
 
         <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
+          <Link to={`/imprimir/expedicao/${carga.id}`} className="self-center text-xs font-semibold text-brand-600 hover:text-brand-700">Imprimir</Link>
           <Button type="button" variant="outline" onClick={onClose}>Fechar</Button>
           {!liberada && <Button type="submit" loading={salvando}>{ehQualidade && liberacao ? 'Registrar resultado' : 'Salvar checklist'}</Button>}
         </div>

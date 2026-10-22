@@ -3,6 +3,7 @@
 // percorre a linha e preenche em sequência. Sem produção, NHP. Nenhum ponto
 // pode ficar em branco: o que falta aparece como pendente.
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { listImas, listVerificacoesImaDesde, criarVerificacoesIma } from '../../../lib/db';
 import { useAsync } from '../../../lib/useAsync';
 import { formatarData, hojeLocalISO } from '../../../lib/format';
@@ -104,6 +105,7 @@ function GradeArea({ area, imas, verifsHoje, onSaved }: {
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">FOR PQSA 09 1.3 · hoje, {formatarData(hojeLocalISO())}</p>
           <p className="text-base font-semibold text-slate-900">{area}</p>
+          <Link to={`/imprimir/imas/${hojeLocalISO()}`} className="text-xs font-semibold text-brand-600 hover:text-brand-700">Imprimir o dia</Link>
         </div>
         {pendentes.length > 0 && (
           <Button type="button" variant="outline" disabled={salvando} onClick={() => void salvar(true)}

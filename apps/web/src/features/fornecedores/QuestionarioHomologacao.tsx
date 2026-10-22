@@ -2,6 +2,7 @@
 // visita e consultar depois. O status sai das respostas — completo e sem NC é
 // qualificado; com NC fica em análise até a Qualidade decidir.
 import { useState, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 import { criarHomologacao, enviarQuestionarioAssinado, urlAssinadaDocumento } from '../../lib/db';
 import { hojeLocalISO, formatarData } from '../../lib/format';
 import {
@@ -281,6 +282,7 @@ export function VerQuestionarioHomologacao({ h }: { h: Homologacao }) {
       ))}
       <p><span className="text-slate-400">Agrotóxicos declarados: </span>{h.agrotoxicos?.join(', ') || '—'}</p>
       {h.observacao && <p><span className="text-slate-400">Observações: </span>{h.observacao}</p>}
+      <Link to={`/imprimir/homologacao/${h.id}`} className="mr-4 font-semibold text-brand-700 hover:underline">Imprimir questionário</Link>
       {h.arquivo_path && (
         <button type="button" onClick={() => void abrirArquivo()} className="font-semibold text-brand-700 hover:underline">
           Abrir questionário assinado ({h.arquivo_nome ?? 'arquivo'})

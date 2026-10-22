@@ -25,6 +25,7 @@ import { AnaliseVendasPage } from '../features/comercial/AnaliseVendasPage';
 import { DevolucoesPage } from '../features/comercial/DevolucoesPage';
 import { LiberacaoOsPage } from '../features/qualidade/LiberacaoOsPage';
 import { RastrearLotePage } from '../features/rastreio/RastrearLotePage';
+import { ImprimirFormularioPage } from '../features/impressao/ImprimirFormularioPage';
 import { AlmoxarifadoPage } from '../features/almoxarifado/AlmoxarifadoPage';
 import { EmbalagensPage } from '../features/embalagens/EmbalagensPage';
 import { UsuariosPage } from '../features/usuarios/UsuariosPage';
@@ -118,6 +119,8 @@ export default function App() {
       <HashRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          {/* Impressão dos formulários da Qualidade — página cheia, fora do Layout */}
+          <Route path="/imprimir/:tipo/:id" element={<Protected><ImprimirFormularioPage /></Protected>} />
           {/* Impressão de laudo — página cheia, fora do Layout */}
           <Route
             path="/laudos/:id/imprimir"

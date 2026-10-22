@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 import {
   listRecebimentos, listProdutos, listProdutores, listPrevisaoDaSemana, listParametrosSemana,
   criarRecebimento, atualizarRecebimento, excluirRecebimento, mapBy,
@@ -462,6 +463,7 @@ export function RecebimentosPage() {
                       <td className="hidden px-3 py-2.5 text-center text-slate-500 2xl:table-cell">{r.cancha ?? '—'}</td>
                       <td className="px-3 py-2.5 text-center"><SeloInspecao r={r} /></td>
                       <td className="px-3 py-2.5 text-right whitespace-nowrap">
+                        <Link to={`/imprimir/carga/${r.id}`} className="mr-3 text-xs font-medium text-slate-500 hover:text-brand-600">Imprimir</Link>
                         <button onClick={() => setEditando(r)} className="text-xs font-medium text-slate-500 hover:text-brand-600">Editar</button>
                         <button onClick={() => setExcluindo(r)} className="ml-3 text-xs font-medium text-slate-400 hover:text-red-600">Excluir</button>
                       </td>

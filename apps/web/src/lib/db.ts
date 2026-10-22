@@ -2449,3 +2449,25 @@ export async function definirCargasDoDia(
     .upsert({ previsao_id, data, cargas }, { onConflict: 'previsao_id,data' });
   if (res.error) throw new Error(res.error.message);
 }
+
+// ── Impressão dos formulários: um registro por id ──────────────
+async function umPorId<T>(consulta: PromiseLike<{ data: unknown; error: { message: string } | null }>): Promise<T | null> {
+  const res = await consulta;
+  if (res.error) throw new Error(res.error.message);
+  return (res.data as T | null) ?? null;
+}
+export const getRecebimento = (id: string) =>
+  umPorId<Recebimento>(producao().from('recebimentos').select('*').eq('id', id).maybeSingle());
+export const getCarregamento = (id: string) =>
+  umPorId<Carregamento>(producao().from('carregamentos').select('*').eq('id', id).maybeSingle());
+export const getHomologacao = (id: string) =>
+  umPorId<Homologacao>(qualidade().from('homologacoes').select('*').eq('id', id).maybeSingle());
+export const getFornoRegistro = (id: string) =>
+  umPorId<FornoRegistro>(qualidade().from('forno_registros').select('*').eq('id', id).maybeSingle());
+
+export async function listVerificacoesDmDoDia(dia: string): Promise<VerificacaoDM[]> {
+  return unwrap<VerificacaoDM[]>(
+    await qualidade().from('verificacoes_dm').select('*')
+      .gte('registrado_em', `${dia}T00:00:00`).lte('registrado_em', `${dia}T23:59:59`).order('registrado_em'),
+  );
+}

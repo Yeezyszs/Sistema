@@ -50,6 +50,7 @@ export * from './entities/Estoque';
 export * from './entities/Pedido';
 export * from './entities/Carregamento';
 export * from './entities/ChecklistExpedicao';
+export * from './entities/Rastreabilidade';
 export * from './entities/Devolucao';
 export * from './entities/Embalagem';
 export * from './entities/Pallet';

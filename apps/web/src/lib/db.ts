@@ -59,6 +59,10 @@ import type {
   LaudoInterno,
   LaudoResultado,
   LaudoAnexo,
+  LoteBag,
+  NovoLoteBag,
+  TesteRastreabilidade,
+  NovoTesteRastreabilidade,
   NovoLaudo,
   NovoResultadoLaudo,
   NaoConformidade,
@@ -293,6 +297,79 @@ export async function getLote(id: string): Promise<Lote | null> {
   const res = await producao().from('lotes').select('*').eq('id', id).maybeSingle();
   if (res.error) throw new Error(res.error.message);
   return res.data as Lote | null;
+}
+
+export async function getLotePorCodigo(codigo: string): Promise<Lote | null> {
+  const res = await producao().from('lotes').select('*').ilike('codigo', codigo.trim()).maybeSingle();
+  if (res.error) throw new Error(res.error.message);
+  return res.data as Lote | null;
+}
+
+// ── Bags do lote (rastreabilidade) ─────────────────────────────
+export async function listBagsDoLote(loteId: string): Promise<LoteBag[]> {
+  return unwrap<LoteBag[]>(
+    await producao().from('lote_bags').select('*').eq('lote_id', loteId).order('numero'),
+  );
+}
+
+export async function criarBags(bags: NovoLoteBag[]): Promise<void> {
+  if (bags.length === 0) return;
+  const res = await producao().from('lote_bags').insert(bags);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function excluirBag(id: string): Promise<void> {
+  const res = await producao().from('lote_bags').delete().eq('id', id);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function excluirBagsDoLote(loteId: string): Promise<void> {
+  const res = await producao().from('lote_bags').delete().eq('lote_id', loteId);
+  if (res.error) throw new Error(res.error.message);
+}
+
+// ── Rastreio: tudo que toca um lote ────────────────────────────
+export async function listFornoDoLote(loteId: string): Promise<{ registros: FornoRegistro[]; leituras: FornoLeitura[] }> {
+  const registros = unwrap<FornoRegistro[]>(await qualidade().from('forno_registros').select('*').eq('lote_id', loteId));
+  const leituras = await listLeiturasForno(registros.map((r) => r.id));
+  return { registros, leituras };
+}
+
+export async function listVerificacoesDmDoLote(loteId: string): Promise<VerificacaoDM[]> {
+  return unwrap<VerificacaoDM[]>(
+    await qualidade().from('verificacoes_dm').select('*').eq('lote_id', loteId).order('registrado_em'),
+  );
+}
+
+export async function listVerificacoesImaDoDia(dia: string): Promise<VerificacaoIma[]> {
+  return unwrap<VerificacaoIma[]>(
+    await qualidade().from('verificacoes_ima').select('*')
+      .gte('registrado_em', `${dia}T00:00:00`).lte('registrado_em', `${dia}T23:59:59`),
+  );
+}
+
+export async function listRetidosDoLote(loteId: string, codigo: string): Promise<Reprocesso[]> {
+  return unwrap<Reprocesso[]>(
+    await producao().from('reprocessos').select('*')
+      .or(`lote_id.eq.${loteId},lote_final_id.eq.${loteId},lote_codigo.eq.${codigo.toUpperCase()},lote_final.eq.${codigo.toUpperCase()}`),
+  );
+}
+
+export async function listCarregamentosDoLote(loteId: string): Promise<Carregamento[]> {
+  return unwrap<Carregamento[]>(
+    await producao().from('carregamentos').select('*').eq('lote_id', loteId).order('data'),
+  );
+}
+
+export async function listTestesRastreabilidade(loteId: string): Promise<TesteRastreabilidade[]> {
+  return unwrap<TesteRastreabilidade[]>(
+    await qualidade().from('testes_rastreabilidade').select('*').eq('lote_id', loteId).order('created_at', { ascending: false }),
+  );
+}
+
+export async function criarTesteRastreabilidade(payload: NovoTesteRastreabilidade & { lote_id: string }): Promise<void> {
+  const res = await qualidade().from('testes_rastreabilidade').insert(payload);
+  if (res.error) throw new Error(res.error.message);
 }
 
 export async function criarLote(payload: NovoLote): Promise<Lote> {

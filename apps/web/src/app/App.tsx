@@ -24,6 +24,7 @@ import { CarteiraPage } from '../features/comercial/CarteiraPage';
 import { AnaliseVendasPage } from '../features/comercial/AnaliseVendasPage';
 import { DevolucoesPage } from '../features/comercial/DevolucoesPage';
 import { LiberacaoOsPage } from '../features/qualidade/LiberacaoOsPage';
+import { RastrearLotePage } from '../features/rastreio/RastrearLotePage';
 import { AlmoxarifadoPage } from '../features/almoxarifado/AlmoxarifadoPage';
 import { EmbalagensPage } from '../features/embalagens/EmbalagensPage';
 import { UsuariosPage } from '../features/usuarios/UsuariosPage';
@@ -170,6 +171,7 @@ export default function App() {
             <Route path="/acompanhamento" element={<ModuloGuard modulo="acompanhamento"><AcompanhamentoPage /></ModuloGuard>} />
             <Route path="/monitoramento-agua" element={<ModuloGuard modulo="monitoramento_agua"><MonitoramentoAguaPage /></ModuloGuard>} />
             <Route path="/nao-conformidades" element={<ModuloGuard modulo="nao_conformidades"><NaoConformidadesPage /></ModuloGuard>} />
+            <Route path="/rastrear" element={<ModuloGuard modulo="qualidade"><RastrearLotePage /></ModuloGuard>} />
             <Route path="/liberacao-os" element={<ModuloGuard modulo="qualidade"><LiberacaoOsPage /></ModuloGuard>} />
             <Route path="/especificacoes" element={<ModuloGuard modulo="especificacoes"><EspecificacoesPage /></ModuloGuard>} />
             <Route path="/pcc-fisico" element={<ModuloGuard modulo="pcc_fisico"><PccFisicoPage /></ModuloGuard>} />

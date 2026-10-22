@@ -6,6 +6,7 @@ import {
   IconLotes, IconRecebimento, IconLogout, IconLeaf, IconShield, IconClipboard, IconDoc,
   IconFlask, IconBox, IconCheck, IconClock, IconTruck, IconArrowLeft,
   IconGrid, IconFactory, IconWrench, IconUser, IconLock,
+  IconSearch,
 } from '../components/icons';
 
 interface SubItem {
@@ -58,6 +59,7 @@ const ITENS_DOCUMENTOS: SubItem[] = [
 
 const ITENS_QUALIDADE: SubItem[] = [
   { to: '/qualidade', icon: <IconShield width={16} height={16} />, label: 'Qualidade', modulo: 'qualidade' },
+  { to: '/rastrear', icon: <IconSearch width={16} height={16} />, label: 'Rastrear lote', modulo: 'qualidade' },
   { to: '/acompanhamento', icon: <IconFlask width={16} height={16} />, label: 'Acomp. de Processo', modulo: 'acompanhamento' },
   { to: '/monitoramento-agua', icon: <IconFlask width={16} height={16} />, label: 'Cloro & pH (água)', modulo: 'monitoramento_agua' },
   { to: '/pcc-fisico', icon: <IconBox width={16} height={16} />, label: 'Monitoramento de PCC', modulo: 'pcc_fisico' },

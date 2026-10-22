@@ -25,6 +25,7 @@ import {
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { MicroDoLaudo } from './MicroDoLaudo';
+import { BagsDoLote } from '../rastreio/BagsDoLote';
 import { formatarData, formatarHora, formatarQuantidade, formatarDuracao } from '../../lib/format';
 import {
   etapaConcluida,
@@ -499,6 +500,8 @@ export function LotePage() {
 
           {/* Apontamento direto pelo lote (retorno do PCP) */}
           <ApontamentosLoteCard loteId={lote.id} produtoId={lote.produto_id} />
+
+          <BagsDoLote lote={lote} />
 
           {/* Laudos físico-químicos */}
           <Card className="p-6">

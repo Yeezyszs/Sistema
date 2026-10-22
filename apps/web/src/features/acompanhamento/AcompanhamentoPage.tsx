@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   listAnalisesProcesso, getValoresDaAnalise, criarAnaliseProcesso, atualizarAnaliseProcesso,
   excluirAnaliseProcesso, listClientes, listProdutos, listLotes, getEspecificacaoAplicavel, mapBy,
@@ -7,9 +8,10 @@ import { useAsync } from '../../lib/useAsync';
 import { formatarData, hojeLocalISO } from '../../lib/format';
 import {
   TURNO_ANALISE, TURNO_ANALISE_LABEL, valorDentroDoLimite, limiteTexto,
+  TIPO_FARINHA, TIPO_FARINHA_LABEL, COR_ESPERADA, tipoFarinhaDoProduto,
 } from '@sistema/domain';
 import type {
-  AnaliseProcesso, AnaliseProcessoValor, EspecificacaoParametro, NovoAnaliseValor,
+  AnaliseProcesso, AnaliseProcessoValor, EspecificacaoParametro, NovoAnaliseValor, TipoFarinha,
 } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconPlus, IconSearch } from '../../components/icons';
@@ -22,6 +24,10 @@ export function AcompanhamentoPage() {
   const [detalhe, setDetalhe] = useState<AnaliseProcesso | null>(null);
   const [busca, setBusca] = useState('');
   const [filtroCliente, setFiltroCliente] = useState('');
+  const [filtroTipo, setFiltroTipo] = useState('');
+  const [limite, setLimite] = useState(200);
+  const [loteFechamento, setLoteFechamento] = useState('');
+  const navegar = useNavigate();
   const { sucesso, erro } = useToast();
 
   const { data, loading, error } = useAsync(async () => {
@@ -35,13 +41,15 @@ export function AcompanhamentoPage() {
   }, [recarregar]);
   const rec = () => setRecarregar((n) => n + 1);
 
+  const codigoLote = (a: AnaliseProcesso) => a.lote_codigo ?? (a.lote_id ? data?.lotesMap.get(a.lote_id)?.codigo ?? null : null);
   const linhas = (data?.analises ?? []).filter((a) => {
     if (filtroCliente && a.cliente_id !== filtroCliente) return false;
+    if (filtroTipo && a.tipo_farinha !== filtroTipo) return false;
     if (!busca.trim()) return true;
     const q = busca.toLowerCase();
     const cli = a.cliente_id ? data?.clientesMap.get(a.cliente_id)?.nome ?? '' : '';
     const prod = a.produto_id ? data?.produtosMap.get(a.produto_id)?.nome ?? '' : '';
-    const lote = a.lote_id ? data?.lotesMap.get(a.lote_id)?.codigo ?? '' : '';
+    const lote = codigoLote(a) ?? '';
     return [cli, prod, lote, a.numero_bag ?? '', String(a.numero)].some((v) => v.toLowerCase().includes(q));
   });
 
@@ -54,7 +62,7 @@ export function AcompanhamentoPage() {
     <>
       <PageHeader grupo="Qualidade"
         title="Acompanhamento de Processo"
-        subtitle="Análise por bag contra a especificação do cliente"
+        subtitle="Análise por bag contra a especificação do cliente — FOR-CQ-001 (General Mills) e FOR-CQ-002 (Pódium)"
         action={<Button onClick={() => setModal(true)}><IconPlus width={16} height={16} />Nova análise</Button>}
       />
 
@@ -64,13 +72,36 @@ export function AcompanhamentoPage() {
           <input type="search" placeholder="Buscar nº, cliente, produto, lote, bag…" value={busca} onChange={(e) => setBusca(e.target.value)}
             className="w-full rounded-[7px] border border-slate-300 bg-white py-2 pl-9 pr-3 text-[12.5px] outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
         </div>
-        <div className="w-52">
-          <Select value={filtroCliente} onChange={(e) => setFiltroCliente(e.target.value)}>
+        <div className="w-full sm:w-52">
+          <Select value={filtroCliente} onChange={(e) => { setFiltroCliente(e.target.value); setLimite(200); }}>
             <option value="">Todos os clientes</option>
             {(data?.clientes ?? []).map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
           </Select>
         </div>
+        <div className="w-full sm:w-44">
+          <Select value={filtroTipo} onChange={(e) => { setFiltroTipo(e.target.value); setLimite(200); }}>
+            <option value="">Todos os tipos</option>
+            {TIPO_FARINHA.map((t) => <option key={t} value={t}>{TIPO_FARINHA_LABEL[t]}</option>)}
+          </Select>
+        </div>
       </div>
+
+      {/* Fechamento do lote: o resumo de todos os bags, como na planilha. */}
+      <Card className="mb-4 flex flex-wrap items-end gap-2 p-3">
+        <div className="min-w-[10rem] flex-1">
+          <Field label="Fechamento do lote">
+            <TextInput value={loteFechamento} onChange={(e) => setLoteFechamento(e.target.value.toUpperCase())}
+              placeholder="Código do lote, ex.: MK0194" list="lotes-analisados" />
+          </Field>
+          <datalist id="lotes-analisados">
+            {[...new Set((data?.analises ?? []).map(codigoLote).filter(Boolean))].slice(0, 400).map((c) => <option key={c!} value={c!} />)}
+          </datalist>
+        </div>
+        <Button type="button" variant="outline" disabled={!loteFechamento.trim()}
+          onClick={() => navegar(`/imprimir/fechamento/${encodeURIComponent(loteFechamento.trim())}`)}>
+          Ver fechamento
+        </Button>
+      </Card>
 
       {error && <ErroCarregamento mensagem={error} />}
       {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
@@ -87,20 +118,27 @@ export function AcompanhamentoPage() {
                 <th className="px-3 py-[11px]">Data</th>
                 <th className="px-3 py-[11px]">Cliente</th>
                 <th className="px-3 py-[11px]">Produto</th>
-                <th className="hidden px-3 py-[11px] lg:table-cell">Lote</th>
+                <th className="px-3 py-[11px]">Lote</th>
                 <th className="px-3 py-[11px]">Bag</th>
                 <th className="px-3 py-[11px]">Conformidade</th>
                 <th className="px-3 py-[11px]" />
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {linhas.map((a) => (
+              {linhas.slice(0, limite).map((a) => (
                 <tr key={a.id} className="cursor-pointer hover:bg-slate-50" onClick={() => setDetalhe(a)}>
                   <td className="px-3 py-2.5 font-medium text-slate-700">{a.numero}</td>
                   <td className="px-3 py-2.5 text-slate-500">{formatarData(a.data)}</td>
                   <td className="px-3 py-2.5 text-slate-700">{a.cliente_id ? data.clientesMap.get(a.cliente_id)?.nome ?? '—' : '—'}</td>
-                  <td className="px-3 py-2.5 text-slate-600"><span className="line-clamp-1">{a.produto_id ? data.produtosMap.get(a.produto_id)?.nome ?? '—' : '—'}</span></td>
-                  <td className="hidden px-3 py-2.5 text-slate-500 lg:table-cell">{a.lote_id ? data.lotesMap.get(a.lote_id)?.codigo ?? '—' : '—'}</td>
+                  <td className="px-3 py-2.5 text-slate-600"><span className="line-clamp-1">
+                    {a.produto_id ? data.produtosMap.get(a.produto_id)?.nome ?? '—' : a.tipo_farinha ? TIPO_FARINHA_LABEL[a.tipo_farinha as TipoFarinha] : '—'}
+                  </span></td>
+                  <td className="px-3 py-2.5 text-slate-500">
+                    {codigoLote(a) ? (
+                      <button type="button" onClick={(e) => { e.stopPropagation(); navegar(`/imprimir/fechamento/${encodeURIComponent(codigoLote(a)!)}`); }}
+                        className="font-medium text-brand-700 hover:underline" title="Ver fechamento do lote">{codigoLote(a)}</button>
+                    ) : '—'}
+                  </td>
                   <td className="px-3 py-2.5 text-slate-500">{a.numero_bag ?? '—'}</td>
                   <td className="px-3 py-2.5">
                     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${a.conforme ? 'bg-brand-100 text-brand-700' : 'bg-red-100 text-red-700'}`}>
@@ -115,6 +153,13 @@ export function AcompanhamentoPage() {
               ))}
             </tbody>
           </table>
+          {linhas.length > limite && (
+            <div className="border-t border-slate-100 p-3 text-center">
+              <button type="button" onClick={() => setLimite((n) => n + 300)} className="text-xs font-semibold text-brand-600 hover:text-brand-700">
+                Mostrar mais ({linhas.length - limite} restantes)
+              </button>
+            </div>
+          )}
         </Card>
       )}
 
@@ -146,6 +191,7 @@ function ModalNovaAnalise({
 }) {
   const [clienteId, setClienteId] = useState(editando?.cliente_id ?? '');
   const [produtoId, setProdutoId] = useState(editando?.produto_id ?? '');
+  const [tipo, setTipo] = useState<TipoFarinha | ''>((editando?.tipo_farinha as TipoFarinha | null) ?? '');
   const [espId, setEspId] = useState<string | null>(null);
   const [parametros, setParametros] = useState<EspecificacaoParametro[]>([]);
   const [valores, setValores] = useState<Record<string, string>>({});
@@ -155,10 +201,10 @@ function ModalNovaAnalise({
 
   // Resolve a especificação aplicável quando cliente+produto mudam.
   useEffect(() => {
-    if (!produtoId) { setParametros([]); setEspId(null); return; }
+    if (!produtoId && !tipo) { setParametros([]); setEspId(null); return; }
     let cancelado = false;
     setCarregandoEsp(true);
-    getEspecificacaoAplicavel(produtoId, clienteId || null)
+    getEspecificacaoAplicavel(produtoId || null, clienteId || null, tipo || null)
       .then(async (r) => {
         if (cancelado) return;
         const params = r?.parametros ?? [];
@@ -184,7 +230,7 @@ function ModalNovaAnalise({
     // `editando` entra na lista: trocar a análise em edição sem mudar produto
     // ou cliente precisa recarregar os valores gravados, senão a tela mostra
     // os da análise anterior.
-  }, [produtoId, clienteId, editando]);
+  }, [produtoId, clienteId, tipo, editando]);
 
   // Pré-avaliação de conformidade ao vivo.
   const preAvaliacao = useMemo(() => {
@@ -217,8 +263,10 @@ function ModalNovaAnalise({
           horario: String(f.get('horario') ?? '') || null,
           turno: String(f.get('turno') ?? '') || null,
           produto_id: produtoId || null,
+          tipo_farinha: tipo || null,
           cliente_id: clienteId || null,
           lote_id: String(f.get('lote_id') ?? '') || null,
+          lote_codigo: lotes.find((l) => l.id === String(f.get('lote_id') ?? ''))?.codigo ?? editando?.lote_codigo ?? null,
           especificacao_id: espId,
           numero_bag: String(f.get('numero_bag') ?? '').trim() || null,
           cor: String(f.get('cor') ?? '').trim() || null,
@@ -246,7 +294,11 @@ function ModalNovaAnalise({
             </Select>
           </Field>
           <Field label="Produto">
-            <Select value={produtoId} onChange={(e) => setProdutoId(e.target.value)} required>
+            <Select value={produtoId} onChange={(e) => {
+              setProdutoId(e.target.value);
+              const t = tipoFarinhaDoProduto(produtos.find((p) => p.id === e.target.value)?.nome ?? '');
+              if (t) setTipo(t);
+            }}>
               <option value="">—</option>
               {produtos.map((p) => <option key={p.id} value={p.id}>{p.nome}</option>)}
             </Select>
@@ -258,6 +310,14 @@ function ModalNovaAnalise({
             </Select>
           </Field>
           <Field label="Nº do bag"><TextInput name="numero_bag" defaultValue={editando?.numero_bag ?? ''} placeholder="ex.: 4" /></Field>
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <Field label="Tipo de farinha">
+            <Select value={tipo} onChange={(e) => setTipo(e.target.value as TipoFarinha | '')}>
+              <option value="">—</option>
+              {TIPO_FARINHA.map((t) => <option key={t} value={t}>{TIPO_FARINHA_LABEL[t]}</option>)}
+            </Select>
+          </Field>
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Field label="Data"><TextInput name="data" type="date" defaultValue={editando?.data ?? hojeLocalISO()} required /></Field>
@@ -274,10 +334,10 @@ function ModalNovaAnalise({
         <div className="rounded-lg border border-slate-200 p-3">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Ensaios da especificação</p>
           {carregandoEsp && <p className="py-3 text-sm text-slate-400">Carregando especificação…</p>}
-          {!carregandoEsp && produtoId && parametros.length === 0 && (
-            <p className="py-3 text-sm text-amber-600">Nenhuma especificação vigente para este produto/cliente. Cadastre em Especificações.</p>
+          {!carregandoEsp && (produtoId || tipo) && parametros.length === 0 && (
+            <p className="py-3 text-sm text-amber-600">Nenhuma especificação vigente para este cliente/produto/tipo. Cadastre em Especificações.</p>
           )}
-          {!carregandoEsp && !produtoId && <p className="py-3 text-sm text-slate-400">Selecione o produto para carregar os ensaios.</p>}
+          {!carregandoEsp && !produtoId && !tipo && <p className="py-3 text-sm text-slate-400">Selecione o cliente e o produto (ou o tipo de farinha) para carregar os ensaios.</p>}
           {parametros.length > 0 && (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {preAvaliacao.map(({ p, conforme }) => (
@@ -307,7 +367,7 @@ function ModalNovaAnalise({
 
         {/* Sensorial */}
         <div className="grid grid-cols-3 gap-3">
-          <Field label="Cor"><TextInput name="cor" defaultValue={editando?.cor ?? ''} placeholder="Creme" /></Field>
+          <Field label="Cor"><TextInput name="cor" key={tipo} defaultValue={editando?.cor ?? (tipo ? COR_ESPERADA[tipo] : '')} placeholder="Creme" /></Field>
           <Field label="Odor"><TextInput name="odor" defaultValue={editando?.odor ?? ''} placeholder="Característico" /></Field>
           <Field label="Aparência"><TextInput name="aparencia" defaultValue={editando?.aparencia ?? ''} placeholder="Fina" /></Field>
         </div>

@@ -2,7 +2,8 @@
 export interface Especificacao {
   id: string;
   org_id: string;
-  produto_id: string;
+  produto_id: string | null;
+  tipo_farinha: string | null;
   cliente_id: string | null;
   nome: string | null;
   shelf_life_dias: number | null;
@@ -25,7 +26,8 @@ export interface EspecificacaoParametro {
 }
 
 export interface NovaEspecificacao {
-  produto_id: string;
+  produto_id: string | null;
+  tipo_farinha: string | null;
   cliente_id?: string | null;
   nome?: string | null;
   shelf_life_dias?: number | null;

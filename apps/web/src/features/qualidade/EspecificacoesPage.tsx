@@ -10,8 +10,8 @@ import {
   mapBy,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
-import { limiteTexto, TEMPLATE_FISICO_QUIMICO } from '@sistema/domain';
-import type { Especificacao, EspecificacaoParametro } from '@sistema/domain';
+import { limiteTexto, TEMPLATE_FISICO_QUIMICO, TIPO_FARINHA, TIPO_FARINHA_LABEL } from '@sistema/domain';
+import type { Especificacao, EspecificacaoParametro, TipoFarinha } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Select, Modal, ErroCarregamento } from '../../components/ui';
 import { IconFlask, IconPlus, IconChevronRight } from '../../components/icons';
 import { useToast } from '../../components/Toast';
@@ -78,8 +78,12 @@ export function EspecificacoesPage() {
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
-    const produto_id = String(form.get('produto_id') ?? '');
-    if (!produto_id) return;
+    const produto_id = String(form.get('produto_id') ?? '') || null;
+    const tipo_farinha = String(form.get('tipo_farinha') ?? '') || null;
+    if (!produto_id && !tipo_farinha) {
+      erro('Escolha o produto ou o tipo de farinha.');
+      return;
+    }
     const params = linhas.filter((l) => l.ensaio.trim() !== '');
     if (params.length === 0) {
       erro('Adicione ao menos um parâmetro.');
@@ -91,6 +95,7 @@ export function EspecificacoesPage() {
       const esp = await criarEspecificacao({
         versao: revisando ? revisando.versao + 1 : 1,
         produto_id,
+        tipo_farinha,
         cliente_id: String(form.get('cliente_id') ?? '') || null,
         nome: String(form.get('nome') ?? '').trim() || null,
         shelf_life_dias: shelf ? Number(shelf) : null,
@@ -152,8 +157,9 @@ export function EspecificacoesPage() {
           {data.especs.map((esp) => (
             <EspecCard
               key={esp.id}
-              titulo={esp.nome ?? data.produtos.get(esp.produto_id)?.nome ?? 'Especificação'}
-              produto={data.produtos.get(esp.produto_id)?.nome ?? '—'}
+              titulo={esp.nome ?? (esp.produto_id ? data.produtos.get(esp.produto_id)?.nome : null) ?? 'Especificação'}
+              produto={esp.produto_id ? data.produtos.get(esp.produto_id)?.nome ?? '—'
+                : esp.tipo_farinha ? TIPO_FARINHA_LABEL[esp.tipo_farinha as TipoFarinha] : '—'}
               cliente={esp.cliente_id ? data.clientes.get(esp.cliente_id)?.nome ?? null : null}
               shelf={esp.shelf_life_dias}
               aberta={expandida === esp.id}
@@ -172,8 +178,8 @@ export function EspecificacoesPage() {
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div className="col-span-2">
               <Field label="Produto">
-                <Select name="produto_id" defaultValue={revisando?.produto_id ?? ''} required>
-                  <option value="" disabled>Selecione…</option>
+                <Select name="produto_id" defaultValue={revisando?.produto_id ?? ''}>
+                  <option value="">— (vale pelo tipo de farinha)</option>
                   {(data?.produtosList ?? []).map((p) => (
                     <option key={p.id} value={p.id}>{p.nome}</option>
                   ))}
@@ -192,6 +198,12 @@ export function EspecificacoesPage() {
               <TextInput name="shelf_life_dias" type="number" min="0" placeholder="180" defaultValue={revisando?.shelf_life_dias ?? ''} />
             </Field>
           </div>
+          <Field label="Tipo de farinha (quando a especificação vale para todo o tipo, sem produto)">
+            <Select name="tipo_farinha" defaultValue={revisando?.tipo_farinha ?? ''}>
+              <option value="">—</option>
+              {TIPO_FARINHA.map((t) => <option key={t} value={t}>{TIPO_FARINHA_LABEL[t]}</option>)}
+            </Select>
+          </Field>
           <Field label="Rótulo (opcional)">
             <TextInput name="nome" placeholder="Ex.: GM Farinha Crua 5%" defaultValue={revisando?.nome ?? ''} />
           </Field>

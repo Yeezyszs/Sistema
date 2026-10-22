@@ -625,16 +625,28 @@ export async function criarParametro(payload: NovoParametro): Promise<void> {
 
 // Especificação aplicável a um produto (preferindo a do cliente, senão a interna)
 export async function getEspecificacaoAplicavel(
-  produtoId: string,
+  produtoId: string | null,
   clienteId: string | null,
+  tipoFarinha: string | null = null,
 ): Promise<{ especificacao: Especificacao; parametros: EspecificacaoParametro[] } | null> {
-  const especs = unwrap<Especificacao[]>(
-    await qualidade().from('especificacoes').select('*').eq('produto_id', produtoId).eq('vigente', true),
-  );
-  const escolhida =
-    (clienteId ? especs.find((e) => e.cliente_id === clienteId) : undefined) ??
-    especs.find((e) => e.cliente_id == null) ??
-    especs[0];
+  // 1º a do produto (cliente > interna); senão a do cliente × tipo de farinha
+  // (FOR-CQ-001 General Mills, FOR-CQ-002 Pódium).
+  const doProduto = produtoId
+    ? unwrap<Especificacao[]>(
+        await qualidade().from('especificacoes').select('*').eq('produto_id', produtoId).eq('vigente', true),
+      )
+    : [];
+  let escolhida =
+    (clienteId ? doProduto.find((e) => e.cliente_id === clienteId) : undefined) ??
+    doProduto.find((e) => e.cliente_id == null) ??
+    doProduto[0];
+  if (!escolhida && clienteId && tipoFarinha) {
+    const doTipo = unwrap<Especificacao[]>(
+      await qualidade().from('especificacoes').select('*')
+        .eq('cliente_id', clienteId).eq('tipo_farinha', tipoFarinha).eq('vigente', true),
+    );
+    escolhida = doTipo[0];
+  }
   if (!escolhida) return null;
   const parametros = await getParametrosDaEspecificacao(escolhida.id);
   return { especificacao: escolhida, parametros };
@@ -642,10 +654,38 @@ export async function getEspecificacaoAplicavel(
 
 // ── Acompanhamento de Processo (análise por bag) ───────────────
 export async function listAnalisesProcesso(): Promise<AnaliseProcesso[]> {
-  return unwrap<AnaliseProcesso[]>(
-    await qualidade().from('analises_processo').select('*')
-      .order('data', { ascending: false }).order('numero', { ascending: false }),
+  // O histórico das planilhas passa de 1.000 linhas (limite do PostgREST).
+  const todas: AnaliseProcesso[] = [];
+  for (let de = 0; ; de += 1000) {
+    const pagina = unwrap<AnaliseProcesso[]>(
+      await qualidade().from('analises_processo').select('*')
+        .order('data', { ascending: false }).order('numero', { ascending: false }).range(de, de + 999),
+    );
+    todas.push(...pagina);
+    if (pagina.length < 1000) return todas;
+  }
+}
+
+// Fechamento do lote: todas as análises de bag de um lote (pelo código, que
+// cobre também o histórico importado) e os valores de cada ensaio.
+export async function getFechamentoDoLote(
+  codigo: string,
+): Promise<{ analises: AnaliseProcesso[]; valores: AnaliseProcessoValor[] }> {
+  const cod = codigo.trim().toUpperCase();
+  const lote = unwrap<{ id: string }[]>(await producao().from('lotes').select('id').eq('codigo', cod));
+  const filtro = lote[0] ? `lote_codigo.eq.${cod},lote_id.eq.${lote[0].id}` : `lote_codigo.eq.${cod}`;
+  const analises = unwrap<AnaliseProcesso[]>(
+    await qualidade().from('analises_processo').select('*').or(filtro)
+      .order('data').order('horario', { nullsFirst: true }).order('numero'),
   );
+  const valores: AnaliseProcessoValor[] = [];
+  for (let i = 0; i < analises.length; i += 150) {
+    const ids = analises.slice(i, i + 150).map((a) => a.id);
+    valores.push(...unwrap<AnaliseProcessoValor[]>(
+      await qualidade().from('analise_processo_valores').select('*').in('analise_id', ids).order('ordem'),
+    ));
+  }
+  return { analises, valores };
 }
 
 export async function getValoresDaAnalise(analiseId: string): Promise<AnaliseProcessoValor[]> {

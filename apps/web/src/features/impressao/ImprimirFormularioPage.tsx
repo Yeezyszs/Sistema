@@ -7,19 +7,22 @@
 //   /imprimir/carga/:recebimentoId     FOR POP 09 1.2 + 1.5
 //   /imprimir/expedicao/:cargaId       FOR POP 14 1.1
 //   /imprimir/homologacao/:id          FOR POP 07 1.1
+//   /imprimir/fechamento/:loteCodigo   FOR-CQ-001 (General Mills) / FOR-CQ-002 (Pódium)
 import type { ReactNode } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   getFornoRegistro, listLeiturasForno, listPontosControle, getLote, listDetectoresMetais, listVerificacoesDmDoDia,
   listImas, listVerificacoesImaDoDia, getRecebimento, getCarregamento, getCliente, getHomologacao, getFornecedor,
-  nomeDoUsuario,
+  nomeDoUsuario, getFechamentoDoLote,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { formatarData, formatarDataHora } from '../../lib/format';
 import {
   desviosLeituraForno, TIPO_TESTE_DM_LABEL, AREAS_IMA, ITENS_INSPECAO_CARGA, TIPO_MP_LABEL, SECOES_EXPEDICAO,
   LIBERACAO_CARGA_LABEL, blocosAplicaveis, resumoHomologacao, STATUS_HOMOLOGACAO_LABEL,
+  fechamentoDoLote, limiteTexto, TIPO_FARINHA_LABEL, TURNO_ANALISE_LABEL,
 } from '@sistema/domain';
+import type { TipoFarinha, TurnoAnalise } from '@sistema/domain';
 import { Spinner, ErroCarregamento } from '../../components/ui';
 
 const EMPRESA = 'INDÚSTRIA E COMÉRCIO DE ALIMENTOS SUMARÉ';
@@ -96,8 +99,53 @@ export function ImprimirFormularioPage() {
   return data;
 }
 
+const num = (v: number | null) => (v == null ? '—' : v.toLocaleString('pt-BR', { maximumFractionDigits: 3 }));
+
 async function carregar(tipo: string, id: string): Promise<ReactNode | null> {
   switch (tipo) {
+    case 'fechamento': {
+      const codigo = decodeURIComponent(id).toUpperCase();
+      const { analises, valores } = await getFechamentoDoLote(codigo);
+      if (analises.length === 0) return null;
+      const a0 = analises[0]!;
+      const cliente = a0.cliente_id ? await getCliente(a0.cliente_id) : null;
+      const podium = /p[oó]dium/i.test(cliente?.nome ?? '');
+      const resumo = fechamentoDoLote(analises, valores);
+      const ensaios = resumo.ensaios.map((e) => e.ensaio);
+      // Limite de cada ensaio como estava na análise (snapshot).
+      const limite = new Map(valores.map((v) => [v.ensaio, limiteTexto(v)]));
+      const porAnalise = new Map<string, Map<string, (typeof valores)[number]>>();
+      for (const v of valores) {
+        const m = porAnalise.get(v.analise_id) ?? new Map();
+        m.set(v.ensaio, v);
+        porAnalise.set(v.analise_id, m);
+      }
+      const datas = analises.map((a) => a.data).sort();
+      return (
+        <Folha codigo={podium ? 'FOR-CQ-002' : 'FOR-CQ-001'} versao={podium ? 'Ver 0.1' : 'Rev. 01'}
+          titulo={`Controle de análise de fechamento de lote — ${codigo}`}>
+          <Campos itens={[['Cliente', cliente?.nome], ['Produto', a0.tipo_farinha ? TIPO_FARINHA_LABEL[a0.tipo_farinha as TipoFarinha] : null],
+            ['Lote', codigo], ['Período', datas[0] === datas[datas.length - 1] ? formatarData(datas[0]!) : `${formatarData(datas[0]!)} a ${formatarData(datas[datas.length - 1]!)}`],
+            ['Análises', String(resumo.analises)], ['Reprovadas', String(resumo.reprovadas)]]} />
+          <Tabela cab={['Data', 'Hora', 'Turno', 'Bag', ...ensaios.map((e) => `${e} (${limite.get(e) ?? ''})`), 'Cor', 'Odor', 'Aparência', 'Resultado']}
+            linhas={analises.map((a) => {
+              const vs = porAnalise.get(a.id);
+              return [formatarData(a.data), a.horario?.slice(0, 5) ?? '', a.turno ? TURNO_ANALISE_LABEL[a.turno as TurnoAnalise] ?? a.turno : '', a.numero_bag ?? '',
+                ...ensaios.map((e) => {
+                  const v = vs?.get(e);
+                  return v?.conforme === false ? <b className="text-red-700">{num(v.valor)}</b> : num(v?.valor ?? null);
+                }),
+                a.cor ?? '', a.odor ?? '', a.aparencia ?? '',
+                a.conforme ? 'Aprovado' : <b className="text-red-700">{a.motivo ?? 'Reprovado'}</b>];
+            })} />
+          <p className="mb-1 mt-4 font-semibold uppercase">Resumo do lote</p>
+          <Tabela cab={['Ensaio', 'Limite', 'Leituras', 'Mín.', 'Máx.', 'Média', 'Fora do limite']}
+            linhas={resumo.ensaios.map((e) => [e.ensaio, limite.get(e.ensaio) ?? '', e.n, num(e.min), num(e.max), num(e.media), e.foraDoLimite || '—'])} />
+          <p className="mt-3 text-[13px]"><span className="font-semibold">Conclusão:</span> {resumo.aprovado ? 'Lote APROVADO — todas as análises conformes.' : `Lote com ${resumo.reprovadas} análise(s) reprovada(s) — avaliar destino.`}</p>
+          <Assinatura rotulo="Responsável pela Qualidade" />
+        </Folha>
+      );
+    }
     case 'forno': {
       const reg = await getFornoRegistro(id);
       if (!reg) return null;

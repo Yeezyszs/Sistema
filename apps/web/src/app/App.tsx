@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { AuthProvider, useAuth } from '../lib/auth';
@@ -6,48 +7,51 @@ import { ToastProvider } from '../components/Toast';
 import type { Modulo } from '@sistema/domain';
 import { Layout } from './Layout';
 import { LoginPage } from './LoginPage';
-import { LotesPage } from '../features/lotes/LotesPage';
-import { LotePage } from '../features/lotes/LotePage';
-import { RecebimentosPage } from '../features/recebimentos/RecebimentosPage';
-import { QualidadePage } from '../features/qualidade/QualidadePage';
-import { AcompanhamentoPage } from '../features/acompanhamento/AcompanhamentoPage';
-import { PcmCadastrosPage } from '../features/pcm/PcmCadastrosPage';
-import { PcmIndicadoresPage } from '../features/pcm/PcmIndicadoresPage';
-import { PcmChecklistPage } from '../features/pcm/PcmChecklistPage';
-import { PainelPage } from '../features/painel/PainelPage';
-import { ClientesPage } from '../features/comercial/ClientesPage';
-import { CarteiraPage } from '../features/comercial/CarteiraPage';
-import { AnaliseVendasPage } from '../features/comercial/AnaliseVendasPage';
-import { DevolucoesPage } from '../features/comercial/DevolucoesPage';
-import { LiberacaoOsPage } from '../features/qualidade/LiberacaoOsPage';
-import { RastrearLotePage } from '../features/rastreio/RastrearLotePage';
-import { ImprimirFormularioPage } from '../features/impressao/ImprimirFormularioPage';
-import { AlmoxarifadoPage } from '../features/almoxarifado/AlmoxarifadoPage';
-import { EmbalagensPage } from '../features/embalagens/EmbalagensPage';
-import { UsuariosPage } from '../features/usuarios/UsuariosPage';
-import { EspecificacoesPage } from '../features/qualidade/EspecificacoesPage';
-import { PccFisicoPage } from '../features/qualidade/PccFisicoPage';
-import { CalibracaoPage } from '../features/qualidade/CalibracaoPage';
-import { PcmOrdensPage } from '../features/pcm/PcmOrdensPage';
-import { PcmPreventivaPage } from '../features/pcm/PcmPreventivaPage';
-import { PcmLubrificacaoPage } from '../features/pcm/PcmLubrificacaoPage';
-import { PcmOsPrint } from '../features/pcm/PcmOsPrint';
-import { OrdemProducaoPrint } from '../features/ordens/OrdemProducaoPrint';
-import { FornecedoresPage } from '../features/fornecedores/FornecedoresPage';
-import { DocumentosPage } from '../features/documentos/DocumentosPage';
-import { ProdutoresPage } from '../features/suprimentos/ProdutoresPage';
-import { SemanaPage } from '../features/suprimentos/SemanaPage';
-import { LaudoPrint } from '../features/lotes/LaudoPrint';
-import { OrdensPage } from '../features/ordens/OrdensPage';
-import { OrdemPage } from '../features/ordens/OrdemPage';
-import { ProgramacaoPage } from '../features/pcp/ProgramacaoPage';
-import { ProdutosPage } from '../features/produtos/ProdutosPage';
-import { ApontamentoPage } from '../features/pcp/ApontamentoPage';
-import { EstoquePage } from '../features/estoque/EstoquePage';
-import { PedidosPage } from '../features/pedidos/PedidosPage';
-import { ExpedicaoPage } from '../features/expedicao/ExpedicaoPage';
-import { PalletsPage } from '../features/pallets/PalletsPage';
-import { RetidosPage } from '../features/retidos/RetidosPage';
+
+// Cada tela é baixada só quando é aberta: o primeiro acesso não precisa
+// carregar o sistema inteiro (antes era um arquivo único de 1,1 MB).
+const LotesPage = lazy(() => import('../features/lotes/LotesPage').then((m) => ({ default: m.LotesPage })));
+const LotePage = lazy(() => import('../features/lotes/LotePage').then((m) => ({ default: m.LotePage })));
+const RecebimentosPage = lazy(() => import('../features/recebimentos/RecebimentosPage').then((m) => ({ default: m.RecebimentosPage })));
+const QualidadePage = lazy(() => import('../features/qualidade/QualidadePage').then((m) => ({ default: m.QualidadePage })));
+const AcompanhamentoPage = lazy(() => import('../features/acompanhamento/AcompanhamentoPage').then((m) => ({ default: m.AcompanhamentoPage })));
+const PcmCadastrosPage = lazy(() => import('../features/pcm/PcmCadastrosPage').then((m) => ({ default: m.PcmCadastrosPage })));
+const PcmIndicadoresPage = lazy(() => import('../features/pcm/PcmIndicadoresPage').then((m) => ({ default: m.PcmIndicadoresPage })));
+const PcmChecklistPage = lazy(() => import('../features/pcm/PcmChecklistPage').then((m) => ({ default: m.PcmChecklistPage })));
+const PainelPage = lazy(() => import('../features/painel/PainelPage').then((m) => ({ default: m.PainelPage })));
+const ClientesPage = lazy(() => import('../features/comercial/ClientesPage').then((m) => ({ default: m.ClientesPage })));
+const CarteiraPage = lazy(() => import('../features/comercial/CarteiraPage').then((m) => ({ default: m.CarteiraPage })));
+const AnaliseVendasPage = lazy(() => import('../features/comercial/AnaliseVendasPage').then((m) => ({ default: m.AnaliseVendasPage })));
+const DevolucoesPage = lazy(() => import('../features/comercial/DevolucoesPage').then((m) => ({ default: m.DevolucoesPage })));
+const LiberacaoOsPage = lazy(() => import('../features/qualidade/LiberacaoOsPage').then((m) => ({ default: m.LiberacaoOsPage })));
+const RastrearLotePage = lazy(() => import('../features/rastreio/RastrearLotePage').then((m) => ({ default: m.RastrearLotePage })));
+const ImprimirFormularioPage = lazy(() => import('../features/impressao/ImprimirFormularioPage').then((m) => ({ default: m.ImprimirFormularioPage })));
+const AlmoxarifadoPage = lazy(() => import('../features/almoxarifado/AlmoxarifadoPage').then((m) => ({ default: m.AlmoxarifadoPage })));
+const EmbalagensPage = lazy(() => import('../features/embalagens/EmbalagensPage').then((m) => ({ default: m.EmbalagensPage })));
+const UsuariosPage = lazy(() => import('../features/usuarios/UsuariosPage').then((m) => ({ default: m.UsuariosPage })));
+const EspecificacoesPage = lazy(() => import('../features/qualidade/EspecificacoesPage').then((m) => ({ default: m.EspecificacoesPage })));
+const PccFisicoPage = lazy(() => import('../features/qualidade/PccFisicoPage').then((m) => ({ default: m.PccFisicoPage })));
+const CalibracaoPage = lazy(() => import('../features/qualidade/CalibracaoPage').then((m) => ({ default: m.CalibracaoPage })));
+const PcmOrdensPage = lazy(() => import('../features/pcm/PcmOrdensPage').then((m) => ({ default: m.PcmOrdensPage })));
+const PcmPreventivaPage = lazy(() => import('../features/pcm/PcmPreventivaPage').then((m) => ({ default: m.PcmPreventivaPage })));
+const PcmLubrificacaoPage = lazy(() => import('../features/pcm/PcmLubrificacaoPage').then((m) => ({ default: m.PcmLubrificacaoPage })));
+const PcmOsPrint = lazy(() => import('../features/pcm/PcmOsPrint').then((m) => ({ default: m.PcmOsPrint })));
+const OrdemProducaoPrint = lazy(() => import('../features/ordens/OrdemProducaoPrint').then((m) => ({ default: m.OrdemProducaoPrint })));
+const FornecedoresPage = lazy(() => import('../features/fornecedores/FornecedoresPage').then((m) => ({ default: m.FornecedoresPage })));
+const DocumentosPage = lazy(() => import('../features/documentos/DocumentosPage').then((m) => ({ default: m.DocumentosPage })));
+const ProdutoresPage = lazy(() => import('../features/suprimentos/ProdutoresPage').then((m) => ({ default: m.ProdutoresPage })));
+const SemanaPage = lazy(() => import('../features/suprimentos/SemanaPage').then((m) => ({ default: m.SemanaPage })));
+const LaudoPrint = lazy(() => import('../features/lotes/LaudoPrint').then((m) => ({ default: m.LaudoPrint })));
+const OrdensPage = lazy(() => import('../features/ordens/OrdensPage').then((m) => ({ default: m.OrdensPage })));
+const OrdemPage = lazy(() => import('../features/ordens/OrdemPage').then((m) => ({ default: m.OrdemPage })));
+const ProgramacaoPage = lazy(() => import('../features/pcp/ProgramacaoPage').then((m) => ({ default: m.ProgramacaoPage })));
+const ProdutosPage = lazy(() => import('../features/produtos/ProdutosPage').then((m) => ({ default: m.ProdutosPage })));
+const ApontamentoPage = lazy(() => import('../features/pcp/ApontamentoPage').then((m) => ({ default: m.ApontamentoPage })));
+const EstoquePage = lazy(() => import('../features/estoque/EstoquePage').then((m) => ({ default: m.EstoquePage })));
+const PedidosPage = lazy(() => import('../features/pedidos/PedidosPage').then((m) => ({ default: m.PedidosPage })));
+const ExpedicaoPage = lazy(() => import('../features/expedicao/ExpedicaoPage').then((m) => ({ default: m.ExpedicaoPage })));
+const PalletsPage = lazy(() => import('../features/pallets/PalletsPage').then((m) => ({ default: m.PalletsPage })));
+const RetidosPage = lazy(() => import('../features/retidos/RetidosPage').then((m) => ({ default: m.RetidosPage })));
 
 function Protected({ children }: { children: JSX.Element }) {
   const { session, loading } = useAuth();
@@ -108,6 +112,7 @@ export default function App() {
     <AuthProvider>
       <ToastProvider>
       <HashRouter>
+        <Suspense fallback={<FullScreen><Spinner className="h-8 w-8 text-brand-600" /></FullScreen>}>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           {/* Impressão dos formulários da Qualidade — página cheia, fora do Layout */}
@@ -191,6 +196,7 @@ export default function App() {
               (controlados fora do sistema). Os dados continuam no banco. */}
           <Route path="*" element={<Navigate to="/painel" replace />} />
         </Routes>
+        </Suspense>
       </HashRouter>
       </ToastProvider>
     </AuthProvider>

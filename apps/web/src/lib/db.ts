@@ -653,13 +653,14 @@ export async function getEspecificacaoAplicavel(
 }
 
 // ── Acompanhamento de Processo (análise por bag) ───────────────
-export async function listAnalisesProcesso(): Promise<AnaliseProcesso[]> {
+export async function listAnalisesProcesso(desde: string | null = null): Promise<AnaliseProcesso[]> {
   // O histórico das planilhas passa de 1.000 linhas (limite do PostgREST).
   const todas: AnaliseProcesso[] = [];
   for (let de = 0; ; de += 1000) {
+    let q = qualidade().from('analises_processo').select('*');
+    if (desde) q = q.gte('data', desde);
     const pagina = unwrap<AnaliseProcesso[]>(
-      await qualidade().from('analises_processo').select('*')
-        .order('data', { ascending: false }).order('numero', { ascending: false }).range(de, de + 999),
+      await q.order('data', { ascending: false }).order('numero', { ascending: false }).range(de, de + 999),
     );
     todas.push(...pagina);
     if (pagina.length < 1000) return todas;

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { aoMudarBanco } from './aoVivo';
 
+const INTERVALO_AO_VIVO_MS = 15_000;
+
 interface AsyncState<T> {
   data: T | null;
   loading: boolean;
@@ -25,10 +27,33 @@ export function useAsync<T>(fn: () => Promise<T>, deps: unknown[]): AsyncState<T
   const [versaoAoVivo, setVersaoAoVivo] = useState(0);
   const silenciosa = useRef(false);
 
-  useEffect(() => aoMudarBanco(() => {
-    silenciosa.current = true;
-    setVersaoAoVivo((v) => v + 1);
-  }), []);
+  // Numa fábrica com lançamentos a todo momento, cada aviso do banco recarregava
+  // todas as telas abertas. Agora a tela recarrega no máximo a cada 15 s (os
+  // avisos no meio do intervalo viram uma busca só, no fim dele) e nada é
+  // buscado com a aba em segundo plano — ao voltar, o aoVivo já avisa.
+  const ultimaAoVivo = useRef(0);
+  const pendente = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    // A carga inicial conta como recente: o aviso que o canal dá ao conectar
+    // não dispara uma segunda busca logo depois da primeira.
+    ultimaAoVivo.current = Date.now();
+    const recarregar = () => {
+      pendente.current = null;
+      ultimaAoVivo.current = Date.now();
+      silenciosa.current = true;
+      setVersaoAoVivo((v) => v + 1);
+    };
+    const parar = aoMudarBanco(() => {
+      if (document.visibilityState === 'hidden' || pendente.current) return;
+      const espera = ultimaAoVivo.current + INTERVALO_AO_VIVO_MS - Date.now();
+      if (espera <= 0) recarregar();
+      else pendente.current = setTimeout(recarregar, espera);
+    });
+    return () => {
+      parar();
+      if (pendente.current) clearTimeout(pendente.current);
+    };
+  }, []);
 
   useEffect(() => {
     let alive = true;

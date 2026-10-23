@@ -1,5 +1,6 @@
 import { NavLink, Link, Outlet, useLocation } from 'react-router-dom';
-import { useEffect, useState, type ReactNode } from 'react';
+import { Suspense, useEffect, useState, type ReactNode } from 'react';
+import { Spinner } from '../components/ui';
 import { useAuth } from '../lib/auth';
 import type { Modulo } from '@sistema/domain';
 import {
@@ -251,7 +252,9 @@ export function Layout() {
               Voltar ao painel
             </Link>
           )}
-          <Outlet />
+          <Suspense fallback={<div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}>
+            <Outlet />
+          </Suspense>
         </div>
       </main>
     </div>

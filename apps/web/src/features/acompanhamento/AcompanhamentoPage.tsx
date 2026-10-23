@@ -26,19 +26,22 @@ export function AcompanhamentoPage() {
   const [filtroCliente, setFiltroCliente] = useState('');
   const [filtroTipo, setFiltroTipo] = useState('');
   const [limite, setLimite] = useState(200);
+  // Abre com os últimos 90 dias; o histórico das planilhas (milhares de
+  // análises) só vem quando pedido.
+  const [historico, setHistorico] = useState(false);
   const [loteFechamento, setLoteFechamento] = useState('');
   const navegar = useNavigate();
   const { sucesso, erro } = useToast();
 
   const { data, loading, error } = useAsync(async () => {
     const [analises, clientes, produtos, lotes] = await Promise.all([
-      listAnalisesProcesso(), listClientes(), listProdutos(), listLotes(),
+      listAnalisesProcesso(historico ? null : hojeLocalISO(new Date(Date.now() - 90 * 86_400_000))), listClientes(), listProdutos(), listLotes(),
     ]);
     return {
       analises, clientes, produtos, lotes,
       clientesMap: mapBy(clientes, 'id'), produtosMap: mapBy(produtos, 'id'), lotesMap: mapBy(lotes, 'id'),
     };
-  }, [recarregar]);
+  }, [recarregar, historico]);
   const rec = () => setRecarregar((n) => n + 1);
 
   const codigoLote = (a: AnaliseProcesso) => a.lote_codigo ?? (a.lote_id ? data?.lotesMap.get(a.lote_id)?.codigo ?? null : null);
@@ -106,7 +109,8 @@ export function AcompanhamentoPage() {
       {error && <ErroCarregamento mensagem={error} />}
       {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}
       {data && linhas.length === 0 && (
-        <EmptyState title="Nenhuma análise" description='Registre a primeira em "Nova análise".' />
+        <EmptyState title="Nenhuma análise" description={historico ? 'Registre a primeira em "Nova análise".' : 'Nenhuma nos últimos 90 dias.'}
+          action={historico ? undefined : <Button variant="outline" onClick={() => setHistorico(true)}>Carregar todo o histórico</Button>} />
       )}
 
       {data && linhas.length > 0 && (
@@ -153,6 +157,13 @@ export function AcompanhamentoPage() {
               ))}
             </tbody>
           </table>
+          {!historico && (
+            <div className="border-t border-slate-100 p-3 text-center">
+              <button type="button" onClick={() => setHistorico(true)} className="text-xs font-semibold text-brand-600 hover:text-brand-700">
+                Mostrando os últimos 90 dias — carregar todo o histórico
+              </button>
+            </div>
+          )}
           {linhas.length > limite && (
             <div className="border-t border-slate-100 p-3 text-center">
               <button type="button" onClick={() => setLimite((n) => n + 300)} className="text-xs font-semibold text-brand-600 hover:text-brand-700">

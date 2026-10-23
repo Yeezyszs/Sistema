@@ -11,10 +11,6 @@ import { LotePage } from '../features/lotes/LotePage';
 import { RecebimentosPage } from '../features/recebimentos/RecebimentosPage';
 import { QualidadePage } from '../features/qualidade/QualidadePage';
 import { AcompanhamentoPage } from '../features/acompanhamento/AcompanhamentoPage';
-import { MonitoramentoAguaPage } from '../features/qualidade/MonitoramentoAguaPage';
-import { CalibracaoPhmetroPage } from '../features/qualidade/CalibracaoPhmetroPage';
-import { InsumosLaboratorioPage } from '../features/qualidade/InsumosLaboratorioPage';
-import { ContraprovasPage } from '../features/qualidade/ContraprovasPage';
 import { PcmCadastrosPage } from '../features/pcm/PcmCadastrosPage';
 import { PcmIndicadoresPage } from '../features/pcm/PcmIndicadoresPage';
 import { PcmChecklistPage } from '../features/pcm/PcmChecklistPage';
@@ -29,19 +25,14 @@ import { ImprimirFormularioPage } from '../features/impressao/ImprimirFormulario
 import { AlmoxarifadoPage } from '../features/almoxarifado/AlmoxarifadoPage';
 import { EmbalagensPage } from '../features/embalagens/EmbalagensPage';
 import { UsuariosPage } from '../features/usuarios/UsuariosPage';
-import { NaoConformidadesPage } from '../features/qualidade/NaoConformidadesPage';
 import { EspecificacoesPage } from '../features/qualidade/EspecificacoesPage';
 import { PccFisicoPage } from '../features/qualidade/PccFisicoPage';
-import { PphoPage } from '../features/qualidade/PphoPage';
 import { CalibracaoPage } from '../features/qualidade/CalibracaoPage';
 import { PcmOrdensPage } from '../features/pcm/PcmOrdensPage';
 import { PcmPreventivaPage } from '../features/pcm/PcmPreventivaPage';
 import { PcmLubrificacaoPage } from '../features/pcm/PcmLubrificacaoPage';
 import { PcmOsPrint } from '../features/pcm/PcmOsPrint';
 import { OrdemProducaoPrint } from '../features/ordens/OrdemProducaoPrint';
-import { AnaliseRiscoPage } from '../features/qualidade/AnaliseRiscoPage';
-import { AuditoriaPage } from '../features/qualidade/AuditoriaPage';
-import { AmbientalPage } from '../features/qualidade/AmbientalPage';
 import { FornecedoresPage } from '../features/fornecedores/FornecedoresPage';
 import { DocumentosPage } from '../features/documentos/DocumentosPage';
 import { ProdutoresPage } from '../features/suprimentos/ProdutoresPage';
@@ -172,26 +163,17 @@ export default function App() {
             <Route path="/recebimentos" element={<ModuloGuard modulo="recebimentos"><RecebimentosPage /></ModuloGuard>} />
             <Route path="/qualidade" element={<ModuloGuard modulo="qualidade"><QualidadePage /></ModuloGuard>} />
             <Route path="/acompanhamento" element={<ModuloGuard modulo="acompanhamento"><AcompanhamentoPage /></ModuloGuard>} />
-            <Route path="/monitoramento-agua" element={<ModuloGuard modulo="monitoramento_agua"><MonitoramentoAguaPage /></ModuloGuard>} />
-            <Route path="/nao-conformidades" element={<ModuloGuard modulo="nao_conformidades"><NaoConformidadesPage /></ModuloGuard>} />
             <Route path="/rastrear" element={<ModuloGuard modulo="qualidade"><RastrearLotePage /></ModuloGuard>} />
             <Route path="/liberacao-os" element={<ModuloGuard modulo="qualidade"><LiberacaoOsPage /></ModuloGuard>} />
             <Route path="/especificacoes" element={<ModuloGuard modulo="especificacoes"><EspecificacoesPage /></ModuloGuard>} />
             <Route path="/pcc-fisico" element={<ModuloGuard modulo="pcc_fisico"><PccFisicoPage /></ModuloGuard>} />
-            <Route path="/ppho" element={<ModuloGuard modulo="ppho"><PphoPage /></ModuloGuard>} />
             <Route path="/calibracao" element={<ModuloGuard modulo="calibracao"><CalibracaoPage /></ModuloGuard>} />
-            <Route path="/calibracao-phmetro" element={<ModuloGuard modulo="calibracao"><CalibracaoPhmetroPage /></ModuloGuard>} />
-            <Route path="/insumos-lab" element={<ModuloGuard modulo="insumos_lab"><InsumosLaboratorioPage /></ModuloGuard>} />
-            <Route path="/contraprovas" element={<ModuloGuard modulo="contraprovas"><ContraprovasPage /></ModuloGuard>} />
             <Route path="/manutencao" element={<ModuloGuard modulo="manutencao"><PcmOrdensPage /></ModuloGuard>} />
             <Route path="/pcm-cadastros" element={<ModuloGuard modulo="manutencao"><PcmCadastrosPage /></ModuloGuard>} />
             <Route path="/preventiva" element={<ModuloGuard modulo="manutencao"><PcmPreventivaPage /></ModuloGuard>} />
             <Route path="/lubrificacao" element={<ModuloGuard modulo="manutencao"><PcmLubrificacaoPage /></ModuloGuard>} />
             <Route path="/pcm-indicadores" element={<ModuloGuard modulo="manutencao"><PcmIndicadoresPage /></ModuloGuard>} />
             <Route path="/pcm-checklist" element={<ModuloGuard modulo="manutencao"><PcmChecklistPage /></ModuloGuard>} />
-            <Route path="/analise-risco" element={<ModuloGuard modulo="analise_risco"><AnaliseRiscoPage /></ModuloGuard>} />
-            <Route path="/auditoria" element={<ModuloGuard modulo="auditoria"><AuditoriaPage /></ModuloGuard>} />
-            <Route path="/ambiental" element={<ModuloGuard modulo="ambiental"><AmbientalPage /></ModuloGuard>} />
             <Route path="/fornecedores" element={<ModuloGuard modulo="fornecedores"><FornecedoresPage /></ModuloGuard>} />
             <Route path="/gestao-documentos" element={<ModuloGuard modulo="documentos"><DocumentosPage /></ModuloGuard>} />
             <Route path="/clientes" element={<ModuloGuard modulo="comercial"><ClientesPage /></ModuloGuard>} />
@@ -204,6 +186,9 @@ export default function App() {
             <Route path="/embalagens" element={<ModuloGuard modulo="almoxarifado"><EmbalagensPage /></ModuloGuard>} />
             <Route path="/usuarios" element={<ModuloGuard modulo="usuarios"><UsuariosPage /></ModuloGuard>} />
           </Route>
+          {/* Cloro & pH, PPHO, pHmetro, insumos do lab, contraprovas, análise de risco,
+              auditoria/PPR, ambiental/pragas e NCs saíram do menu a pedido da Qualidade
+              (controlados fora do sistema). Os dados continuam no banco. */}
           <Route path="*" element={<Navigate to="/painel" replace />} />
         </Routes>
       </HashRouter>

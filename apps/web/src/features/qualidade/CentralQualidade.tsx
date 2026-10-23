@@ -3,12 +3,12 @@
 import { Link } from 'react-router-dom';
 import {
   listDetectoresMetais, listVerificacoesDMDesde, listImas, listVerificacoesImaDesde, listFornoRegistros,
-  listCarregamentos, listOrdensPcm, listRecebimentosPeriodo, listNaoConformidades, listReprocessos, listHomologacoes,
+  listCarregamentos, listOrdensPcm, listRecebimentosPeriodo, listReprocessos, listHomologacoes,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { hojeLocalISO } from '../../lib/format';
 import {
-  situacaoDetector, imasPendentesNoDia, situacaoExpedicao, itensNaoConformes, ncEstaAberta, retidoVencendo,
+  situacaoDetector, imasPendentesNoDia, situacaoExpedicao, itensNaoConformes, retidoVencendo,
 } from '@sistema/domain';
 import { Card, Spinner } from '../../components/ui';
 
@@ -32,7 +32,6 @@ const FORMULARIOS: { codigo: string; nome: string; to: string }[] = [
   { codigo: 'FOR POP 14 1.1', nome: 'Checklist de expedição', to: '/expedicao' },
   { codigo: 'FOR POP 08 1.6', nome: 'Rastrear lote / recolhimento', to: '/rastrear' },
   { codigo: '—', nome: 'Liberação pós-manutenção', to: '/liberacao-os' },
-  { codigo: '—', nome: 'Não conformidades', to: '/nao-conformidades' },
 ];
 
 export function CentralQualidade() {
@@ -43,10 +42,10 @@ export function CentralQualidade() {
     const em30 = new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10);
     // Cada fonte falha sozinha: uma tabela fora do ar não apaga a central toda.
     const ok = <T,>(p: Promise<T[]>) => p.catch(() => [] as T[]);
-    const [detectores, verifsDm, imas, verifsIma, forno, cargas, os, recebimentos, ncs, retidos, homolog] = await Promise.all([
+    const [detectores, verifsDm, imas, verifsIma, forno, cargas, os, recebimentos, retidos, homolog] = await Promise.all([
       ok(listDetectoresMetais()), ok(listVerificacoesDMDesde(desde)), ok(listImas()), ok(listVerificacoesImaDesde(desde)),
       ok(listFornoRegistros()), ok(listCarregamentos()), ok(listOrdensPcm()),
-      ok(listRecebimentosPeriodo(hojeLocalISO(seteDias), hoje)), ok(listNaoConformidades()), ok(listReprocessos()), ok(listHomologacoes()),
+      ok(listRecebimentosPeriodo(hojeLocalISO(seteDias), hoje)), ok(listReprocessos()), ok(listHomologacoes()),
     ]);
     // Homologação mais recente de cada produtor.
     const ultima = new Map<string, (typeof homolog)[number]>();
@@ -59,7 +58,6 @@ export function CentralQualidade() {
       { n: verifsDm.filter((v) => !v.validado_em).length + verifsIma.filter((v) => !v.validado_em).length
           + forno.filter((r) => !r.validado_em && r.data < hoje).length, label: 'Registros de PCC a validar', to: '/pcc-fisico', tom: 'alerta' },
       { n: imasPendentesNoDia(imas.filter((i) => i.area), verifsIma, hoje).length, label: 'Ímãs a verificar hoje', to: '/pcc-fisico?aba=imas', tom: 'info' },
-      { n: ncs.filter(ncEstaAberta).length, label: 'Não conformidades abertas', to: '/nao-conformidades', tom: 'alerta' },
       { n: retidos.filter((r) => retidoVencendo(r, hoje)).length, label: 'Retidos com shelf life vencendo', to: '/reprocesso', tom: 'alerta' },
       { n: [...ultima.values()].filter((h) => h.status === 'qualificado' && h.validade && h.validade <= em30).length, label: 'Homologações vencendo (30 dias)', to: '/fornecedores?aba=homologacao', tom: 'alerta' },
     ];

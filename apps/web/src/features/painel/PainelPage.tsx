@@ -1,14 +1,14 @@
 import { Link } from 'react-router-dom';
 import {
   listApontamentos, listLinhas, listRecebimentos, listProgramacao, listLotes,
-  listOrdensProducao, listNaoConformidades, listOrdensPcm, listParadas,
+  listOrdensProducao, listOrdensPcm, listParadas,
   listCalibracoes, listPedidos, listCarregamentos, getDocumentosVencendo, mapBy,
   listDetectoresMetais, listVerificacoesDMDesde, listImas, listVerificacoesImaDesde, listFornoRegistros,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { formatarData, formatarQuantidade, hojeLocalISO } from '../../lib/format';
 import {
-  calcularRendimento, ncEstaAberta, situacaoCalibracao, itensNaoConformes, situacaoDetector, situacaoExpedicao, imasPendentesNoDia,
+  calcularRendimento, situacaoCalibracao, itensNaoConformes, situacaoDetector, situacaoExpedicao, imasPendentesNoDia,
   STATUS_LOTE, STATUS_LOTE_LABEL,
 } from '@sistema/domain';
 import type { Perfil, StatusLote } from '@sistema/domain';
@@ -141,10 +141,10 @@ function PainelOperacao() {
   const { data, loading, error } = useAsync(async () => {
     // Calculado na busca, não no render: o render tem de ser puro.
     const seteDias = new Date(Date.now() - 7 * 86_400_000).toISOString();
-    const [apontSemana, linhas, recebimentos, prog, lotes, ops, ncs, osPcm, paradas, calibracoes, pedidos, cargas, pcc] =
+    const [apontSemana, linhas, recebimentos, prog, lotes, ops, osPcm, paradas, calibracoes, pedidos, cargas, pcc] =
       await Promise.all([
         listApontamentos(de, ate), listLinhas(), listRecebimentos(), listProgramacao(de, ate),
-        listLotes(), listOrdensProducao(), listNaoConformidades(), listOrdensPcm(),
+        listLotes(), listOrdensProducao(), listOrdensPcm(),
         listParadas(), listCalibracoes(), listPedidos(), listCarregamentos(),
         // Monitoramento de PCC só para quem o acessa; falha aqui não derruba o painel.
         vePcc
@@ -152,7 +152,7 @@ function PainelOperacao() {
               .catch(() => null)
           : Promise.resolve(null),
       ]);
-    return { apontSemana, recebimentos, prog, lotes, ops, ncs, osPcm, paradas, calibracoes, pedidos, cargas, pcc, seteDiasAtras: seteDias, linhas, linhasMap: mapBy(linhas, 'id') };
+    return { apontSemana, recebimentos, prog, lotes, ops, osPcm, paradas, calibracoes, pedidos, cargas, pcc, seteDiasAtras: seteDias, linhas, linhasMap: mapBy(linhas, 'id') };
   }, [de, ate]);
 
   if (error || (loading === false && !data)) return <ErroCarregamento mensagem={error} />;
@@ -161,7 +161,7 @@ function PainelOperacao() {
     return <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>;
   }
 
-  const { apontSemana, recebimentos, prog, lotes, ops, ncs, osPcm, paradas, calibracoes, pedidos, cargas, linhas } = data;
+  const { apontSemana, recebimentos, prog, lotes, ops, osPcm, paradas, calibracoes, pedidos, cargas, linhas } = data;
 
   // ── Pulso do dia ──
   const apontHoje = apontSemana.filter((a) => a.data === hoje);
@@ -191,7 +191,6 @@ function PainelOperacao() {
   const aguardando = lotes.filter((l) => l.status === 'aguardando_liberacao').length;
   const bloqueados = lotes.filter((l) => l.status === 'bloqueado').length;
   const opsAbertas = ops.filter((o) => o.status !== 'concluida').length;
-  const ncsAbertas = ncs.filter(ncEstaAberta).length;
   const osAbertas = osPcm.filter((o) => o.status !== 'Concluído').length;
   // Equipamento parado esperando a Qualidade: é produção perdida enquanto
   // ninguém olha, por isso entra como crítico.
@@ -227,7 +226,6 @@ function PainelOperacao() {
     { modulo: 'recebimentos', n: cargasComNc, label: 'Cargas com inspeção não conforme (7 dias)', to: '/recebimentos', tom: 'critico' },
     { modulo: 'qualidade', n: cargasAInspecionar, label: 'Cargas aguardando inspeção da Qualidade', to: '/expedicao', tom: 'critico' },
     { modulo: 'qualidade', n: osParaLiberar, label: 'Equipamentos aguardando liberação', to: '/liberacao-os', tom: 'critico' },
-    { modulo: 'nao_conformidades', n: ncsAbertas, label: 'Não conformidades abertas', to: '/nao-conformidades', tom: 'critico' },
     { modulo: 'manutencao', n: osAbertas, label: 'O.S. de manutenção abertas', to: '/manutencao', tom: 'alerta' },
     { modulo: 'manutencao', n: horasParadasHoje > 0 ? `${horasParadasHoje.toFixed(1)} h` : 0,
       label: `Paradas de hoje${paradasHoje.length ? ` · ${paradasHoje.length} evento(s)` : ''}`,

@@ -1,4 +1,4 @@
-// Painel da Qualidade: análises por cliente (FOR-CQ-001/002) e PCC do processo
+// Painel da Qualidade (aba do Painel): análises por cliente (FOR-CQ-001/002) e PCC do processo
 // (forno, detector, ímãs) no período escolhido. Só lê o que já é registrado.
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -12,14 +12,14 @@ import {
   indicadoresPorCliente, aprovacaoPorDia, indicadoresPcc, percentual, TIPO_FARINHA_LABEL,
 } from '@sistema/domain';
 import type { TipoFarinha } from '@sistema/domain';
-import { PageHeader, Card, CardTitle, Spinner, ErroCarregamento } from '../../components/ui';
-import { Kpi } from '../painel/comum';
+import { Card, CardTitle, Spinner, ErroCarregamento } from '../../components/ui';
+import { Kpi } from './comum';
 
 const PERIODOS = [7, 30, 90] as const;
 const fmt = (v: number | null, casas = 1) => (v == null ? '—' : v.toLocaleString('pt-BR', { maximumFractionDigits: casas }));
 const fmtPct = (v: number | null) => (v == null ? '—' : `${fmt(v)}%`);
 
-export function PainelQualidadePage() {
+export function PainelQualidade() {
   const [dias, setDias] = useState<(typeof PERIODOS)[number]>(7);
 
   const { data, loading, error } = useAsync(async () => {
@@ -51,18 +51,17 @@ export function PainelQualidadePage() {
 
   return (
     <>
-      <PageHeader grupo="Qualidade" title="Painel da Qualidade"
-        subtitle={data ? `De ${formatarData(data.de)} até hoje` : 'Indicadores do período'}
-        action={
-          <div className="flex rounded-lg border border-slate-200 bg-white p-0.5">
-            {PERIODOS.map((p) => (
-              <button key={p} type="button" onClick={() => setDias(p)} aria-pressed={dias === p}
-                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${dias === p ? 'bg-brand-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>
-                {p} dias
-              </button>
-            ))}
-          </div>
-        } />
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <p className="text-[12.5px] text-slate-500">{data ? `De ${formatarData(data.de)} até hoje` : 'Indicadores do período'}</p>
+        <div className="flex rounded-lg border border-slate-200 bg-white p-0.5">
+          {PERIODOS.map((p) => (
+            <button key={p} type="button" onClick={() => setDias(p)} aria-pressed={dias === p}
+              className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${dias === p ? 'bg-brand-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>
+              {p} dias
+            </button>
+          ))}
+        </div>
+      </div>
 
       {error && <ErroCarregamento mensagem={error} />}
       {loading && <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>}

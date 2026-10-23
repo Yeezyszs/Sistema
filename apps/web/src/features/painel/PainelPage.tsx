@@ -18,6 +18,7 @@ import { useAuth } from '../../lib/auth';
 import { useAbaUrl } from '../../lib/useAbaUrl';
 import { Kpi } from './comum';
 import { PainelAlmoxarifado } from './PainelAlmoxarifado';
+import { PainelQualidade } from './PainelQualidade';
 import { PainelCompras } from './PainelCompras';
 import { PainelManutencao } from './PainelManutencao';
 import { PainelSuprimentos } from './PainelSuprimentos';
@@ -53,10 +54,11 @@ const COR_STATUS: Record<StatusLote, string> = {
 // O painel de operação não serve a quem não acessa produção: os atalhos dele
 // levam a lotes, NCs e calibração, que compras e almoxarifado não abrem.
 // Cada perfil abre no painel que responde à pergunta dele.
-type Visao = 'operacao' | 'almoxarifado' | 'compras' | 'suprimentos' | 'comercial' | 'manutencao';
+type Visao = 'operacao' | 'qualidade' | 'almoxarifado' | 'compras' | 'suprimentos' | 'comercial' | 'manutencao';
 
 const VISAO_LABEL: Record<Visao, string> = {
   operacao: 'Operação',
+  qualidade: 'Qualidade',
   almoxarifado: 'Almoxarifado',
   compras: 'Compras',
   suprimentos: 'Suprimentos',
@@ -66,6 +68,7 @@ const VISAO_LABEL: Record<Visao, string> = {
 
 const SUBTITULO: Record<Visao, string> = {
   operacao: 'Operação da fábrica — dia e semana',
+  qualidade: 'Análises por cliente e PCC do processo',
   almoxarifado: 'O que vai faltar e o que saiu da minha mão',
   compras: 'O que precisa comprar e de quem pode comprar',
   suprimentos: 'O combinado, o que chegou e a que preço',
@@ -77,11 +80,12 @@ const SUBTITULO: Record<Visao, string> = {
 // A tupla garante ao menos uma visão: sem isso a primeira posição seria
 // opcional e a página poderia ficar sem nada para mostrar.
 function visoesDoUsuario(perfis: Perfil[]): [Visao, ...Visao[]] {
-  if (perfis.includes('gestao')) return ['operacao', 'comercial', 'manutencao', 'almoxarifado', 'compras', 'suprimentos'];
+  if (perfis.includes('gestao')) return ['operacao', 'qualidade', 'comercial', 'manutencao', 'almoxarifado', 'compras', 'suprimentos'];
   const visoes: Visao[] = [];
   if (perfis.some((p) => p === 'operador' || p === 'qualidade' || p === 'encarregado')) visoes.push('operacao');
   // O encarregado responde pela produção do turno e abre a O.S. quando quebra:
   // as duas visões que ele usa são operação e manutenção.
+  if (perfis.includes('qualidade')) visoes.push('qualidade');
   if (perfis.includes('encarregado')) visoes.push('manutencao');
   if (perfis.includes('manutencao')) visoes.push('manutencao');
   if (perfis.includes('almoxarifado')) visoes.push('almoxarifado');
@@ -121,6 +125,7 @@ export function PainelPage() {
       )}
 
       {atual === 'operacao' && <PainelOperacao />}
+      {atual === 'qualidade' && <PainelQualidade />}
       {atual === 'almoxarifado' && <PainelAlmoxarifado />}
       {atual === 'compras' && <PainelCompras />}
       {atual === 'suprimentos' && <PainelSuprimentos />}

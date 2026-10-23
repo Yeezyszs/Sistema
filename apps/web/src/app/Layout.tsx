@@ -58,7 +58,6 @@ const ITENS_DOCUMENTOS: SubItem[] = [
 ];
 
 const ITENS_QUALIDADE: SubItem[] = [
-  { to: '/painel-qualidade', icon: <IconGrid width={16} height={16} />, label: 'Painel da Qualidade', modulo: 'qualidade' },
   { to: '/qualidade', icon: <IconShield width={16} height={16} />, label: 'Qualidade', modulo: 'qualidade' },
   { to: '/rastrear', icon: <IconSearch width={16} height={16} />, label: 'Rastrear lote', modulo: 'qualidade' },
   { to: '/acompanhamento', icon: <IconFlask width={16} height={16} />, label: 'Acomp. de Processo', modulo: 'acompanhamento' },

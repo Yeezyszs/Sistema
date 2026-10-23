@@ -9,7 +9,6 @@ import { LoginPage } from './LoginPage';
 import { LotesPage } from '../features/lotes/LotesPage';
 import { LotePage } from '../features/lotes/LotePage';
 import { RecebimentosPage } from '../features/recebimentos/RecebimentosPage';
-import { PainelQualidadePage } from '../features/qualidade/PainelQualidadePage';
 import { QualidadePage } from '../features/qualidade/QualidadePage';
 import { AcompanhamentoPage } from '../features/acompanhamento/AcompanhamentoPage';
 import { PcmCadastrosPage } from '../features/pcm/PcmCadastrosPage';
@@ -162,7 +161,6 @@ export default function App() {
             <Route path="/lotes" element={<ModuloGuard modulo="lotes"><LotesPage /></ModuloGuard>} />
             <Route path="/lotes/:id" element={<ModuloGuard modulo="lotes"><LotePage /></ModuloGuard>} />
             <Route path="/recebimentos" element={<ModuloGuard modulo="recebimentos"><RecebimentosPage /></ModuloGuard>} />
-            <Route path="/painel-qualidade" element={<ModuloGuard modulo="qualidade"><PainelQualidadePage /></ModuloGuard>} />
             <Route path="/qualidade" element={<ModuloGuard modulo="qualidade"><QualidadePage /></ModuloGuard>} />
             <Route path="/acompanhamento" element={<ModuloGuard modulo="acompanhamento"><AcompanhamentoPage /></ModuloGuard>} />
             <Route path="/rastrear" element={<ModuloGuard modulo="qualidade"><RastrearLotePage /></ModuloGuard>} />

@@ -666,6 +666,28 @@ export async function listAnalisesProcesso(): Promise<AnaliseProcesso[]> {
   }
 }
 
+// Painel da Qualidade: análises do período com os valores de cada ensaio.
+export async function listAnalisesPeriodo(
+  de: string,
+  ate: string,
+): Promise<{ analises: AnaliseProcesso[]; valores: AnaliseProcessoValor[] }> {
+  const analises: AnaliseProcesso[] = [];
+  for (let i = 0; ; i += 1000) {
+    const pagina = unwrap<AnaliseProcesso[]>(
+      await qualidade().from('analises_processo').select('*').gte('data', de).lte('data', ate).order('data').range(i, i + 999),
+    );
+    analises.push(...pagina);
+    if (pagina.length < 1000) break;
+  }
+  const valores: AnaliseProcessoValor[] = [];
+  for (let i = 0; i < analises.length; i += 150) {
+    valores.push(...unwrap<AnaliseProcessoValor[]>(
+      await qualidade().from('analise_processo_valores').select('*').in('analise_id', analises.slice(i, i + 150).map((a) => a.id)),
+    ));
+  }
+  return { analises, valores };
+}
+
 // Fechamento do lote: todas as análises de bag de um lote (pelo código, que
 // cobre também o histórico importado) e os valores de cada ensaio.
 export async function getFechamentoDoLote(
@@ -1033,6 +1055,12 @@ export async function criarFornoRegistro(payload: NovoFornoRegistro): Promise<Fo
 export async function atualizarFornoRegistro(id: string, patch: NovoFornoRegistro): Promise<void> {
   const res = await qualidade().from('forno_registros').update(patch).eq('id', id);
   if (res.error) throw new Error(res.error.message);
+}
+
+export async function listLeiturasFornoDesde(desdeISO: string): Promise<FornoLeitura[]> {
+  return unwrap<FornoLeitura[]>(
+    await qualidade().from('forno_leituras').select('*').gte('registrado_em', desdeISO).order('registrado_em').limit(5000),
+  );
 }
 
 export async function listLeiturasForno(registroIds: string[]): Promise<FornoLeitura[]> {

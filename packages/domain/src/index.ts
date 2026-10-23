@@ -61,3 +61,4 @@ export * from './entities/InsumoLaboratorio';
 export * from './entities/Contraprova';
 export * from './entities/Pcm';
 export * from './entities/Lubrificacao';
+export * from './entities/PainelQualidade';

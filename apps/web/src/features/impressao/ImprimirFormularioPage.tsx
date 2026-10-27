@@ -7,20 +7,21 @@
 //   /imprimir/carga/:recebimentoId     FOR POP 09 1.2 + 1.5
 //   /imprimir/expedicao/:cargaId       FOR POP 14 1.1
 //   /imprimir/homologacao/:id          FOR POP 07 1.1
+//   /imprimir/ferramentas/:colab~ano-mes~lista  Check-list do uso de ferramentas (manutenção)
 //   /imprimir/fechamento/:loteCodigo   FOR-CQ-001 (General Mills) / FOR-CQ-002 (Pódium)
 import type { ReactNode } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   getFornoRegistro, listLeiturasForno, listPontosControle, getLote, listDetectoresMetais, listVerificacoesDmDoDia,
   listImas, listVerificacoesImaDoDia, getRecebimento, getCarregamento, getCliente, getHomologacao, getFornecedor,
-  nomeDoUsuario, getFechamentoDoLote,
+  nomeDoUsuario, getFechamentoDoLote, listColaboradoresPcm, listFerramentasPcm, listEstadosChecklist,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { formatarData, formatarDataHora } from '../../lib/format';
 import {
   desviosLeituraForno, TIPO_TESTE_DM_LABEL, AREAS_IMA, ITENS_INSPECAO_CARGA, TIPO_MP_LABEL, SECOES_EXPEDICAO,
   LIBERACAO_CARGA_LABEL, blocosAplicaveis, resumoHomologacao, STATUS_HOMOLOGACAO_LABEL,
-  fechamentoDoLote, limiteTexto, TIPO_FARINHA_LABEL, TURNO_ANALISE_LABEL,
+  fechamentoDoLote, limiteTexto, diasNoMes, TIPO_FARINHA_LABEL, TURNO_ANALISE_LABEL,
 } from '@sistema/domain';
 import type { TipoFarinha, TurnoAnalise } from '@sistema/domain';
 import { Spinner, ErroCarregamento } from '../../components/ui';
@@ -29,10 +30,11 @@ const EMPRESA = 'INDÚSTRIA E COMÉRCIO DE ALIMENTOS SUMARÉ';
 const hora = (iso: string) => new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 const R = { c: 'C', nc: 'NC', na: 'N/A' } as const;
 
-function Folha({ codigo, versao, titulo, children }: { codigo: string; versao: string; titulo: string; children: ReactNode }) {
+function Folha({ codigo, versao, titulo, children, paisagem = false }: { codigo: string; versao: string; titulo: string; children: ReactNode; paisagem?: boolean }) {
   const navegar = useNavigate();
   return (
     <div className="min-h-screen bg-slate-100 print:bg-white">
+      {paisagem && <style>{'@page { size: A4 landscape; margin: 8mm; }'}</style>}
       <div className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3 print:hidden">
         <button type="button" onClick={() => navegar(-1)} className="text-sm text-slate-500 hover:text-slate-800">← Voltar</button>
         <button type="button" onClick={() => window.print()}
@@ -40,7 +42,7 @@ function Folha({ codigo, versao, titulo, children }: { codigo: string; versao: s
           Imprimir / Salvar PDF
         </button>
       </div>
-      <div className="mx-auto my-6 max-w-[210mm] bg-white p-8 text-[12px] text-slate-900 shadow-sm print:my-0 print:p-4 print:shadow-none">
+      <div className={`mx-auto my-6 ${paisagem ? 'max-w-[297mm]' : 'max-w-[210mm]'} bg-white p-8 text-[12px] text-slate-900 shadow-sm print:my-0 print:p-4 print:shadow-none`}>
         <header className="mb-4 grid grid-cols-[1fr_auto] border border-slate-400">
           <div className="border-r border-slate-400 px-3 py-2">
             <p className="font-bold">{EMPRESA}</p>
@@ -103,6 +105,67 @@ const num = (v: number | null) => (v == null ? '—' : v.toLocaleString('pt-BR',
 
 async function carregar(tipo: string, id: string): Promise<ReactNode | null> {
   switch (tipo) {
+    case 'ferramentas': {
+      const [colabId = '', periodo = '', lista = 'todas'] = id.split('~');
+      const [ano, mes] = periodo.split('-').map(Number);
+      if (!ano || !mes) return null;
+      const [colabs, todas, estados] = await Promise.all([listColaboradoresPcm(), listFerramentasPcm(), listEstadosChecklist(colabId, ano, mes)]);
+      const colab = colabs.find((c) => c.id === colabId);
+      if (!colab) return null;
+      const ferramentas = todas.filter((f) => !f.caixa && (lista === 'todas' || f.tipo === lista));
+      const dias = Array.from({ length: diasNoMes(ano, mes) }, (_, i) => i + 1);
+      const marca = new Map(estados.map((e) => [`${e.ferramenta_id}|${e.dia}`, e.estado]));
+      // "Todas conformes?" do dia: só responde quando todas as ferramentas foram marcadas.
+      const conformeNoDia = (d: number) => {
+        const v = ferramentas.map((f) => marca.get(`${f.id}|${d}`));
+        if (v.some((x) => !x)) return '';
+        return v.every((x) => x === 'C') ? 'S' : v.some((x) => x === 'NC') ? 'N' : '';
+      };
+      const MESES = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
+      const cel = 'border border-slate-400 px-0.5 text-center text-[9px]';
+      return (
+        <Folha paisagem codigo="Manutenção" versao={lista === 'eletrica' ? 'Elétrica' : lista === 'mecanica' ? 'Mecânica' : 'Ferramentas'}
+          titulo="Check-list do uso de ferramentas">
+          <Campos itens={[['Nome', colab.nome], ['Mês', `${MESES[mes - 1]} / ${ano}`], ['Setor', colab.setor],
+            ['Função', colab.funcao], ['Supervisor responsável', '______________________'], ['Turno', '__________']]} />
+          <table className="w-full border-collapse">
+            <thead>
+              <tr>
+                <th className="border border-slate-400 bg-slate-100 px-1 text-left text-[9.5px]">LISTA DE FERRAMENTAS</th>
+                <th className="border border-slate-400 bg-slate-100 px-0.5 text-[9.5px]">QTD</th>
+                {dias.map((d) => <th key={d} className={`${cel} bg-slate-100 font-semibold`}>{String(d).padStart(2, '0')}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {ferramentas.map((f) => (
+                <tr key={f.id}>
+                  <td className="whitespace-nowrap border border-slate-400 px-1 text-[9.5px]">{f.nome}</td>
+                  <td className={cel}>{f.qty ?? ''}</td>
+                  {dias.map((d) => {
+                    const e = marca.get(`${f.id}|${d}`);
+                    return <td key={d} className={`${cel} ${e === 'NC' ? 'font-bold text-red-700' : ''}`}>{e ?? ''}</td>;
+                  })}
+                </tr>
+              ))}
+              <tr>
+                <td colSpan={2} className="border border-slate-400 px-1 text-[9.5px] font-semibold">TODAS FERRAMENTAS CONFORMES?</td>
+                {dias.map((d) => <td key={d} className={`${cel} font-semibold`}>{conformeNoDia(d)}</td>)}
+              </tr>
+            </tbody>
+          </table>
+          <p className="mt-1.5 text-[10px]">Preencher os campos com C (Conforme), NC (Não Conforme), F (Folga), FE (Férias), A (Atestado) — quando houver NC, reportar ao supervisor responsável o ocorrido.</p>
+          <p className="mt-2 text-[11px]"><span className="font-semibold">Observações:</span> ____________________________________________________________________________________________</p>
+          <div className="mt-4 grid grid-cols-2 gap-6 text-[11px]">
+            <p>Assinatura colaborador: ______________________________ Data: ___/___/______</p>
+            <p>Assinatura supervisor: ______________________________ Data: ___/___/______</p>
+          </div>
+          <div className="mt-4 break-inside-avoid">
+            <Tabela cab={['Horário da NC', 'Descrição da não conformidade', 'Tipo de ação', 'Descrição da ação corretiva ou preventiva', 'Responsável pela ação', 'Verificação da eficácia', 'Responsável verificação']}
+              linhas={Array.from({ length: 4 }, () => ['', '', '( ) Corretiva  ( ) Preventiva', '', '', 'Horário: ____ ( ) Conforme', ''].map((t) => <span className="block min-h-[22px] text-[9.5px]">{t}</span>))} />
+          </div>
+        </Folha>
+      );
+    }
     case 'fechamento': {
       const codigo = decodeURIComponent(id).toUpperCase();
       const { analises, valores } = await getFechamentoDoLote(codigo);

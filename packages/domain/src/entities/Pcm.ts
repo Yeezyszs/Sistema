@@ -407,9 +407,11 @@ export type EstadoChecklist = (typeof ESTADO_CHECKLIST)[number];
 export const ESTADO_CHECKLIST_LABEL: Record<EstadoChecklist, string> = {
   C: 'Conforme',
   NC: 'Não conforme',
-  F: 'Faltando',
-  FE: 'Ferramenta emprestada',
-  A: 'Ausente',
+  // Como no formulário em papel: F/FE/A marcam o dia em que o colaborador
+  // não estava (folga, férias, atestado), não a ferramenta.
+  F: 'Folga',
+  FE: 'Férias',
+  A: 'Atestado',
 };
 // Classe de fundo/tom por estado (a UI aplica).
 export const ESTADO_CHECKLIST_TOM: Record<EstadoChecklist, string> = {

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   listColaboradoresPcm, listFerramentasPcm, listEstadosChecklist, salvarEstadoChecklist,
 } from '../../lib/db';
@@ -17,6 +18,8 @@ const chave = (ferramentaId: string, dia: number) => `${ferramentaId}|${dia}`;
 export function PcmChecklistPage() {
   const hoje = new Date();
   const [colaboradorId, setColaboradorId] = useState('');
+  // Lista do formulário: Elétrica ou Mecânica (são duas folhas no papel).
+  const [lista, setLista] = useState<'' | 'eletrica' | 'mecanica'>('');
   const [ano, setAno] = useState(hoje.getFullYear());
   const [mes, setMes] = useState(hoje.getMonth() + 1);
   // Estado local por célula (ferramenta|dia -> estado), sincronizado do banco.
@@ -29,7 +32,7 @@ export function PcmChecklistPage() {
     ]);
     const doChecklist = ferramentas.filter((f) => !f.caixa); // caixa null = tipo checklist
     const linhas = colaboradorId ? await listEstadosChecklist(colaboradorId, ano, mes) : [];
-    return { colaboradores, ferramentas: doChecklist, linhas };
+    return { colaboradores, todas: doChecklist, linhas };
   }, [colaboradorId, ano, mes]);
 
   // Recarrega o mapa local sempre que os dados do período mudam.
@@ -40,6 +43,12 @@ export function PcmChecklistPage() {
   }, [data?.linhas]);
 
   const dias = diasNoMes(ano, mes);
+  // Sem escolha, a lista segue a função do colaborador (técnico mecânico →
+  // mecânica); quem não tem função definida vê todas.
+  const colaborador = data?.colaboradores.find((c) => c.id === colaboradorId);
+  const funcao = (colaborador?.funcao ?? '').toLowerCase();
+  const listaEfetiva = lista || (funcao.includes('mec') ? 'mecanica' : funcao.includes('elét') || funcao.includes('elet') ? 'eletrica' : '');
+  const ferramentas = (data?.todas ?? []).filter((f) => !listaEfetiva || f.tipo === listaEfetiva);
   const anos = [hoje.getFullYear() - 1, hoje.getFullYear(), hoje.getFullYear() + 1];
 
   async function clicar(ferramentaId: string, dia: number) {
@@ -74,13 +83,20 @@ export function PcmChecklistPage() {
       />
 
       {/* Filtros */}
-      <div className="mb-4 grid gap-3 sm:grid-cols-3 lg:max-w-2xl">
+      <div className="mb-4 grid gap-3 sm:grid-cols-4 lg:max-w-3xl">
         <Field label="Colaborador">
           <Select value={colaboradorId} onChange={(e) => setColaboradorId(e.target.value)}>
             <option value="">Selecione…</option>
             {(data?.colaboradores ?? []).map((c) => (
               <option key={c.id} value={c.id}>{c.nome}</option>
             ))}
+          </Select>
+        </Field>
+        <Field label="Ferramentas">
+          <Select value={listaEfetiva} onChange={(e) => setLista(e.target.value as typeof lista)}>
+            <option value="">Todas</option>
+            <option value="mecanica">Mecânica</option>
+            <option value="eletrica">Elétrica</option>
           </Select>
         </Field>
         <Field label="Mês">
@@ -105,6 +121,12 @@ export function PcmChecklistPage() {
         <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 text-slate-400 ring-1 ring-slate-200">
           Clique numa célula para avançar o estado
         </span>
+        {colaboradorId && (
+          <Link to={`/imprimir/ferramentas/${colaboradorId}~${ano}-${mes}~${listaEfetiva || 'todas'}`}
+            className="ml-auto inline-flex items-center rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700">
+            Imprimir checklist
+          </Link>
+        )}
       </div>
 
       {error && <ErroCarregamento mensagem={error} />}
@@ -114,11 +136,11 @@ export function PcmChecklistPage() {
         <EmptyState title="Selecione um colaborador" description="Escolha o colaborador para preencher a grade do mês." />
       )}
 
-      {data && colaboradorId && data.ferramentas.length === 0 && (
+      {data && colaboradorId && ferramentas.length === 0 && (
         <EmptyState title="Nenhuma ferramenta de checklist" description="Cadastre ferramentas sem caixa (tipo checklist) em Cadastros (PCM)." />
       )}
 
-      {data && colaboradorId && data.ferramentas.length > 0 && (
+      {data && colaboradorId && ferramentas.length > 0 && (
         <Card className="overflow-x-auto">
           <table className="min-w-max text-sm">
             <thead>
@@ -130,7 +152,7 @@ export function PcmChecklistPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {data.ferramentas.map((f) => (
+              {ferramentas.map((f) => (
                 <tr key={f.id} className="hover:bg-slate-50/60">
                   <td className="sticky left-0 z-10 bg-white px-3 py-1.5 font-medium text-slate-700 whitespace-nowrap">
                     {f.nome}

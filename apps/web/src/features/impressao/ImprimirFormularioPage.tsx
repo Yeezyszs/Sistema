@@ -25,6 +25,7 @@ import {
 } from '@sistema/domain';
 import type { TipoFarinha, TurnoAnalise } from '@sistema/domain';
 import { Spinner, ErroCarregamento } from '../../components/ui';
+import logoBepi from '../../assets/logo-bepi.png';
 
 const EMPRESA = 'INDÚSTRIA E COMÉRCIO DE ALIMENTOS SUMARÉ';
 const hora = (iso: string) => new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -101,6 +102,102 @@ export function ImprimirFormularioPage() {
   return data;
 }
 
+// Check-list do uso de ferramentas no modelo da planilha (BEPI Mataruco):
+// uma única folha A4 deitada. A altura da linha sai do número de ferramentas,
+// para a lista inteira caber numa página só.
+const MESES_CK = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
+
+function ChecklistFerramentasFolha({ colab, ano, mes, ferramentas, estados }: {
+  colab: { nome: string; setor: string | null };
+  ano: number;
+  mes: number;
+  ferramentas: { id: string; nome: string; qty: number | null }[];
+  estados: { ferramenta_id: string; dia: number; estado: string }[];
+}) {
+  const navegar = useNavigate();
+  const dias = Array.from({ length: 31 }, (_, i) => i + 1);
+  const noMes = diasNoMes(ano, mes);
+  const marca = new Map(estados.map((e) => [`${e.ferramenta_id}|${e.dia}`, e.estado]));
+  const conformeNoDia = (d: number) => {
+    const v = ferramentas.map((f) => marca.get(`${f.id}|${d}`));
+    if (v.length === 0 || v.some((x) => !x)) return '';
+    return v.every((x) => x === 'C') ? 'S' : v.some((x) => x === 'NC') ? 'N' : '';
+  };
+  // Área útil da folha deitada (210 mm − margens − cabeçalho − rodapé).
+  const alturaLinha = Math.min(5, Math.max(2.6, 150 / (ferramentas.length + 2)));
+  const fonte = alturaLinha < 3.2 ? 6.5 : 8;
+  const b = 'border border-black';
+  const cel = `${b} text-center align-middle`;
+  const linha = { height: `${alturaLinha}mm`, fontSize: `${fonte}px`, lineHeight: 1 };
+  return (
+    <div className="min-h-screen bg-slate-100 print:bg-white">
+      <style>{'@page { size: A4 landscape; margin: 6mm; }'}</style>
+      <div className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3 print:hidden">
+        <button type="button" onClick={() => navegar(-1)} className="text-sm text-slate-500 hover:text-slate-800">← Voltar</button>
+        <button type="button" onClick={() => window.print()} className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
+          Imprimir / Salvar PDF
+        </button>
+      </div>
+      <div className="mx-auto my-6 w-[285mm] bg-white p-[3mm] text-black shadow-sm print:m-0 print:w-full print:p-0 print:shadow-none" style={{ fontFamily: 'Arial, sans-serif' }}>
+        <table className="w-full border-collapse" style={{ tableLayout: 'fixed' }}>
+          <colgroup>
+            <col style={{ width: '38mm' }} />
+            <col style={{ width: '7mm' }} />
+            {dias.map((d) => <col key={d} />)}
+          </colgroup>
+          <tbody>
+            <tr>
+              <td colSpan={2} className={`${b} p-1 text-center`} style={{ height: '16mm' }}><img src={logoBepi} alt="BEPI Mataruco" className="mx-auto h-[12mm]" /></td>
+              <td colSpan={24} className={`${b} text-center text-[13px] font-bold`}>CHECK-LIST DO USO DE FERRAMENTAS</td>
+              <td colSpan={7} className={b} />
+            </tr>
+            {([['NOME', colab.nome, 'MÊS', MESES_CK.map((m, i) => `${m}(${i + 1 === mes ? 'X' : ' '})`).join(' ')],
+              ['MATRÍCULA', '', 'ANO', String(ano)], ['SETOR', colab.setor ?? '', 'UNIDADE', ''], ['RESPONSÁVEL', '', 'TURNO', '']] as const).map(([r1, v1, r2, v2]) => (
+              <tr key={r1} style={{ fontSize: '7.5px', lineHeight: 1.1 }}>
+                <td colSpan={17} className={`${b} px-0.5`}><b>{r1}:</b> {v1}</td>
+                <td colSpan={16} className={`${b} px-0.5`}><b>{r2}:</b> {v2}</td>
+              </tr>
+            ))}
+            <tr style={{ fontSize: '7.5px' }} className="font-bold">
+              <td className={`${b} px-0.5`}>LISTA DE FERRAMENTAS</td>
+              <td className={cel}>QTD</td>
+              {dias.map((d) => <td key={d} className={cel}>{String(d).padStart(2, '0')}</td>)}
+            </tr>
+            {ferramentas.map((f) => (
+              <tr key={f.id} style={linha}>
+                <td className={`${b} overflow-hidden whitespace-nowrap px-0.5`}>{f.nome}</td>
+                <td className={cel}>{f.qty ?? ''}</td>
+                {dias.map((d) => {
+                  const e = d <= noMes ? marca.get(`${f.id}|${d}`) : undefined;
+                  return <td key={d} className={`${cel} ${d > noMes ? 'bg-slate-200' : ''} ${e === 'NC' ? 'font-bold' : ''}`}>{e ?? ''}</td>;
+                })}
+              </tr>
+            ))}
+            <tr style={linha} className="font-bold">
+              <td colSpan={2} className={`${b} px-0.5`}>TODAS FERRAMENTAS CONFORMES?</td>
+              {dias.map((d) => <td key={d} className={cel}>{d <= noMes ? conformeNoDia(d) : ''}</td>)}
+            </tr>
+            <tr style={{ fontSize: '7px' }}>
+              <td colSpan={33} className={`${b} text-center`}>
+                Preencher os campos com <b>C (Conforme)</b>, <b>NC (Não Conforme)</b>, <b>F (Folga)</b>, <b>FE (Férias)</b>, <b>A (Atestado)</b> — quando houver <b>NC</b> reportar ao responsável o ocorrido
+              </td>
+            </tr>
+            <tr style={{ fontSize: '7.5px', height: '6mm' }}><td colSpan={33} className={`${b} px-0.5 align-top`}>Observações:</td></tr>
+            <tr style={{ fontSize: '7.5px', height: '7mm' }}>
+              <td colSpan={33} className={`${b} px-1 align-bottom`}>
+                <div className="flex justify-between">
+                  <span>Assinatura Colaborador: ______________________________</span><span>Data: ___/___/______</span>
+                  <span>Assinatura Responsável: ______________________________</span><span>Data: ___/___/______</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 const num = (v: number | null) => (v == null ? '—' : v.toLocaleString('pt-BR', { maximumFractionDigits: 3 }));
 
 async function carregar(tipo: string, id: string): Promise<ReactNode | null> {
@@ -113,58 +210,7 @@ async function carregar(tipo: string, id: string): Promise<ReactNode | null> {
       const colab = colabs.find((c) => c.id === colabId);
       if (!colab) return null;
       const ferramentas = todas.filter((f) => !f.caixa && (lista === 'todas' || f.tipo === lista));
-      const dias = Array.from({ length: diasNoMes(ano, mes) }, (_, i) => i + 1);
-      const marca = new Map(estados.map((e) => [`${e.ferramenta_id}|${e.dia}`, e.estado]));
-      // "Todas conformes?" do dia: só responde quando todas as ferramentas foram marcadas.
-      const conformeNoDia = (d: number) => {
-        const v = ferramentas.map((f) => marca.get(`${f.id}|${d}`));
-        if (v.some((x) => !x)) return '';
-        return v.every((x) => x === 'C') ? 'S' : v.some((x) => x === 'NC') ? 'N' : '';
-      };
-      const MESES = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
-      const cel = 'border border-slate-400 px-0.5 text-center text-[9px]';
-      return (
-        <Folha paisagem codigo="Manutenção" versao={lista === 'eletrica' ? 'Elétrica' : lista === 'mecanica' ? 'Mecânica' : 'Ferramentas'}
-          titulo="Check-list do uso de ferramentas">
-          <Campos itens={[['Nome', colab.nome], ['Mês', `${MESES[mes - 1]} / ${ano}`], ['Setor', colab.setor],
-            ['Função', colab.funcao], ['Supervisor responsável', '______________________'], ['Turno', '__________']]} />
-          <table className="w-full border-collapse">
-            <thead>
-              <tr>
-                <th className="border border-slate-400 bg-slate-100 px-1 text-left text-[9.5px]">LISTA DE FERRAMENTAS</th>
-                <th className="border border-slate-400 bg-slate-100 px-0.5 text-[9.5px]">QTD</th>
-                {dias.map((d) => <th key={d} className={`${cel} bg-slate-100 font-semibold`}>{String(d).padStart(2, '0')}</th>)}
-              </tr>
-            </thead>
-            <tbody>
-              {ferramentas.map((f) => (
-                <tr key={f.id}>
-                  <td className="whitespace-nowrap border border-slate-400 px-1 text-[9.5px]">{f.nome}</td>
-                  <td className={cel}>{f.qty ?? ''}</td>
-                  {dias.map((d) => {
-                    const e = marca.get(`${f.id}|${d}`);
-                    return <td key={d} className={`${cel} ${e === 'NC' ? 'font-bold text-red-700' : ''}`}>{e ?? ''}</td>;
-                  })}
-                </tr>
-              ))}
-              <tr>
-                <td colSpan={2} className="border border-slate-400 px-1 text-[9.5px] font-semibold">TODAS FERRAMENTAS CONFORMES?</td>
-                {dias.map((d) => <td key={d} className={`${cel} font-semibold`}>{conformeNoDia(d)}</td>)}
-              </tr>
-            </tbody>
-          </table>
-          <p className="mt-1.5 text-[10px]">Preencher os campos com C (Conforme), NC (Não Conforme), F (Folga), FE (Férias), A (Atestado) — quando houver NC, reportar ao supervisor responsável o ocorrido.</p>
-          <p className="mt-2 text-[11px]"><span className="font-semibold">Observações:</span> ____________________________________________________________________________________________</p>
-          <div className="mt-4 grid grid-cols-2 gap-6 text-[11px]">
-            <p>Assinatura colaborador: ______________________________ Data: ___/___/______</p>
-            <p>Assinatura supervisor: ______________________________ Data: ___/___/______</p>
-          </div>
-          <div className="mt-4 break-inside-avoid">
-            <Tabela cab={['Horário da NC', 'Descrição da não conformidade', 'Tipo de ação', 'Descrição da ação corretiva ou preventiva', 'Responsável pela ação', 'Verificação da eficácia', 'Responsável verificação']}
-              linhas={Array.from({ length: 4 }, () => ['', '', '( ) Corretiva  ( ) Preventiva', '', '', 'Horário: ____ ( ) Conforme', ''].map((t) => <span className="block min-h-[22px] text-[9.5px]">{t}</span>))} />
-          </div>
-        </Folha>
-      );
+      return <ChecklistFerramentasFolha colab={colab} ano={ano} mes={mes} ferramentas={ferramentas} estados={estados} />;
     }
     case 'fechamento': {
       const codigo = decodeURIComponent(id).toUpperCase();

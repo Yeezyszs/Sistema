@@ -115,13 +115,31 @@ function ChecklistFerramentasFolha({ colab, ano, mes, ferramentas, estados }: {
   estados: { ferramenta_id: string; dia: number; estado: string }[];
 }) {
   const navegar = useNavigate();
-  // Garante uma página: mede a folha e, se passar da altura útil do A4 deitado
-  // (210 mm − 12 mm de margem ≈ 748 px), reduz só na impressão.
+  // Ocupa a folha inteira: testa a letra das linhas de ferramentas da maior
+  // para a menor e fica com a maior que ainda cabe na altura útil do A4 deitado
+  // (210 mm − 12 mm de margem ≈ 748 px). A medida é feita direto no DOM, antes
+  // de pintar, então a tela não pisca.
+  const ALTURA_UTIL = 725;
   const folha = useRef<HTMLDivElement>(null);
-  const [escala, setEscala] = useState(1);
+  const [fonte, setFonte] = useState(10);
   useLayoutEffect(() => {
-    const h = folha.current?.scrollHeight ?? 0;
-    if (h > 0) setEscala(Math.min(1, 740 / h));
+    const ajustar = () => {
+      const el = folha.current;
+      if (!el) return;
+      // Na impressão a folha perde o respiro da tela; mede como impressa.
+      const imprimindo = window.matchMedia('print').matches;
+      const limite = imprimindo ? ALTURA_UTIL : ALTURA_UTIL + 23;
+      let melhor = 7;
+      for (let f = 22; f >= 7; f -= 0.5) {
+        el.style.setProperty('--fl', `${f}px`);
+        if (el.scrollHeight <= limite) { melhor = f; break; }
+      }
+      el.style.setProperty('--fl', `${melhor}px`);
+      setFonte(melhor);
+    };
+    ajustar();
+    window.addEventListener('beforeprint', ajustar);
+    return () => window.removeEventListener('beforeprint', ajustar);
   }, [ferramentas.length]);
   const dias = Array.from({ length: 31 }, (_, i) => i + 1);
   const noMes = diasNoMes(ano, mes);
@@ -132,15 +150,15 @@ function ChecklistFerramentasFolha({ colab, ano, mes, ferramentas, estados }: {
     return v.every((x) => x === 'C') ? 'S' : v.some((x) => x === 'NC') ? 'N' : '';
   };
   // Área útil da folha deitada (210 mm − margens − cabeçalho − rodapé).
-  const alturaLinha = Math.min(5, Math.max(3.2, 150 / (ferramentas.length + 2)));
   // A fonte ocupa quase toda a altura da linha (1 mm ≈ 3,78 px na impressão).
-  const fonte = Math.min(12, Math.max(9, Math.round((alturaLinha * 3.78 - 1.2) * 10) / 10));
   const b = 'border border-black';
-  const cel = `${b} text-center align-middle`;
-  const linha = { height: `${alturaLinha}mm`, fontSize: `${fonte}px`, lineHeight: 1 };
+  // Sem o respiro padrão das células (1 px em cima e embaixo): em 50 linhas
+  // isso é ~100 px que viram letra maior.
+  const cel = `${b} py-0 text-center align-middle`;
+  const linha = { fontSize: 'var(--fl)', lineHeight: 1.05 };
   return (
     <div className="min-h-screen bg-slate-100 print:bg-white">
-      <style>{`@page { size: A4 landscape; margin: 6mm; } @media print { .folha-ck { zoom: ${escala}; } }`}</style>
+      <style>{'@page { size: A4 landscape; margin: 6mm; }'}</style>
       <div className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3 print:hidden">
         <button type="button" onClick={() => navegar(-1)} className="text-sm text-slate-500 hover:text-slate-800">← Voltar</button>
         <button type="button" onClick={() => window.print()} className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
@@ -150,7 +168,7 @@ function ChecklistFerramentasFolha({ colab, ano, mes, ferramentas, estados }: {
       <div ref={folha} className="folha-ck mx-auto my-6 w-[285mm] bg-white p-[3mm] text-black shadow-sm print:m-0 print:w-full print:p-0 print:shadow-none" style={{ fontFamily: 'Arial, sans-serif' }}>
         <table className="w-full border-collapse" style={{ tableLayout: 'fixed' }}>
           <colgroup>
-            <col style={{ width: '50mm' }} />
+            <col style={{ width: `${Math.max(50, fonte * 5.2)}mm` }} />
             <col style={{ width: '7mm' }} />
             {dias.map((d) => <col key={d} />)}
           </colgroup>
@@ -174,7 +192,7 @@ function ChecklistFerramentasFolha({ colab, ano, mes, ferramentas, estados }: {
             </tr>
             {ferramentas.map((f) => (
               <tr key={f.id} style={linha}>
-                <td className={`${b} overflow-hidden whitespace-nowrap px-0.5`}>{f.nome}</td>
+                <td className={`${b} overflow-hidden whitespace-nowrap px-0.5 py-0`}>{f.nome}</td>
                 <td className={cel}>{f.qty ?? ''}</td>
                 {dias.map((d) => {
                   const e = d <= noMes ? marca.get(`${f.id}|${d}`) : undefined;

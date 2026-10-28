@@ -103,7 +103,7 @@ export function ImprimirFormularioPage() {
 }
 
 // Check-list do uso de ferramentas no modelo da planilha (BEPI Mataruco):
-// uma única folha A4 deitada. A altura da linha sai do número de ferramentas,
+// uma única folha A4 em pé. A altura da linha sai do número de ferramentas,
 // para a lista inteira caber numa página só.
 const MESES_CK = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
 
@@ -117,9 +117,9 @@ function ChecklistFerramentasFolha({ colab, ano, mes, ferramentas, estados }: {
   const navegar = useNavigate();
   // Ocupa a folha inteira: testa a letra das linhas de ferramentas da maior
   // para a menor e fica com a maior que ainda cabe na altura útil do A4 deitado
-  // (210 mm − 12 mm de margem ≈ 748 px). A medida é feita direto no DOM, antes
+  // (297 mm − 12 mm de margem ≈ 1077 px, folha em pé). A medida é feita direto no DOM, antes
   // de pintar, então a tela não pisca.
-  const ALTURA_UTIL = 725;
+  const ALTURA_UTIL = 1054;
   const folha = useRef<HTMLDivElement>(null);
   const [fonte, setFonte] = useState(10);
   useLayoutEffect(() => {
@@ -149,33 +149,35 @@ function ChecklistFerramentasFolha({ colab, ano, mes, ferramentas, estados }: {
     if (v.length === 0 || v.some((x) => !x)) return '';
     return v.every((x) => x === 'C') ? 'S' : v.some((x) => x === 'NC') ? 'N' : '';
   };
-  // Área útil da folha deitada (210 mm − margens − cabeçalho − rodapé).
+  // Área útil da folha em pé (297 mm − margens − cabeçalho − rodapé).
   // A fonte ocupa quase toda a altura da linha (1 mm ≈ 3,78 px na impressão).
   const b = 'border border-black';
   // Sem o respiro padrão das células (1 px em cima e embaixo): em 50 linhas
   // isso é ~100 px que viram letra maior.
   const cel = `${b} py-0 text-center align-middle`;
   const linha = { fontSize: 'var(--fl)', lineHeight: 1.05 };
+  // Colunas dos dias são estreitas na folha em pé: "NC" precisa caber.
+  const dia = { fontSize: 'min(var(--fl), 11px)' };
   return (
     <div className="min-h-screen bg-slate-100 print:bg-white">
-      <style>{'@page { size: A4 landscape; margin: 6mm; }'}</style>
+      <style>{'@page { size: A4 portrait; margin: 6mm; }'}</style>
       <div className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3 print:hidden">
         <button type="button" onClick={() => navegar(-1)} className="text-sm text-slate-500 hover:text-slate-800">← Voltar</button>
         <button type="button" onClick={() => window.print()} className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
           Imprimir / Salvar PDF
         </button>
       </div>
-      <div ref={folha} className="folha-ck mx-auto my-6 w-[285mm] bg-white p-[3mm] text-black shadow-sm print:m-0 print:w-full print:p-0 print:shadow-none" style={{ fontFamily: 'Arial, sans-serif' }}>
+      <div ref={folha} className="folha-ck mx-auto my-6 w-[204mm] bg-white p-[3mm] text-black shadow-sm print:m-0 print:w-full print:p-0 print:shadow-none" style={{ fontFamily: 'Arial, sans-serif' }}>
         <table className="w-full border-collapse" style={{ tableLayout: 'fixed' }}>
           <colgroup>
-            <col style={{ width: `${Math.max(50, fonte * 5.2)}mm` }} />
+            <col style={{ width: `${Math.min(62, Math.max(42, fonte * 3.6))}mm` }} />
             <col style={{ width: '7mm' }} />
             {dias.map((d) => <col key={d} />)}
           </colgroup>
           <tbody>
             <tr>
               <td colSpan={2} className={`${b} p-1 text-center`} style={{ height: '13mm' }}><img src={logoBepi} alt="BEPI Mataruco" className="mx-auto h-[10mm]" /></td>
-              <td colSpan={24} className={`${b} text-center text-[13px] font-bold`}>CHECK-LIST DO USO DE FERRAMENTAS</td>
+              <td colSpan={24} className={`${b} text-center text-[12px] font-bold`}>CHECK-LIST DO USO DE FERRAMENTAS</td>
               <td colSpan={7} className={b} />
             </tr>
             {([['NOME', colab.nome, 'MÊS', MESES_CK.map((m, i) => `${m}(${i + 1 === mes ? 'X' : ' '})`).join(' ')],
@@ -185,7 +187,7 @@ function ChecklistFerramentasFolha({ colab, ano, mes, ferramentas, estados }: {
                 <td colSpan={16} className={`${b} px-0.5`}><b>{r2}:</b> {v2}</td>
               </tr>
             ))}
-            <tr style={{ fontSize: '9.5px' }} className="font-bold">
+            <tr style={{ fontSize: '8px' }} className="font-bold">
               <td className={`${b} px-0.5`}>LISTA DE FERRAMENTAS</td>
               <td className={cel}>QTD</td>
               {dias.map((d) => <td key={d} className={cel}>{String(d).padStart(2, '0')}</td>)}
@@ -196,13 +198,13 @@ function ChecklistFerramentasFolha({ colab, ano, mes, ferramentas, estados }: {
                 <td className={cel}>{f.qty ?? ''}</td>
                 {dias.map((d) => {
                   const e = d <= noMes ? marca.get(`${f.id}|${d}`) : undefined;
-                  return <td key={d} className={`${cel} ${d > noMes ? 'bg-slate-200' : ''} ${e === 'NC' ? 'font-bold' : ''}`}>{e ?? ''}</td>;
+                  return <td key={d} style={dia} className={`${cel} ${d > noMes ? 'bg-slate-200' : ''} ${e === 'NC' ? 'font-bold' : ''}`}>{e ?? ''}</td>;
                 })}
               </tr>
             ))}
             <tr style={linha} className="font-bold">
-              <td colSpan={2} className={`${b} px-0.5`}>TODAS FERRAMENTAS CONFORMES?</td>
-              {dias.map((d) => <td key={d} className={cel}>{d <= noMes ? conformeNoDia(d) : ''}</td>)}
+              <td colSpan={2} className={`${b} overflow-hidden whitespace-nowrap px-0.5`}>TODAS CONFORMES?</td>
+              {dias.map((d) => <td key={d} style={dia} className={cel}>{d <= noMes ? conformeNoDia(d) : ''}</td>)}
             </tr>
             <tr style={{ fontSize: '9px' }}>
               <td colSpan={33} className={`${b} text-center`}>
@@ -210,9 +212,9 @@ function ChecklistFerramentasFolha({ colab, ano, mes, ferramentas, estados }: {
               </td>
             </tr>
             <tr style={{ fontSize: '10px', height: '6mm' }}><td colSpan={33} className={`${b} px-0.5 align-top`}>Observações:</td></tr>
-            <tr style={{ fontSize: '10px', height: '7mm' }}>
+            <tr style={{ fontSize: '10px', height: '12mm' }}>
               <td colSpan={33} className={`${b} px-1 align-bottom`}>
-                <div className="flex justify-between">
+                <div className="flex flex-wrap justify-between gap-x-4">
                   <span>Assinatura Colaborador: ______________________________</span><span>Data: ___/___/______</span>
                   <span>Assinatura Responsável: ______________________________</span><span>Data: ___/___/______</span>
                 </div>

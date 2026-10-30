@@ -179,6 +179,21 @@ import type {
   NovoCustoManut,
 } from '@sistema/domain';
 
+/**
+ * Lê o arquivo para a memória antes de subir. Se ele foi aberto, movido ou
+ * ainda está sincronizando (OneDrive, anexo de e-mail) desde que foi escolhido,
+ * o navegador aborta o envio com um "Failed to fetch" mudo; lendo antes, o
+ * problema aparece com uma mensagem que o usuário entende.
+ */
+async function conteudoDoArquivo(arquivo: File): Promise<Blob> {
+  try {
+    return new Blob([await arquivo.arrayBuffer()], { type: arquivo.type });
+  } catch {
+    throw new Error(`Não foi possível ler "${arquivo.name}". Feche o arquivo se estiver aberto, salve uma cópia no computador e escolha de novo.`);
+  }
+}
+
+
 const producao = () => supabase.schema('producao');
 const core = () => supabase.schema('core');
 const qualidade = () => supabase.schema('qualidade');
@@ -890,7 +905,7 @@ export async function anexarMicroNoLaudo(laudoId: string, arquivo: File): Promis
   const caminho = `laudos-micro/${laudoId}/${Date.now()}-${nomeArquivoSeguro(arquivo.name)}`;
   const up = await supabase.storage
     .from('fornecedores')
-    .upload(caminho, arquivo, { upsert: false, contentType: arquivo.type || undefined });
+    .upload(caminho, await conteudoDoArquivo(arquivo), { upsert: false, contentType: arquivo.type || undefined });
   if (up.error) throw new Error(up.error.message);
   const res = await qualidade().from('laudo_anexos').insert({ laudo_id: laudoId, caminho, nome: arquivo.name });
   if (res.error) throw new Error(res.error.message);
@@ -1386,7 +1401,7 @@ export async function enviarQuestionarioAssinado(fornecedorId: string, arquivo: 
   const path = `homologacao/${fornecedorId}/${Date.now()}-${nomeArquivoSeguro(arquivo.name)}`;
   const up = await supabase.storage
     .from('fornecedores')
-    .upload(path, arquivo, { upsert: false, contentType: arquivo.type || undefined });
+    .upload(path, await conteudoDoArquivo(arquivo), { upsert: false, contentType: arquivo.type || undefined });
   if (up.error) throw new Error(up.error.message);
   return path;
 }
@@ -1419,7 +1434,7 @@ export async function enviarDocumentoFornecedor(
   const path = `${meta.fornecedor_id}/${Date.now()}-${nomeArquivoSeguro(arquivo.name)}`;
   const up = await supabase.storage
     .from('fornecedores')
-    .upload(path, arquivo, { upsert: false, contentType: arquivo.type || undefined });
+    .upload(path, await conteudoDoArquivo(arquivo), { upsert: false, contentType: arquivo.type || undefined });
   if (up.error) throw new Error(up.error.message);
 
   const res = await qualidade()
@@ -2054,7 +2069,7 @@ export async function listAnexosDaOs(osId: string): Promise<OsAnexo[]> {
  */
 export async function anexarNaOs(osId: string, etapa: EtapaAnexoOs, arquivo: File): Promise<void> {
   const caminho = `${osId}/${etapa}/${Date.now()}-${nomeArquivoSeguro(arquivo.name)}`;
-  const up = await supabase.storage.from(BUCKET_OS).upload(caminho, arquivo, {
+  const up = await supabase.storage.from(BUCKET_OS).upload(caminho, await conteudoDoArquivo(arquivo), {
     contentType: arquivo.type, upsert: false,
   });
   if (up.error) throw new Error(`Falha ao enviar "${arquivo.name}": ${up.error.message}`);

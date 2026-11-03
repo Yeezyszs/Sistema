@@ -108,9 +108,10 @@ function ModuloGuard({ modulo, children }: { modulo: Modulo; children: ReactNode
   if (modulo !== 'painel' && podeAcessarModulo('painel')) {
     return <Navigate to="/painel" replace />;
   }
-  // Perfil sem painel (logística): o início é a primeira tela que ele acessa.
+  // Perfil sem painel (logística): qualquer tela bloqueada leva à primeira
+  // que ele acessa, em vez de parar no "sem acesso".
   const inicio = INICIO_SEM_PAINEL.find(([m]) => podeAcessarModulo(m));
-  if (modulo === 'painel' && inicio) return <Navigate to={inicio[1]} replace />;
+  if (inicio) return <Navigate to={inicio[1]} replace />;
   return <SemAcesso />;
 }
 

@@ -1,5 +1,5 @@
 // Perfis de acesso (core.perfis) — definem quais módulos cada usuário vê.
-export const PERFIL = ['gestao', 'encarregado', 'operador', 'qualidade', 'manutencao', 'compras', 'almoxarifado', 'comercial', 'administrador'] as const;
+export const PERFIL = ['gestao', 'encarregado', 'operador', 'qualidade', 'manutencao', 'compras', 'almoxarifado', 'comercial', 'logistica', 'administrador'] as const;
 export type Perfil = (typeof PERFIL)[number];
 
 export const PERFIL_LABEL: Record<Perfil, string> = {
@@ -11,6 +11,7 @@ export const PERFIL_LABEL: Record<Perfil, string> = {
   compras: 'Compras',
   almoxarifado: 'Almoxarifado',
   comercial: 'Comercial',
+  logistica: 'Logística',
   administrador: 'Administrador',
 };
 
@@ -21,7 +22,7 @@ export const MODULO = [
   'ordens', 'lotes', 'recebimentos', 'fornecedores',
   'qualidade', 'acompanhamento', 'monitoramento_agua', 'insumos_lab', 'contraprovas', 'pcc_fisico', 'ppho', 'especificacoes', 'calibracao',
   'analise_risco', 'auditoria', 'ambiental', 'nao_conformidades',
-  'manutencao', 'comercial', 'almoxarifado', 'documentos', 'suprimentos', 'usuarios',
+  'manutencao', 'comercial', 'almoxarifado', 'embalagens', 'documentos', 'suprimentos', 'usuarios',
 ] as const;
 export type Modulo = (typeof MODULO)[number];
 
@@ -41,12 +42,12 @@ export const MODULOS_POR_PERFIL: Record<Perfil, Modulo[]> = {
   encarregado: [
     'painel',
     'pcp', 'produtos', 'ordens', 'lotes', 'estoque', 'pallets', 'reprocesso', 'recebimentos',
-    'almoxarifado', 'manutencao', 'pcc_fisico',
+    'almoxarifado', 'embalagens', 'manutencao', 'pcc_fisico',
   ],
   operador: [
     'painel',
     'pcp', 'produtos', 'pedidos', 'expedicao', 'estoque', 'pallets', 'reprocesso',
-    'ordens', 'lotes', 'recebimentos', 'almoxarifado', 'pcc_fisico',
+    'ordens', 'lotes', 'recebimentos', 'almoxarifado', 'embalagens', 'pcc_fisico',
   ],
   qualidade: [
     'painel',
@@ -59,15 +60,15 @@ export const MODULOS_POR_PERFIL: Record<Perfil, Modulo[]> = {
     // têm risco à segurança de alimentos).
     'manutencao',
   ],
-  manutencao: ['painel', 'manutencao', 'calibracao', 'pcc_fisico', 'almoxarifado'],
+  manutencao: ['painel', 'manutencao', 'calibracao', 'pcc_fisico', 'almoxarifado', 'embalagens'],
   // Compras cuida da documentação de homologação e do estoque de consumíveis
   // e embalagens. Não vê produção, qualidade nem comercial.
   // A chegada da carga (`recebimentos`) é do comprador tanto quanto a
   // previsão: é onde ele confere se o que combinou entrou de fato.
-  compras: ['painel', 'documentos', 'almoxarifado', 'suprimentos', 'recebimentos', 'fornecedores'],
+  compras: ['painel', 'documentos', 'almoxarifado', 'embalagens', 'suprimentos', 'recebimentos', 'fornecedores'],
   // Almoxarifado atende a manutenção: quem entrega a peça e quem a consome
   // olham o mesmo estoque.
-  almoxarifado: ['painel', 'almoxarifado', 'manutencao'],
+  almoxarifado: ['painel', 'almoxarifado', 'embalagens', 'manutencao'],
   // Comercial vende e acompanha o que sustenta a venda: o grupo Suprimentos
   // inteiro (previsão da semana, produtores, recebimentos e fornecedores) e os
   // lotes prontos. De produção, só lotes — programação, apontamento e ordens
@@ -76,6 +77,10 @@ export const MODULOS_POR_PERFIL: Record<Perfil, Modulo[]> = {
     'painel', 'comercial', 'pedidos', 'lotes',
     'suprimentos', 'recebimentos', 'fornecedores',
   ],
+  // Logística: estoque e expedição, os pedidos que vai carregar e as
+  // embalagens/bags que saem com a carga. Sem painel — o painel mostra a
+  // fábrica inteira; quem entra cai direto na Expedição.
+  logistica: ['estoque', 'expedicao', 'pedidos', 'embalagens'],
   // Só a administração de usuários e perfis. Soma-se a outro perfil.
   administrador: ['painel', 'usuarios'],
 };

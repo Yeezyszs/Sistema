@@ -28,7 +28,7 @@ const ITENS_PRODUCAO: SubItem[] = [
 
 const ITENS_ALMOX: SubItem[] = [
   { to: '/almoxarifado', icon: <IconBox width={16} height={16} />, label: 'Consumíveis', modulo: 'almoxarifado' },
-  { to: '/embalagens', icon: <IconBox width={16} height={16} />, label: 'Embalagens', modulo: 'almoxarifado' },
+  { to: '/embalagens', icon: <IconBox width={16} height={16} />, label: 'Embalagens', modulo: 'embalagens' },
   { to: '/pallets', icon: <IconBox width={16} height={16} />, label: 'Pallets', modulo: 'pallets' },
 ];
 

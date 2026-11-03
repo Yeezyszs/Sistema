@@ -91,6 +91,10 @@ function SemAcesso() {
 
 // Bloqueia acesso a um módulo cujo perfil do usuário não cobre.
 // Complementa (não substitui) o RLS do banco, que é a defesa real.
+const INICIO_SEM_PAINEL: [Modulo, string][] = [
+  ['expedicao', '/expedicao'], ['pedidos', '/pedidos'], ['estoque', '/estoque'], ['embalagens', '/embalagens'],
+];
+
 function ModuloGuard({ modulo, children }: { modulo: Modulo; children: ReactNode }) {
   const { podeAcessarModulo, loading, perfisProntos } = useAuth();
   // Decidir sem os perfis negaria acesso a tudo — e no login isso piscava
@@ -104,6 +108,9 @@ function ModuloGuard({ modulo, children }: { modulo: Modulo; children: ReactNode
   if (modulo !== 'painel' && podeAcessarModulo('painel')) {
     return <Navigate to="/painel" replace />;
   }
+  // Perfil sem painel (logística): o início é a primeira tela que ele acessa.
+  const inicio = INICIO_SEM_PAINEL.find(([m]) => podeAcessarModulo(m));
+  if (modulo === 'painel' && inicio) return <Navigate to={inicio[1]} replace />;
   return <SemAcesso />;
 }
 
@@ -188,7 +195,7 @@ export default function App() {
             <Route path="/semana" element={<ModuloGuard modulo="suprimentos"><SemanaPage /></ModuloGuard>} />
             <Route path="/produtores" element={<ModuloGuard modulo="suprimentos"><ProdutoresPage /></ModuloGuard>} />
             <Route path="/almoxarifado" element={<ModuloGuard modulo="almoxarifado"><AlmoxarifadoPage /></ModuloGuard>} />
-            <Route path="/embalagens" element={<ModuloGuard modulo="almoxarifado"><EmbalagensPage /></ModuloGuard>} />
+            <Route path="/embalagens" element={<ModuloGuard modulo="embalagens"><EmbalagensPage /></ModuloGuard>} />
             <Route path="/usuarios" element={<ModuloGuard modulo="usuarios"><UsuariosPage /></ModuloGuard>} />
           </Route>
           {/* Cloro & pH, PPHO, pHmetro, insumos do lab, contraprovas, análise de risco,

@@ -203,7 +203,9 @@ export function CatalogoFornecedores() {
                     <Select name="documento_exigido_id" defaultValue="" required>
                       <option value="" disabled>Selecione…</option>
                       {data.documentos.filter((d) => d.ativo && !jaVinculados.has(d.id)).map((d) => (
-                        <option key={d.id} value={d.id}>{d.nome}</option>
+                        // Nomes longos (o laudo microbiológico tem 400+ letras) esticavam a lista
+                        // do Windows para fora da tela e ela aparecia toda em branco.
+                        <option key={d.id} value={d.id} title={d.nome}>{d.nome.length > 90 ? `${d.nome.slice(0, 87).trimEnd()}…` : d.nome}</option>
                       ))}
                     </Select>
                   </Field>

@@ -70,7 +70,7 @@ const ITENS_QUALIDADE: SubItem[] = [
 ];
 
 const ITENS_MANUTENCAO: SubItem[] = [
-  { to: '/manutencao', icon: <IconClipboard width={16} height={16} />, label: 'Ordens de Serviço', modulo: 'manutencao' },
+  { to: '/manutencao', icon: <IconClipboard width={16} height={16} />, label: 'Ordens de Serviço', modulo: 'ordens_servico' },
   { to: '/preventiva', icon: <IconCheck width={16} height={16} />, label: 'Preventiva', modulo: 'manutencao' },
   { to: '/lubrificacao', icon: <IconClock width={16} height={16} />, label: 'Lubrificação', modulo: 'manutencao' },
   { to: '/pcm-indicadores', icon: <IconGrid width={16} height={16} />, label: 'Indicadores', modulo: 'manutencao' },

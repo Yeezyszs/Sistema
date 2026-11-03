@@ -22,7 +22,7 @@ export const MODULO = [
   'ordens', 'lotes', 'recebimentos', 'fornecedores',
   'qualidade', 'acompanhamento', 'monitoramento_agua', 'insumos_lab', 'contraprovas', 'pcc_fisico', 'ppho', 'especificacoes', 'calibracao',
   'analise_risco', 'auditoria', 'ambiental', 'nao_conformidades',
-  'manutencao', 'comercial', 'almoxarifado', 'embalagens', 'documentos', 'suprimentos', 'usuarios',
+  'manutencao', 'ordens_servico', 'comercial', 'almoxarifado', 'embalagens', 'documentos', 'suprimentos', 'usuarios',
 ] as const;
 export type Modulo = (typeof MODULO)[number];
 
@@ -42,7 +42,7 @@ export const MODULOS_POR_PERFIL: Record<Perfil, Modulo[]> = {
   encarregado: [
     'painel',
     'pcp', 'produtos', 'ordens', 'lotes', 'estoque', 'pallets', 'reprocesso', 'recebimentos',
-    'almoxarifado', 'embalagens', 'manutencao', 'pcc_fisico',
+    'almoxarifado', 'embalagens', 'manutencao', 'ordens_servico', 'pcc_fisico',
   ],
   operador: [
     'painel',
@@ -58,9 +58,9 @@ export const MODULOS_POR_PERFIL: Record<Perfil, Modulo[]> = {
     'expedicao',
     // Abre O.S. quando encontra problema em equipamento (e já libera as que
     // têm risco à segurança de alimentos).
-    'manutencao',
+    'manutencao', 'ordens_servico',
   ],
-  manutencao: ['painel', 'manutencao', 'calibracao', 'pcc_fisico', 'almoxarifado', 'embalagens'],
+  manutencao: ['painel', 'manutencao', 'ordens_servico', 'calibracao', 'pcc_fisico', 'almoxarifado', 'embalagens'],
   // Compras cuida da documentação de homologação e do estoque de consumíveis
   // e embalagens. Não vê produção, qualidade nem comercial.
   // A chegada da carga (`recebimentos`) é do comprador tanto quanto a
@@ -68,7 +68,7 @@ export const MODULOS_POR_PERFIL: Record<Perfil, Modulo[]> = {
   compras: ['painel', 'documentos', 'almoxarifado', 'embalagens', 'suprimentos', 'recebimentos', 'fornecedores'],
   // Almoxarifado atende a manutenção: quem entrega a peça e quem a consome
   // olham o mesmo estoque.
-  almoxarifado: ['painel', 'almoxarifado', 'embalagens', 'manutencao'],
+  almoxarifado: ['painel', 'almoxarifado', 'embalagens', 'manutencao', 'ordens_servico'],
   // Comercial vende e acompanha o que sustenta a venda: o grupo Suprimentos
   // inteiro (previsão da semana, produtores, recebimentos e fornecedores) e os
   // lotes prontos. De produção, só lotes — programação, apontamento e ordens
@@ -79,8 +79,9 @@ export const MODULOS_POR_PERFIL: Record<Perfil, Modulo[]> = {
   ],
   // Logística: estoque e expedição, os pedidos que vai carregar e as
   // embalagens/bags que saem com a carga. Sem painel — o painel mostra a
-  // fábrica inteira; quem entra cai direto na Expedição.
-  logistica: ['estoque', 'expedicao', 'pedidos', 'embalagens'],
+  // fábrica inteira; quem entra cai direto na Expedição. Abre O.S. (só a
+  // tela de ordens de serviço, não o resto do PCM).
+  logistica: ['estoque', 'expedicao', 'pedidos', 'embalagens', 'ordens_servico'],
   // Só a administração de usuários e perfis. Soma-se a outro perfil.
   administrador: ['painel', 'usuarios'],
 };

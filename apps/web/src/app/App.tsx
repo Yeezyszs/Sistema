@@ -180,7 +180,7 @@ export default function App() {
             <Route path="/especificacoes" element={<ModuloGuard modulo="especificacoes"><EspecificacoesPage /></ModuloGuard>} />
             <Route path="/pcc-fisico" element={<ModuloGuard modulo="pcc_fisico"><PccFisicoPage /></ModuloGuard>} />
             <Route path="/calibracao" element={<ModuloGuard modulo="calibracao"><CalibracaoPage /></ModuloGuard>} />
-            <Route path="/manutencao" element={<ModuloGuard modulo="manutencao"><PcmOrdensPage /></ModuloGuard>} />
+            <Route path="/manutencao" element={<ModuloGuard modulo="ordens_servico"><PcmOrdensPage /></ModuloGuard>} />
             <Route path="/pcm-cadastros" element={<ModuloGuard modulo="manutencao"><PcmCadastrosPage /></ModuloGuard>} />
             <Route path="/preventiva" element={<ModuloGuard modulo="manutencao"><PcmPreventivaPage /></ModuloGuard>} />
             <Route path="/lubrificacao" element={<ModuloGuard modulo="manutencao"><PcmLubrificacaoPage /></ModuloGuard>} />

@@ -1,9 +1,10 @@
 // Avaliação de desempenho de fornecedor — FOR-POP 07 1.2 Ver 02.
 //
-// Frequência semestral: preenchida em janeiro e julho. Cada critério recebe
-// exclusivamente 1, 2 ou 3, com os textos do POP. A pontuação é a média dos
-// quatro critérios (é o que a planilha faz: quatro notas 1 → pontuação 1) e a
-// classificação sai da média na escala 1–3.
+// Frequência semestral: preenchida em janeiro e julho. Cada critério continua
+// com as três faixas do POP (guardadas como 1, 2 e 3 em `criterios`), mas a
+// pontuação agora é de 0 a 100, maior é melhor: cada critério vale até 25
+// pontos — faixa boa 25, intermediária 15, ruim 0 — e a pontuação é a soma.
+// Fornecedor com tudo em ordem fecha 100.
 
 export const CRITERIO_AVALIACAO = ['cotacao', 'prazo_entrega', 'atendimento', 'nao_conformidades'] as const;
 export type CriterioAvaliacao = (typeof CRITERIO_AVALIACAO)[number];
@@ -24,6 +25,10 @@ export const CRITERIO_NOTAS: Record<CriterioAvaliacao, Record<NotaCriterio, stri
   atendimento: { 1: 'Bom', 2: 'Moderável', 3: 'Ruim' },
   nao_conformidades: { 1: 'Máximo 3', 2: 'Entre 3 a 7', 3: 'Acima de 7' },
 };
+
+/** Pontos de cada faixa. Quatro critérios × 25 = 100. */
+export const PONTOS_POR_NOTA: Record<NotaCriterio, number> = { 1: 25, 2: 15, 3: 0 };
+export const PONTUACAO_MAXIMA = 100;
 
 export type CriteriosAvaliacao = Record<CriterioAvaliacao, NotaCriterio>;
 
@@ -58,16 +63,19 @@ export interface AvaliacaoFornecedor {
   created_by: string | null;
 }
 
-/** Média dos quatro critérios, arredondada em duas casas. */
+/** Soma dos pontos dos quatro critérios (0 a 100). */
 export function pontuacaoAvaliacao(c: CriteriosAvaliacao): number {
-  const soma = CRITERIO_AVALIACAO.reduce((t, k) => t + c[k], 0);
-  return Math.round((soma / CRITERIO_AVALIACAO.length) * 100) / 100;
+  return CRITERIO_AVALIACAO.reduce((t, k) => t + PONTOS_POR_NOTA[c[k]], 0);
 }
 
-/** Classificação a partir da pontuação, em terços da escala 1–3. */
+/**
+ * 80 ou mais: aceitável — até dois critérios na faixa intermediária.
+ * 60 a 79: aceitável com restrição — três intermediários, ou um critério ruim.
+ * Abaixo de 60: não aceitável.
+ */
 export function classificacaoAvaliacao(pontuacao: number): ClassificacaoAvaliacao {
-  if (pontuacao <= 1.66) return 'aceitavel';
-  if (pontuacao <= 2.33) return 'aceitavel_com_restricao';
+  if (pontuacao >= 80) return 'aceitavel';
+  if (pontuacao >= 60) return 'aceitavel_com_restricao';
   return 'nao_aceitavel';
 }
 

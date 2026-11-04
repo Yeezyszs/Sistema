@@ -4,31 +4,33 @@ import {
   periodoVigente, rotuloPeriodo, intervaloDoPeriodo,
 } from '../AvaliacaoFornecedor';
 
-describe('pontuação (FOR-POP 07)', () => {
-  it('reproduz a planilha: quatro notas 1 dão pontuação 1', () => {
-    expect(pontuacaoAvaliacao({ cotacao: 1, prazo_entrega: 1, atendimento: 1, nao_conformidades: 1 })).toBe(1);
+describe('pontuação (0 a 100)', () => {
+  it('tudo em ordem fecha 100', () => {
+    expect(pontuacaoAvaliacao({ cotacao: 1, prazo_entrega: 1, atendimento: 1, nao_conformidades: 1 })).toBe(100);
   });
 
-  it('é a média dos quatro critérios', () => {
-    expect(pontuacaoAvaliacao({ cotacao: 1, prazo_entrega: 1, atendimento: 1, nao_conformidades: 2 })).toBe(1.25);
-    expect(pontuacaoAvaliacao({ cotacao: 3, prazo_entrega: 3, atendimento: 3, nao_conformidades: 3 })).toBe(3);
+  it('soma 25 / 15 / 0 por critério', () => {
+    expect(pontuacaoAvaliacao({ cotacao: 1, prazo_entrega: 1, atendimento: 1, nao_conformidades: 2 })).toBe(90);
+    expect(pontuacaoAvaliacao({ cotacao: 1, prazo_entrega: 3, atendimento: 1, nao_conformidades: 1 })).toBe(75);
+    expect(pontuacaoAvaliacao({ cotacao: 3, prazo_entrega: 3, atendimento: 3, nao_conformidades: 3 })).toBe(0);
   });
 });
 
 describe('classificação', () => {
-  it('fornecedor sem desvio é aceitável', () => {
-    expect(classificacaoAvaliacao(1)).toBe('aceitavel');
-    expect(classificacaoAvaliacao(1.66)).toBe('aceitavel');
+  it('até dois critérios intermediários é aceitável', () => {
+    expect(classificacaoAvaliacao(100)).toBe('aceitavel');
+    expect(classificacaoAvaliacao(80)).toBe('aceitavel');
   });
 
-  it('meio da escala exige ressalva', () => {
-    expect(classificacaoAvaliacao(1.75)).toBe('aceitavel_com_restricao');
-    expect(classificacaoAvaliacao(2.33)).toBe('aceitavel_com_restricao');
+  it('três intermediários ou um ruim exige ressalva', () => {
+    expect(classificacaoAvaliacao(70)).toBe('aceitavel_com_restricao');
+    expect(classificacaoAvaliacao(75)).toBe('aceitavel_com_restricao');
+    expect(classificacaoAvaliacao(60)).toBe('aceitavel_com_restricao');
   });
 
-  it('acima de dois terços reprova', () => {
-    expect(classificacaoAvaliacao(2.5)).toBe('nao_aceitavel');
-    expect(classificacaoAvaliacao(3)).toBe('nao_aceitavel');
+  it('abaixo de 60 reprova', () => {
+    expect(classificacaoAvaliacao(59)).toBe('nao_aceitavel');
+    expect(classificacaoAvaliacao(0)).toBe('nao_aceitavel');
   });
 });
 

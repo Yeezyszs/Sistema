@@ -12,7 +12,7 @@ import {
 import { useAsync } from '../../lib/useAsync';
 import { useAbaUrl } from '../../lib/useAbaUrl';
 import {
-  CRITERIO_AVALIACAO, CRITERIO_LABEL, CRITERIO_NOTAS,
+  CRITERIO_AVALIACAO, CRITERIO_LABEL, CRITERIO_NOTAS, PONTOS_POR_NOTA, PONTUACAO_MAXIMA,
   CLASSIFICACAO_FORNECEDOR_LABEL, CLASSIFICACAO_FORNECEDOR_TOM,
   pontuacaoAvaliacao, classificacaoAvaliacao, notaPorNumeroDeNCs,
   periodoVigente, rotuloPeriodo, intervaloDoPeriodo,
@@ -106,8 +106,9 @@ export function AvaliacoesFornecedor() {
           </p>
         </div>
         <p className="mt-3 text-xs text-slate-400">
-          FOR-POP 07 1.2 Ver 02 — frequência semestral (janeiro e julho). Pontuação é a média dos
-          quatro critérios; classificação sai da média na escala 1 a 3.
+          FOR-POP 07 1.2 Ver 02 — frequência semestral (janeiro e julho). Pontuação de 0 a 100: cada
+          critério vale 25 (bom), 15 (intermediário) ou 0 (ruim). 80 ou mais é aceitável, 60 a 79 aceitável
+          com restrição, abaixo de 60 não aceitável.
         </p>
       </Card>
 
@@ -131,7 +132,7 @@ export function AvaliacoesFornecedor() {
                           <span className={`rounded-full px-2 py-0.5 font-semibold ${CLASSIFICACAO_FORNECEDOR_TOM[av.classificacao ?? 'aceitavel']}`}>
                             {CLASSIFICACAO_FORNECEDOR_LABEL[av.classificacao ?? 'aceitavel']}
                           </span>
-                          <span>Pontuação {formatarNota(av.pontuacao)}</span>
+                          <span>Pontuação {formatarNota(av.pontuacao)}/{PONTUACAO_MAXIMA}</span>
                           {av.responsavel && <span>Avaliador: {av.responsavel}</span>}
                         </>
                       ) : (
@@ -226,7 +227,7 @@ function ModalAvaliacao({
                 <p className="text-sm font-semibold text-slate-800">{CRITERIO_LABEL[c]}</p>
                 {c === 'nao_conformidades' && (
                   <p className="text-xs text-slate-500">
-                    {ncsNoPeriodo} NC(s) no semestre → nota sugerida {sugerida}
+                    {ncsNoPeriodo} NC(s) no semestre → sugerido: {CRITERIO_NOTAS[c][sugerida]}
                   </p>
                 )}
               </div>
@@ -239,7 +240,7 @@ function ModalAvaliacao({
                         ? 'border-slate-900 bg-slate-900 text-white'
                         : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
                     }`}>
-                    <span className="block text-sm font-bold">{n}</span>
+                    <span className="block text-sm font-bold">{PONTOS_POR_NOTA[n]} pts</span>
                     {CRITERIO_NOTAS[c][n]}
                   </button>
                 ))}
@@ -254,7 +255,7 @@ function ModalAvaliacao({
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-3">
           <p className="text-sm text-slate-600">
-            Pontuação <span className="text-lg font-bold text-slate-900">{formatarNota(pontuacao)}</span>
+            Pontuação <span className="text-lg font-bold text-slate-900">{formatarNota(pontuacao)}</span> de {PONTUACAO_MAXIMA}
           </p>
           <div className="flex gap-3">
             <Button type="button" variant="outline" onClick={onFechar}>Cancelar</Button>
@@ -306,7 +307,7 @@ function ModalHistorico({
                     <td className="py-2 text-slate-700">{CRITERIO_LABEL[c]}</td>
                     {periodos.map((p) => (
                       <td key={p} className="px-2 py-2 text-center text-slate-800">
-                        {porPeriodo.get(p)?.criterios?.[c as CriterioAvaliacao] ?? ''}
+                        {pontosDoCriterio(porPeriodo.get(p), c)}
                       </td>
                     ))}
                   </tr>
@@ -341,7 +342,7 @@ function ModalHistorico({
           <div>
             <p className="mb-2 text-sm font-semibold text-slate-800">Acompanhamento da evolução</p>
             <GraficoEvolucao pontos={comNota.map((p) => ({ periodo: p, valor: porPeriodo.get(p)?.pontuacao ?? 0 }))} />
-            <p className="mt-1 text-xs text-slate-400">Escala 1 (melhor) a 3 (pior).</p>
+            <p className="mt-1 text-xs text-slate-400">Escala 0 a 100 — quanto maior, melhor. Linha tracejada: mínimo para aceitável (80).</p>
           </div>
         </div>
       )}
@@ -349,17 +350,19 @@ function ModalHistorico({
   );
 }
 
-// Linha simples em SVG — a escala é fixa (1 a 3), então não há eixo a calcular.
+// Linha simples em SVG — a escala é fixa (0 a 100, maior em cima), então não
+// há eixo a calcular.
 function GraficoEvolucao({ pontos }: { pontos: { periodo: string; valor: number }[] }) {
   const L = 34, R = 8, T = 8, B = 20, W = 520, H = 150;
   const x = (i: number) => pontos.length < 2 ? (L + W - R) / 2 : L + (i * (W - L - R)) / (pontos.length - 1);
-  const y = (v: number) => T + ((v - 1) / 2) * (H - T - B);
+  const y = (v: number) => T + ((PONTUACAO_MAXIMA - v) / PONTUACAO_MAXIMA) * (H - T - B);
   const linha = pontos.map((p, i) => `${i === 0 ? 'M' : 'L'} ${x(i)} ${y(p.valor)}`).join(' ');
 
   return (
     <div className="-mx-1 overflow-x-auto px-1">
       <svg viewBox={`0 0 ${W} ${H}`} className="h-40 w-full min-w-[420px]" role="img" aria-label="Evolução da pontuação">
-        {[1, 2, 3].map((v) => (
+        <line x1={L} x2={W - R} y1={y(80)} y2={y(80)} stroke="#10b981" strokeWidth="1" strokeDasharray="4 4" />
+        {[0, 25, 50, 75, 100].map((v) => (
           <g key={v}>
             <line x1={L} x2={W - R} y1={y(v)} y2={y(v)} stroke="#e2e8f0" strokeWidth="1" />
             <text x={L - 8} y={y(v) + 4} textAnchor="end" fontSize="11" fill="#94a3b8">{v}</text>
@@ -388,6 +391,12 @@ function periodosDisponiveis(): string[] {
     }
   }
   return lista.reverse();
+}
+
+// Avaliações antigas guardam a faixa (1, 2, 3); a grade mostra os pontos.
+function pontosDoCriterio(a: AvaliacaoFornecedor | undefined, c: CriterioAvaliacao): string {
+  const nota = a?.criterios?.[c];
+  return nota ? String(PONTOS_POR_NOTA[nota]) : '';
 }
 
 function formatarNota(n: number | null): string {

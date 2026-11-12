@@ -1250,7 +1250,7 @@ export async function criarInstrumento(payload: NovoInstrumento): Promise<Instru
   return res.data as Instrumento;
 }
 
-export async function listCalibracoes(limite = 100): Promise<Calibracao[]> {
+export async function listCalibracoes(limite = 1000): Promise<Calibracao[]> {
   return unwrap<Calibracao[]>(
     await qualidade().from('calibracoes').select('*').order('calibrado_em', { ascending: false }).limit(limite),
   );

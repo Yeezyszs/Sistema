@@ -15,6 +15,8 @@ export interface Instrumento {
   equipamento_id: string | null;
   faixa: string | null;
   criterio_aceitacao: string | null;
+  area: string | null;
+  numero_serie: string | null;
   ativo: boolean;
   created_at: string;
   created_by: string | null;
@@ -32,6 +34,14 @@ export interface Calibracao {
   incerteza: string | null;
   conforme: boolean;
   observacao: string | null;
+  // FOR-POP 05 1.4: "Vencimento" (data interna para recalibrar), faixa
+  // calibrada, critério, análise crítica e quem verificou o certificado.
+  recalibrar_ate: string | null;
+  faixa_calibrada: string | null;
+  criterio_aceitacao: string | null;
+  analise_critica: string | null;
+  verificado_em: string | null;
+  verificado_por: string | null;
   anexo_url: string | null;
   registrado_em: string;
   created_at: string;
@@ -44,6 +54,8 @@ export interface NovoInstrumento {
   equipamento_id?: string | null;
   faixa?: string | null;
   criterio_aceitacao?: string | null;
+  area?: string | null;
+  numero_serie?: string | null;
 }
 
 export interface NovaCalibracao {
@@ -56,6 +68,12 @@ export interface NovaCalibracao {
   incerteza?: string | null;
   conforme: boolean;
   observacao?: string | null;
+  recalibrar_ate?: string | null;
+  faixa_calibrada?: string | null;
+  criterio_aceitacao?: string | null;
+  analise_critica?: string | null;
+  verificado_em?: string | null;
+  verificado_por?: string | null;
 }
 
 // Situação da validade da calibração mais recente.
@@ -120,4 +138,32 @@ export function phmetroConforme(ph4: number | null, ph7: number | null): boolean
   const ph4Ok = ph4 == null || (ph4 >= PHMETRO_PH4_MIN && ph4 <= PHMETRO_PH4_MAX);
   const ph7Ok = ph7 == null || (ph7 >= PHMETRO_PH7_MIN && ph7 <= PHMETRO_PH7_MAX);
   return ph4Ok && ph7Ok;
+}
+
+/**
+ * Certificado vigente de cada instrumento: o de calibração mais recente.
+ * O alerta olha só este — um certificado antigo, já substituído, não pode
+ * continuar aparecendo como vencido.
+ */
+export function ultimaCalibracaoPorInstrumento<T extends Pick<Calibracao, 'instrumento_id' | 'calibrado_em'>>(
+  calibracoes: T[],
+): Map<string, T> {
+  const ultima = new Map<string, T>();
+  for (const c of calibracoes) {
+    const atual = ultima.get(c.instrumento_id);
+    if (!atual || c.calibrado_em > atual.calibrado_em) ultima.set(c.instrumento_id, c);
+  }
+  return ultima;
+}
+
+/** Instrumentos ativos cujo certificado vence em até 30 dias ou já venceu. */
+export function calibracoesEmAlerta<T extends Pick<Calibracao, 'instrumento_id' | 'calibrado_em' | 'valido_ate'>>(
+  instrumentos: Pick<Instrumento, 'id' | 'ativo'>[], calibracoes: T[], hoje = new Date(),
+): T[] {
+  const ativos = new Set(instrumentos.filter((i) => i.ativo).map((i) => i.id));
+  return [...ultimaCalibracaoPorInstrumento(calibracoes).values()].filter((c) => {
+    if (!ativos.has(c.instrumento_id)) return false;
+    const sit = situacaoCalibracao(c.valido_ate, hoje);
+    return sit === 'a_vencer' || sit === 'vencida';
+  });
 }

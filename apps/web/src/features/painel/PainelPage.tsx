@@ -8,7 +8,7 @@ import {
 import { useAsync } from '../../lib/useAsync';
 import { formatarData, formatarQuantidade, hojeLocalISO } from '../../lib/format';
 import {
-  calcularRendimento, situacaoCalibracao, itensNaoConformes, situacaoDetector, situacaoExpedicao, imasPendentesNoDia,
+  calcularRendimento, situacaoCalibracao, ultimaCalibracaoPorInstrumento, itensNaoConformes, situacaoDetector, situacaoExpedicao, imasPendentesNoDia,
   STATUS_LOTE, STATUS_LOTE_LABEL,
 } from '@sistema/domain';
 import type { Perfil, StatusLote } from '@sistema/domain';
@@ -215,7 +215,10 @@ function PainelOperacao() {
   ).length;
   const paradasHoje = paradas.filter((p) => p.data === hoje);
   const horasParadasHoje = paradasHoje.reduce((s, p) => s + (p.horas ?? 0), 0);
-  const calibVencendo = calibracoes.filter((c) => ['a_vencer', 'vencida'].includes(situacaoCalibracao(c.valido_ate))).length;
+  // Só o certificado vigente de cada instrumento: um antigo, já substituído,
+  // não pode seguir contando como vencido.
+  const calibVencendo = [...ultimaCalibracaoPorInstrumento(calibracoes).values()]
+    .filter((c) => ['a_vencer', 'vencida'].includes(situacaoCalibracao(c.valido_ate))).length;
   const carteira = pedidos.filter((p) => p.status === 'aprovado' && p.situacao !== 'carregado');
   const cargasHoje = cargas.filter((c) => c.data === hoje).length;
   // Carga com checklist da Logística feito e sem resultado da Qualidade.
@@ -235,7 +238,7 @@ function PainelOperacao() {
     { modulo: 'manutencao', n: horasParadasHoje > 0 ? `${horasParadasHoje.toFixed(1)} h` : 0,
       label: `Paradas de hoje${paradasHoje.length ? ` · ${paradasHoje.length} evento(s)` : ''}`,
       to: '/pcm-indicadores', tom: 'alerta' },
-    { modulo: 'calibracao', n: calibVencendo, label: 'Calibração vencendo / vencida', to: '/calibracao', tom: 'alerta' },
+    { modulo: 'calibracao', n: calibVencendo, label: 'Calibração vencendo (30 dias) / vencida', to: '/calibracao', tom: 'alerta' },
     { modulo: 'ordens', n: opsAbertas, label: 'Ordens de produção em aberto', to: '/ordens', tom: 'info' },
     { modulo: 'pedidos', n: carteira.length, label: 'Pedidos a expedir', to: '/pedidos', tom: 'info' },
     { modulo: 'expedicao', n: cargasHoje, label: 'Cargas de hoje', to: '/expedicao', tom: 'info' },

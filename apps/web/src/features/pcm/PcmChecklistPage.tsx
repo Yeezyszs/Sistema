@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   listColaboradoresPcm, listFerramentasPcm, listEstadosChecklist, salvarEstadoChecklist,
@@ -15,6 +15,8 @@ import { useAuth } from '../../lib/auth';
 
 const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 const chave = (ferramentaId: string, dia: number) => `${ferramentaId}|${dia}`;
+// Só usado nos cliques e ao mesclar leituras, nunca para desenhar a tela.
+const agoraMs = () => Date.now();
 
 export function PcmChecklistPage() {
   const hoje = new Date();
@@ -40,10 +42,27 @@ export function PcmChecklistPage() {
     return { colaboradores, todas: doChecklist, linhas };
   }, [colaboradorId, ano, mes]);
 
-  // Recarrega o mapa local sempre que os dados do período mudam.
+  // Cliques recentes ainda não confirmados pela leitura do banco. A tela
+  // recarrega sozinha (tempo real, voltar à aba) e a leitura pode ter saído
+  // antes de as gravações terminarem: sem isto, ela devolvia a foto antiga e
+  // apagava da tela o que o usuário acabou de marcar — embora estivesse salvo.
+  const locais = useRef(new Map<string, { estado: EstadoChecklist | null; em: number }>());
+  // Gravações em fila por célula, para dois cliques rápidos não chegarem
+  // ao banco fora de ordem.
+  const filas = useRef(new Map<string, Promise<void>>());
+
+  useEffect(() => { locais.current.clear(); }, [colaboradorId, ano, mes]);
+
+  // Recarrega o mapa local sempre que os dados do período mudam, mantendo por
+  // cima os cliques recentes que a leitura ainda não trouxe.
   useEffect(() => {
     const m = new Map<string, EstadoChecklist>();
     for (const l of data?.linhas ?? []) m.set(chave(l.ferramenta_id, l.dia), l.estado);
+    const agora = agoraMs();
+    for (const [k, v] of locais.current) {
+      if ((m.get(k) ?? null) === v.estado || agora - v.em > 60_000) { locais.current.delete(k); continue; }
+      if (v.estado === null) m.delete(k); else m.set(k, v.estado);
+    }
     setEstados(m);
   }, [data?.linhas]);
 
@@ -61,6 +80,7 @@ export function PcmChecklistPage() {
     const k = chave(ferramentaId, dia);
     const atual = estados.get(k) ?? null;
     const proximo = proximoEstadoChecklist(atual);
+    locais.current.set(k, { estado: proximo, em: agoraMs() });
     // Otimista
     setEstados((prev) => {
       const n = new Map(prev);
@@ -68,8 +88,13 @@ export function PcmChecklistPage() {
       return n;
     });
     try {
-      await salvarEstadoChecklist(colaboradorId, ferramentaId, ano, mes, dia, proximo);
+      const anterior = filas.current.get(k) ?? Promise.resolve();
+      const gravacao = anterior.catch(() => undefined)
+        .then(() => salvarEstadoChecklist(colaboradorId, ferramentaId, ano, mes, dia, proximo));
+      filas.current.set(k, gravacao);
+      await gravacao;
     } catch (err) {
+      locais.current.delete(k);
       // Reverte em caso de falha
       setEstados((prev) => {
         const n = new Map(prev);

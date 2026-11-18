@@ -11,6 +11,7 @@ import {
 import type { EstadoChecklist } from '@sistema/domain';
 import { PageHeader, Card, Spinner, EmptyState, Field, Select, ErroCarregamento } from '../../components/ui';
 import { useToast } from '../../components/Toast';
+import { useAuth } from '../../lib/auth';
 
 const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 const chave = (ferramentaId: string, dia: number) => `${ferramentaId}|${dia}`;
@@ -25,6 +26,10 @@ export function PcmChecklistPage() {
   // Estado local por célula (ferramenta|dia -> estado), sincronizado do banco.
   const [estados, setEstados] = useState<Map<string, EstadoChecklist>>(new Map());
   const { erro } = useToast();
+  // Só Qualidade e Manutenção marcam o checklist; os demais só consultam.
+  // O banco aplica a mesma regra (manutencao.pode_editar_checklist).
+  const { perfis } = useAuth();
+  const podeEditar = perfis.includes('qualidade') || perfis.includes('manutencao');
 
   const { data, loading, error } = useAsync(async () => {
     const [colaboradores, ferramentas] = await Promise.all([
@@ -52,7 +57,7 @@ export function PcmChecklistPage() {
   const anos = [hoje.getFullYear() - 1, hoje.getFullYear(), hoje.getFullYear() + 1];
 
   async function clicar(ferramentaId: string, dia: number) {
-    if (!colaboradorId) return;
+    if (!colaboradorId || !podeEditar) return;
     const k = chave(ferramentaId, dia);
     const atual = estados.get(k) ?? null;
     const proximo = proximoEstadoChecklist(atual);
@@ -81,6 +86,12 @@ export function PcmChecklistPage() {
         title="Checklist de ferramentas"
         subtitle="Verificação diária por colaborador — grade mensal (PCM)"
       />
+
+      {!podeEditar && (
+        <p className="mb-4 rounded-lg bg-slate-100 px-4 py-2 text-[13px] text-slate-600">
+          Somente consulta — só a Qualidade e a Manutenção podem marcar o checklist.
+        </p>
+      )}
 
       {/* Filtros */}
       <div className="mb-4 grid gap-3 sm:grid-cols-4 lg:max-w-3xl">
@@ -164,10 +175,11 @@ export function PcmChecklistPage() {
                       <td key={d} className="p-0.5 text-center">
                         <button
                           onClick={() => void clicar(f.id, d)}
+                          disabled={!podeEditar}
                           title={estado ? ESTADO_CHECKLIST_LABEL[estado] : 'Vazio'}
                           className={`h-7 w-7 rounded text-xs font-bold transition ${
                             estado ? ESTADO_CHECKLIST_TOM[estado] : 'bg-slate-50 text-slate-300 hover:bg-slate-100'
-                          }`}
+                          } ${podeEditar ? '' : 'cursor-default'}`}
                         >
                           {estado ?? '·'}
                         </button>

@@ -1990,14 +1990,24 @@ export async function listFerramentasPcm(): Promise<FerramentaPcm[]> {
 export async function listEstadosChecklist(
   colaboradorId: string, ano: number, mes: number,
 ): Promise<EstadoChecklistFerramenta[]> {
-  return unwrap<EstadoChecklistFerramenta[]>(
-    await manutencao()
-      .from('checklist_ferramenta_estado')
-      .select('*')
-      .eq('colaborador_id', colaboradorId)
-      .eq('ano', ano)
-      .eq('mes', mes),
-  );
+  // Um mês de um colaborador passa de 1.000 marcações (50 ferramentas × 31
+  // dias) — o limite do PostgREST. Sem paginar, o que passava do limite
+  // estava salvo mas não voltava para a tela.
+  const todas: EstadoChecklistFerramenta[] = [];
+  for (let de = 0; ; de += 1000) {
+    const pagina = unwrap<EstadoChecklistFerramenta[]>(
+      await manutencao()
+        .from('checklist_ferramenta_estado')
+        .select('*')
+        .eq('colaborador_id', colaboradorId)
+        .eq('ano', ano)
+        .eq('mes', mes)
+        .order('dia').order('ferramenta_id')
+        .range(de, de + 999),
+    );
+    todas.push(...pagina);
+    if (pagina.length < 1000) return todas;
+  }
 }
 
 // Define (upsert) ou limpa (delete) o estado de uma célula ferramenta×dia.

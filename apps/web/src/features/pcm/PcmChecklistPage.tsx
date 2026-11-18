@@ -26,10 +26,10 @@ export function PcmChecklistPage() {
   // Estado local por célula (ferramenta|dia -> estado), sincronizado do banco.
   const [estados, setEstados] = useState<Map<string, EstadoChecklist>>(new Map());
   const { erro } = useToast();
-  // Só Qualidade e Manutenção marcam o checklist; os demais só consultam.
+  // Só Qualidade, Manutenção e Almoxarifado marcam o checklist; os demais só consultam.
   // O banco aplica a mesma regra (manutencao.pode_editar_checklist).
   const { perfis } = useAuth();
-  const podeEditar = perfis.includes('qualidade') || perfis.includes('manutencao');
+  const podeEditar = perfis.some((p) => p === 'qualidade' || p === 'manutencao' || p === 'almoxarifado');
 
   const { data, loading, error } = useAsync(async () => {
     const [colaboradores, ferramentas] = await Promise.all([
@@ -89,7 +89,7 @@ export function PcmChecklistPage() {
 
       {!podeEditar && (
         <p className="mb-4 rounded-lg bg-slate-100 px-4 py-2 text-[13px] text-slate-600">
-          Somente consulta — só a Qualidade e a Manutenção podem marcar o checklist.
+          Somente consulta — só a Qualidade, a Manutenção e o Almoxarifado podem marcar o checklist.
         </p>
       )}
 

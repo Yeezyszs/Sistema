@@ -6,7 +6,9 @@
 // diários, conferido por qualidade.alerta_cron_token_ok().
 //
 // Secrets (Supabase → Edge Functions → Secrets):
-//   RESEND_API_KEY, ALERTA_EMAIL_DE  (os mesmos dos alertas diários)
+//   ALERTA_EMAIL_DE                  caixa remetente (Outlook da empresa)
+//   MS_TENANT_ID, MS_CLIENT_ID, MS_CLIENT_SECRET  aplicativo do Entra ID com Mail.Send
+//   (ou RESEND_API_KEY, no lugar dos três acima)
 //   OS_EMAIL_PARA                    destinatários da Qualidade, separados por vírgula
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
@@ -14,6 +16,49 @@ function exigir(nome: string): string {
   const v = Deno.env.get(nome);
   if (!v) throw new Error(`Variável de ambiente ausente: ${nome}`);
   return v;
+}
+
+// Envio pelo Microsoft 365 (Outlook) via Microsoft Graph: o sistema entra com
+// um aplicativo registrado no Entra ID da empresa (permissão Mail.Send) e manda
+// em nome da caixa ALERTA_EMAIL_DE. Sem as variáveis do Microsoft, cai no
+// Resend (RESEND_API_KEY), se estiver configurado.
+async function enviarEmail(para: string[], assunto: string, html: string): Promise<void> {
+  const de = exigir('ALERTA_EMAIL_DE');
+  const tenant = Deno.env.get('MS_TENANT_ID');
+  if (tenant) {
+    const token = await fetch(`https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'client_credentials',
+        client_id: exigir('MS_CLIENT_ID'),
+        client_secret: exigir('MS_CLIENT_SECRET'),
+        scope: 'https://graph.microsoft.com/.default',
+      }),
+    });
+    if (!token.ok) throw new Error(`Microsoft recusou o login do aplicativo: ${token.status} ${await token.text()}`);
+    const { access_token } = await token.json() as { access_token: string };
+    const resp = await fetch(`https://graph.microsoft.com/v1.0/users/${encodeURIComponent(de)}/sendMail`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${access_token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: {
+          subject: assunto,
+          body: { contentType: 'HTML', content: html },
+          toRecipients: para.map((address) => ({ emailAddress: { address } })),
+        },
+        saveToSentItems: true,
+      }),
+    });
+    if (!resp.ok) throw new Error(`Falha no envio pelo Outlook: ${resp.status} ${await resp.text()}`);
+    return;
+  }
+  const resp = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${exigir('RESEND_API_KEY')}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from: de, to: para, subject: assunto, html }),
+  });
+  if (!resp.ok) throw new Error(`Falha no envio do e-mail: ${resp.status} ${await resp.text()}`);
 }
 
 const esc = (s: unknown) => String(s ?? '—').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!));
@@ -59,17 +104,11 @@ Deno.serve(async (req) => {
       <p style="color:#64748b;font-size:12px">Aviso automático do sistema — Manutenção → Ordens de Serviço.</p>
     </div>`;
 
-    const resp = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${exigir('RESEND_API_KEY')}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        from: exigir('ALERTA_EMAIL_DE'),
-        to: exigir('OS_EMAIL_PARA').split(',').map((s) => s.trim()),
-        subject: `${os.risco_seguranca_alimentos ? '⚠ ' : ''}O.S. nº ${os.numero} aberta — ${os.setor ?? 's/ setor'} (${os.prioridade ?? 's/ prioridade'})`,
-        html,
-      }),
-    });
-    if (!resp.ok) throw new Error(`Falha no envio do e-mail: ${resp.status} ${await resp.text()}`);
+    await enviarEmail(
+      exigir('OS_EMAIL_PARA').split(',').map((e) => e.trim()),
+      `${os.risco_seguranca_alimentos ? '⚠ ' : ''}O.S. nº ${os.numero} aberta — ${os.setor ?? 's/ setor'} (${os.prioridade ?? 's/ prioridade'})`,
+      html,
+    );
     return Response.json({ enviado: true, numero: os.numero });
   } catch (err) {
     const mensagem = err instanceof Error ? err.message : String(err);

@@ -12,8 +12,9 @@
 //
 // Variáveis de ambiente (Supabase → Edge Functions → Secrets):
 //   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY  (injetadas pela plataforma)
-//   RESEND_API_KEY        chave do provedor de e-mail
-//   ALERTA_EMAIL_DE       remetente verificado, ex. sistema@suaempresa.com.br
+//   ALERTA_EMAIL_DE       caixa remetente (Outlook da empresa)
+//   MS_TENANT_ID, MS_CLIENT_ID, MS_CLIENT_SECRET  aplicativo do Entra ID com Mail.Send
+//   (ou RESEND_API_KEY, no lugar dos três acima)
 //   ALERTA_EMAIL_PARA     destinatários internos, separados por vírgula
 //   ALERTA_DIAS           opcional, padrão 30
 import { createClient } from 'jsr:@supabase/supabase-js@2';
@@ -44,6 +45,49 @@ function exigir(nome: string): string {
   const v = Deno.env.get(nome);
   if (!v) throw new Error(`Variável de ambiente ausente: ${nome}`);
   return v;
+}
+
+// Envio pelo Microsoft 365 (Outlook) via Microsoft Graph: o sistema entra com
+// um aplicativo registrado no Entra ID da empresa (permissão Mail.Send) e manda
+// em nome da caixa ALERTA_EMAIL_DE. Sem as variáveis do Microsoft, cai no
+// Resend (RESEND_API_KEY), se estiver configurado.
+async function enviarEmail(para: string[], assunto: string, html: string): Promise<void> {
+  const de = exigir('ALERTA_EMAIL_DE');
+  const tenant = Deno.env.get('MS_TENANT_ID');
+  if (tenant) {
+    const token = await fetch(`https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'client_credentials',
+        client_id: exigir('MS_CLIENT_ID'),
+        client_secret: exigir('MS_CLIENT_SECRET'),
+        scope: 'https://graph.microsoft.com/.default',
+      }),
+    });
+    if (!token.ok) throw new Error(`Microsoft recusou o login do aplicativo: ${token.status} ${await token.text()}`);
+    const { access_token } = await token.json() as { access_token: string };
+    const resp = await fetch(`https://graph.microsoft.com/v1.0/users/${encodeURIComponent(de)}/sendMail`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${access_token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: {
+          subject: assunto,
+          body: { contentType: 'HTML', content: html },
+          toRecipients: para.map((address) => ({ emailAddress: { address } })),
+        },
+        saveToSentItems: true,
+      }),
+    });
+    if (!resp.ok) throw new Error(`Falha no envio pelo Outlook: ${resp.status} ${await resp.text()}`);
+    return;
+  }
+  const resp = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${exigir('RESEND_API_KEY')}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from: de, to: para, subject: assunto, html }),
+  });
+  if (!resp.ok) throw new Error(`Falha no envio do e-mail: ${resp.status} ${await resp.text()}`);
 }
 
 const dataBR = (iso: string) => iso.split('-').reverse().join('/');
@@ -121,20 +165,11 @@ Deno.serve(async (req) => {
 
     const vencidos = [...docs, ...cals].filter((i) => i.estado === 'vencido').length;
     const total = docs.length + cals.length;
-    const resp = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${exigir('RESEND_API_KEY')}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: exigir('ALERTA_EMAIL_DE'),
-        to: exigir('ALERTA_EMAIL_PARA').split(',').map((s) => s.trim()),
-        subject: `Qualidade — ${vencidos} vencido(s), ${total - vencidos} vencendo em até ${dias} dias`,
-        html: corpo(docs, cals),
-      }),
-    });
-    if (!resp.ok) throw new Error(`Falha no envio do e-mail: ${resp.status} ${await resp.text()}`);
+    await enviarEmail(
+      exigir('ALERTA_EMAIL_PARA').split(',').map((e) => e.trim()),
+      `Qualidade — ${vencidos} vencido(s), ${total - vencidos} vencendo em até ${dias} dias`,
+      corpo(docs, cals),
+    );
 
     // Só marca depois que o e-mail saiu.
     for (const d of docs) {

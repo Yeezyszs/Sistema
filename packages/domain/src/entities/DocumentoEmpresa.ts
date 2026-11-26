@@ -8,6 +8,8 @@ export interface DocumentoEmpresa {
   validade: string | null;
   validade_obs: string | null;
   observacao: string | null;
+  arquivo_path: string | null;
+  arquivo_nome: string | null;
   created_at: string;
   created_by: string | null;
 }

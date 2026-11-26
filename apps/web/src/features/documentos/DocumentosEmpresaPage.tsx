@@ -3,7 +3,10 @@
 // banco aplica a mesma regra). O alerta no topo lista o que vence em até 30
 // dias ou já venceu.
 import { useState, type FormEvent } from 'react';
-import { listDocumentosEmpresa, salvarDocumentoEmpresa, excluirDocumentoEmpresa } from '../../lib/db';
+import {
+  listDocumentosEmpresa, salvarDocumentoEmpresa, excluirDocumentoEmpresa,
+  anexarArquivoDocumentoEmpresa, urlAssinadaDocumento,
+} from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { useAuth } from '../../lib/auth';
 import { formatarData } from '../../lib/format';
@@ -12,7 +15,7 @@ import type { DocumentoEmpresa, SituacaoCalibracao } from '@sistema/domain';
 import {
   PageHeader, Card, Spinner, EmptyState, Button, Field, TextInput, Modal, ErroCarregamento,
 } from '../../components/ui';
-import { IconPlus } from '../../components/icons';
+import { IconPlus, IconDownload } from '../../components/icons';
 import { useToast } from '../../components/Toast';
 
 // Mesma regra de 30 dias da calibração; sem validade = sem vencimento.
@@ -33,6 +36,7 @@ function diasAte(iso: string): number {
 export function DocumentosEmpresaPage() {
   const [recarregar, setRecarregar] = useState(0);
   const [editando, setEditando] = useState<DocumentoEmpresa | 'novo' | null>(null);
+  const [enviando, setEnviando] = useState(false);
   const { perfis } = useAuth();
   const podeEditar = perfis.some((p) => p === 'qualidade' || p === 'gestao' || p === 'administrador');
   const { sucesso, erro } = useToast();
@@ -63,6 +67,26 @@ export function DocumentosEmpresaPage() {
       await excluirDocumentoEmpresa(d.id);
       sucesso('Documento excluído.'); setEditando(null); setRecarregar((n) => n + 1);
     } catch (err) { erro(err instanceof Error ? err.message : 'Falha ao excluir.'); }
+  }
+
+  async function abrirPdf(d: DocumentoEmpresa) {
+    if (!d.arquivo_path) return;
+    try {
+      window.open(await urlAssinadaDocumento(d.arquivo_path, 'documentos-empresa'), '_blank', 'noopener');
+    } catch (err) { erro(err instanceof Error ? err.message : 'Falha ao abrir o PDF.'); }
+  }
+
+  async function onAnexar(d: DocumentoEmpresa, arquivo: File | undefined) {
+    if (!arquivo) return;
+    if (!['application/pdf', 'image/jpeg', 'image/png'].includes(arquivo.type)) { erro('Use PDF, JPG ou PNG.'); return; }
+    if (arquivo.size > 20 * 1024 * 1024) { erro('Arquivo maior que 20MB.'); return; }
+    setEnviando(true);
+    try {
+      await anexarArquivoDocumentoEmpresa(d, arquivo);
+      sucesso(d.arquivo_path ? 'Arquivo substituído.' : 'Arquivo anexado.');
+      setEditando(null); setRecarregar((n) => n + 1);
+    } catch (err) { erro(err instanceof Error ? err.message : 'Falha ao enviar.'); }
+    finally { setEnviando(false); }
   }
 
   const doc = editando && editando !== 'novo' ? editando : null;
@@ -110,6 +134,7 @@ export function DocumentosEmpresaPage() {
                 <th className="px-4 py-[11px]">Número</th>
                 <th className="px-4 py-[11px]">Validade</th>
                 <th className="px-4 py-[11px]">Situação</th>
+                <th className="px-4 py-[11px]">Arquivo</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -126,6 +151,15 @@ export function DocumentosEmpresaPage() {
                     <td className="px-4 py-3 text-slate-700">{d.validade ? formatarData(d.validade) : (d.validade_obs ?? '—')}</td>
                     <td className="px-4 py-3">
                       <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ${sit.tom}`}>{sit.rotulo}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {d.arquivo_path ? (
+                        <button type="button" title={d.arquivo_nome ?? 'Abrir'}
+                          onClick={(e) => { e.stopPropagation(); void abrirPdf(d); }}
+                          className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-brand-700 hover:bg-slate-100">
+                          <IconDownload width={14} height={14} />Abrir
+                        </button>
+                      ) : <span className="text-xs text-slate-400">—</span>}
                     </td>
                   </tr>
                 );
@@ -146,6 +180,21 @@ export function DocumentosEmpresaPage() {
             <TextInput name="validade_obs" defaultValue={doc?.validade_obs ?? ''} placeholder="Indeterminado / condicionado ao CLCB vigente" />
           </Field>
           <Field label="Observação"><TextInput name="observacao" defaultValue={doc?.observacao ?? ''} /></Field>
+          {doc ? (
+            <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-3 text-[13px]">
+              <p className="text-slate-600">
+                {doc.arquivo_path ? <>Arquivo atual: <b>{doc.arquivo_nome}</b></> : 'Nenhum arquivo anexado.'}
+              </p>
+              <label className={`mt-2 inline-block cursor-pointer rounded-lg bg-brand-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-600 ${enviando ? 'pointer-events-none opacity-60' : ''}`}>
+                {enviando ? 'Enviando…' : doc.arquivo_path ? 'Trocar arquivo' : 'Anexar PDF'}
+                <input type="file" accept="application/pdf,image/jpeg,image/png" className="hidden"
+                  onChange={(e) => void onAnexar(doc, e.target.files?.[0])} />
+              </label>
+              <p className="mt-1 text-xs text-slate-400">PDF, JPG ou PNG até 20MB.</p>
+            </div>
+          ) : (
+            <p className="text-xs text-slate-400">Salve o documento para depois anexar o PDF.</p>
+          )}
           <div className="flex justify-between gap-3">
             {doc ? <Button type="button" variant="outline" onClick={() => void onExcluir(doc)}>Excluir</Button> : <span />}
             <div className="flex gap-3">

@@ -2584,3 +2584,20 @@ export async function excluirDocumentoEmpresa(id: string): Promise<void> {
   const res = await core().from('documentos_empresa').delete().eq('id', id);
   if (res.error) throw new Error(res.error.message);
 }
+
+// PDF do documento: sobe ao bucket privado, aponta a linha para ele e só
+// então apaga o arquivo anterior — se algo falhar no meio, a linha continua
+// apontando para um arquivo que existe.
+export async function anexarArquivoDocumentoEmpresa(doc: DocumentoEmpresa, arquivo: File): Promise<void> {
+  const path = `${doc.id}/${Date.now()}-${nomeArquivoSeguro(arquivo.name)}`;
+  const up = await supabase.storage.from('documentos-empresa')
+    .upload(path, await conteudoDoArquivo(arquivo), { upsert: false, contentType: arquivo.type || undefined });
+  if (up.error) throw new Error(up.error.message);
+  const res = await core().from('documentos_empresa')
+    .update({ arquivo_path: path, arquivo_nome: arquivo.name }).eq('id', doc.id);
+  if (res.error) {
+    await supabase.storage.from('documentos-empresa').remove([path]);
+    throw new Error(res.error.message);
+  }
+  if (doc.arquivo_path) await supabase.storage.from('documentos-empresa').remove([doc.arquivo_path]);
+}

@@ -22,7 +22,7 @@ export const MODULO = [
   'ordens', 'lotes', 'recebimentos', 'fornecedores',
   'qualidade', 'acompanhamento', 'monitoramento_agua', 'insumos_lab', 'contraprovas', 'pcc_fisico', 'ppho', 'especificacoes', 'calibracao',
   'analise_risco', 'auditoria', 'ambiental', 'nao_conformidades',
-  'manutencao', 'ordens_servico', 'comercial', 'almoxarifado', 'embalagens', 'documentos', 'suprimentos', 'usuarios',
+  'manutencao', 'ordens_servico', 'comercial', 'almoxarifado', 'embalagens', 'documentos', 'documentos_empresa', 'suprimentos', 'usuarios',
 ] as const;
 export type Modulo = (typeof MODULO)[number];
 
@@ -40,17 +40,17 @@ export const MODULOS_POR_PERFIL: Record<Perfil, Modulo[]> = {
   // outra mesa: pedido, expedição, comercial e qualidade. A exceção é o
   // monitoramento de PCC (forno, detector, ímãs): quem preenche é a linha.
   encarregado: [
-    'painel',
+    'documentos_empresa', 'painel',
     'pcp', 'produtos', 'ordens', 'lotes', 'estoque', 'pallets', 'reprocesso', 'recebimentos',
     'almoxarifado', 'embalagens', 'manutencao', 'ordens_servico', 'pcc_fisico',
   ],
   operador: [
-    'painel',
+    'documentos_empresa', 'painel',
     'pcp', 'produtos', 'pedidos', 'expedicao', 'estoque', 'pallets', 'reprocesso',
     'ordens', 'lotes', 'recebimentos', 'almoxarifado', 'embalagens', 'pcc_fisico',
   ],
   qualidade: [
-    'painel',
+    'documentos_empresa', 'painel',
     'lotes', 'recebimentos', 'fornecedores', 'qualidade', 'acompanhamento', 'monitoramento_agua', 'insumos_lab', 'contraprovas', 'pcc_fisico', 'ppho',
     'especificacoes', 'calibracao', 'analise_risco', 'auditoria', 'ambiental',
     'nao_conformidades', 'reprocesso', 'documentos',
@@ -60,30 +60,30 @@ export const MODULOS_POR_PERFIL: Record<Perfil, Modulo[]> = {
     // têm risco à segurança de alimentos).
     'manutencao', 'ordens_servico',
   ],
-  manutencao: ['painel', 'manutencao', 'ordens_servico', 'calibracao', 'pcc_fisico', 'almoxarifado', 'embalagens'],
+  manutencao: ['documentos_empresa', 'painel', 'manutencao', 'ordens_servico', 'calibracao', 'pcc_fisico', 'almoxarifado', 'embalagens'],
   // Compras cuida da documentação de homologação e do estoque de consumíveis
   // e embalagens. Não vê produção, qualidade nem comercial.
   // A chegada da carga (`recebimentos`) é do comprador tanto quanto a
   // previsão: é onde ele confere se o que combinou entrou de fato.
-  compras: ['painel', 'documentos', 'almoxarifado', 'embalagens', 'suprimentos', 'recebimentos', 'fornecedores'],
+  compras: ['documentos_empresa', 'painel', 'documentos', 'almoxarifado', 'embalagens', 'suprimentos', 'recebimentos', 'fornecedores'],
   // Almoxarifado atende a manutenção: quem entrega a peça e quem a consome
   // olham o mesmo estoque.
-  almoxarifado: ['painel', 'almoxarifado', 'embalagens', 'manutencao', 'ordens_servico'],
+  almoxarifado: ['documentos_empresa', 'painel', 'almoxarifado', 'embalagens', 'manutencao', 'ordens_servico'],
   // Comercial vende e acompanha o que sustenta a venda: o grupo Suprimentos
   // inteiro (previsão da semana, produtores, recebimentos e fornecedores) e os
   // lotes prontos. De produção, só lotes — programação, apontamento e ordens
   // são do chão de fábrica.
   comercial: [
-    'painel', 'comercial', 'pedidos', 'lotes',
+    'documentos_empresa', 'painel', 'comercial', 'pedidos', 'lotes',
     'suprimentos', 'recebimentos', 'fornecedores',
   ],
   // Logística: estoque e expedição, os pedidos que vai carregar e as
   // embalagens/bags que saem com a carga. Sem painel — o painel mostra a
   // fábrica inteira; quem entra cai direto na Expedição. Abre O.S. (só a
   // tela de ordens de serviço, não o resto do PCM).
-  logistica: ['estoque', 'expedicao', 'pedidos', 'embalagens', 'ordens_servico'],
+  logistica: ['documentos_empresa', 'estoque', 'expedicao', 'pedidos', 'embalagens', 'ordens_servico'],
   // Só a administração de usuários e perfis. Soma-se a outro perfil.
-  administrador: ['painel', 'usuarios'],
+  administrador: ['documentos_empresa', 'painel', 'usuarios'],
 };
 
 // Verdadeiro se algum dos perfis do usuário dá acesso ao módulo.

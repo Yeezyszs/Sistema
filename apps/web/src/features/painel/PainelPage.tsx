@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import {
   listApontamentos, listLinhas, listRecebimentos, listProgramacao, listLotes,
   listOrdensProducao, listOrdensPcm, listParadas,
-  listCalibracoes, listPedidos, listCarregamentos, getDocumentosVencendo, mapBy,
+  listCalibracoes, listDocumentosEmpresa, listPedidos, listCarregamentos, getDocumentosVencendo, mapBy,
   listDetectoresMetais, listVerificacoesDMDesde, listImas, listVerificacoesImaDesde, listFornoRegistros,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
@@ -146,7 +146,7 @@ function PainelOperacao() {
   const { data, loading, error } = useAsync(async () => {
     // Calculado na busca, não no render: o render tem de ser puro.
     const seteDias = new Date(Date.now() - 7 * 86_400_000).toISOString();
-    const [apontSemana, linhas, recebimentos, prog, lotes, ops, osPcm, paradas, calibracoes, pedidos, cargas, pcc] =
+    const [apontSemana, linhas, recebimentos, prog, lotes, ops, osPcm, paradas, calibracoes, pedidos, cargas, pcc, docsEmpresa] =
       await Promise.all([
         listApontamentos(de, ate), listLinhas(), listRecebimentos(), listProgramacao(de, ate),
         listLotes(), listOrdensProducao(), listOrdensPcm(),
@@ -156,8 +156,9 @@ function PainelOperacao() {
           ? Promise.all([listDetectoresMetais(), listVerificacoesDMDesde(seteDias), listImas(), listVerificacoesImaDesde(seteDias), listFornoRegistros()])
               .catch(() => null)
           : Promise.resolve(null),
+        listDocumentosEmpresa().catch(() => []),
       ]);
-    return { apontSemana, recebimentos, prog, lotes, ops, osPcm, paradas, calibracoes, pedidos, cargas, pcc, seteDiasAtras: seteDias, linhas, linhasMap: mapBy(linhas, 'id') };
+    return { apontSemana, recebimentos, prog, lotes, ops, osPcm, paradas, calibracoes, pedidos, cargas, pcc, docsEmpresa, seteDiasAtras: seteDias, linhas, linhasMap: mapBy(linhas, 'id') };
   }, [de, ate]);
 
   if (error || (loading === false && !data)) return <ErroCarregamento mensagem={error} />;
@@ -166,7 +167,7 @@ function PainelOperacao() {
     return <div className="flex justify-center py-20"><Spinner className="h-7 w-7 text-brand-600" /></div>;
   }
 
-  const { apontSemana, recebimentos, prog, lotes, ops, osPcm, paradas, calibracoes, pedidos, cargas, linhas } = data;
+  const { apontSemana, recebimentos, prog, lotes, ops, osPcm, paradas, calibracoes, pedidos, cargas, linhas, docsEmpresa } = data;
 
   // ── Pulso do dia ──
   const apontHoje = apontSemana.filter((a) => a.data === hoje);
@@ -219,6 +220,8 @@ function PainelOperacao() {
   // não pode seguir contando como vencido.
   const calibVencendo = [...ultimaCalibracaoPorInstrumento(calibracoes).values()]
     .filter((c) => ['a_vencer', 'vencida'].includes(situacaoCalibracao(c.valido_ate))).length;
+  const docsEmpresaVencendo = docsEmpresa
+    .filter((d) => ['a_vencer', 'vencida'].includes(situacaoCalibracao(d.validade))).length;
   const carteira = pedidos.filter((p) => p.status === 'aprovado' && p.situacao !== 'carregado');
   const cargasHoje = cargas.filter((c) => c.data === hoje).length;
   // Carga com checklist da Logística feito e sem resultado da Qualidade.
@@ -242,6 +245,7 @@ function PainelOperacao() {
     { modulo: 'ordens', n: opsAbertas, label: 'Ordens de produção em aberto', to: '/ordens', tom: 'info' },
     { modulo: 'pedidos', n: carteira.length, label: 'Pedidos a expedir', to: '/pedidos', tom: 'info' },
     { modulo: 'expedicao', n: cargasHoje, label: 'Cargas de hoje', to: '/expedicao', tom: 'info' },
+    { modulo: 'documentos_empresa', n: docsEmpresaVencendo, label: 'Documentos da empresa vencidos / vencendo (30 dias)', to: '/documentos-empresa', tom: 'critico' },
   ] as const).filter((a) => podeAcessarModulo(a.modulo));
 
   // ── Comercial ──

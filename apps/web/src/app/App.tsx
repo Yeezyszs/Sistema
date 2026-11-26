@@ -31,6 +31,7 @@ const EmbalagensPage = lazy(() => import('../features/embalagens/EmbalagensPage'
 const UsuariosPage = lazy(() => import('../features/usuarios/UsuariosPage').then((m) => ({ default: m.UsuariosPage })));
 const EspecificacoesPage = lazy(() => import('../features/qualidade/EspecificacoesPage').then((m) => ({ default: m.EspecificacoesPage })));
 const PccFisicoPage = lazy(() => import('../features/qualidade/PccFisicoPage').then((m) => ({ default: m.PccFisicoPage })));
+const DocumentosEmpresaPage = lazy(() => import('../features/documentos/DocumentosEmpresaPage').then((m) => ({ default: m.DocumentosEmpresaPage })));
 const CalibracaoPage = lazy(() => import('../features/qualidade/CalibracaoPage').then((m) => ({ default: m.CalibracaoPage })));
 const PcmOrdensPage = lazy(() => import('../features/pcm/PcmOrdensPage').then((m) => ({ default: m.PcmOrdensPage })));
 const PcmPreventivaPage = lazy(() => import('../features/pcm/PcmPreventivaPage').then((m) => ({ default: m.PcmPreventivaPage })));
@@ -180,6 +181,7 @@ export default function App() {
             <Route path="/liberacao-os" element={<ModuloGuard modulo="qualidade"><LiberacaoOsPage /></ModuloGuard>} />
             <Route path="/especificacoes" element={<ModuloGuard modulo="especificacoes"><EspecificacoesPage /></ModuloGuard>} />
             <Route path="/pcc-fisico" element={<ModuloGuard modulo="pcc_fisico"><PccFisicoPage /></ModuloGuard>} />
+            <Route path="/documentos-empresa" element={<ModuloGuard modulo="documentos_empresa"><DocumentosEmpresaPage /></ModuloGuard>} />
             <Route path="/calibracao" element={<ModuloGuard modulo="calibracao"><CalibracaoPage /></ModuloGuard>} />
             <Route path="/manutencao" element={<ModuloGuard modulo="ordens_servico"><PcmOrdensPage /></ModuloGuard>} />
             <Route path="/pcm-cadastros" element={<ModuloGuard modulo="manutencao"><PcmCadastrosPage /></ModuloGuard>} />

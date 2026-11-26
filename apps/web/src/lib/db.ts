@@ -4,6 +4,8 @@
 import { supabase } from './supabaseClient';
 import { nomeArquivoSeguro } from './format';
 import type {
+  DocumentoEmpresa,
+  NovoDocumentoEmpresa,
   Lote,
   NovoLote,
   Produto,
@@ -2564,4 +2566,21 @@ export async function listVerificacoesDmDoDia(dia: string): Promise<VerificacaoD
     await qualidade().from('verificacoes_dm').select('*')
       .gte('registrado_em', `${dia}T00:00:00`).lte('registrado_em', `${dia}T23:59:59`).order('registrado_em'),
   );
+}
+
+// ── Documentos regulatórios da empresa ─────────────────────────
+export async function listDocumentosEmpresa(): Promise<DocumentoEmpresa[]> {
+  return unwrap<DocumentoEmpresa[]>(await core().from('documentos_empresa').select('*').order('nome'));
+}
+
+export async function salvarDocumentoEmpresa(id: string | null, dados: NovoDocumentoEmpresa): Promise<void> {
+  const res = id
+    ? await core().from('documentos_empresa').update(dados).eq('id', id)
+    : await core().from('documentos_empresa').insert(dados);
+  if (res.error) throw new Error(res.error.message);
+}
+
+export async function excluirDocumentoEmpresa(id: string): Promise<void> {
+  const res = await core().from('documentos_empresa').delete().eq('id', id);
+  if (res.error) throw new Error(res.error.message);
 }

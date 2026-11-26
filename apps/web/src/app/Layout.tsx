@@ -55,6 +55,7 @@ const ITENS_COMERCIAL: SubItem[] = [
 // Gestão de Documentos — homologação documental do fornecedor. Nada a ver com
 // os laudos de matéria-prima, que ficam em Fornecedores & Recebimento.
 const ITENS_DOCUMENTOS: SubItem[] = [
+  { to: '/documentos-empresa', icon: <IconDoc width={16} height={16} />, label: 'Documentos da empresa', modulo: 'documentos_empresa' },
   { to: '/gestao-documentos', icon: <IconDoc width={16} height={16} />, label: 'Documentos de fornecedores', modulo: 'documentos' },
 ];
 

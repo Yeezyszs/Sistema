@@ -2601,3 +2601,12 @@ export async function anexarArquivoDocumentoEmpresa(doc: DocumentoEmpresa, arqui
   }
   if (doc.arquivo_path) await supabase.storage.from('documentos-empresa').remove([doc.arquivo_path]);
 }
+
+// Tira o anexo: primeiro desliga a linha do arquivo, depois apaga o arquivo.
+export async function removerArquivoDocumentoEmpresa(doc: DocumentoEmpresa): Promise<void> {
+  if (!doc.arquivo_path) return;
+  const res = await core().from('documentos_empresa')
+    .update({ arquivo_path: null, arquivo_nome: null }).eq('id', doc.id);
+  if (res.error) throw new Error(res.error.message);
+  await supabase.storage.from('documentos-empresa').remove([doc.arquivo_path]);
+}

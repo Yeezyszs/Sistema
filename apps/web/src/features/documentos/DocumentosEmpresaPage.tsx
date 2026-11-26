@@ -5,7 +5,7 @@
 import { useState, type FormEvent } from 'react';
 import {
   listDocumentosEmpresa, salvarDocumentoEmpresa, excluirDocumentoEmpresa,
-  anexarArquivoDocumentoEmpresa, urlAssinadaDocumento,
+  anexarArquivoDocumentoEmpresa, removerArquivoDocumentoEmpresa, urlAssinadaDocumento,
 } from '../../lib/db';
 import { useAsync } from '../../lib/useAsync';
 import { useAuth } from '../../lib/auth';
@@ -86,6 +86,16 @@ export function DocumentosEmpresaPage() {
       sucesso(d.arquivo_path ? 'Arquivo substituído.' : 'Arquivo anexado.');
       setEditando(null); setRecarregar((n) => n + 1);
     } catch (err) { erro(err instanceof Error ? err.message : 'Falha ao enviar.'); }
+    finally { setEnviando(false); }
+  }
+
+  async function onRemoverArquivo(d: DocumentoEmpresa) {
+    if (!window.confirm(`Excluir o arquivo "${d.arquivo_nome ?? ''}" de ${d.nome}?`)) return;
+    setEnviando(true);
+    try {
+      await removerArquivoDocumentoEmpresa(d);
+      sucesso('Arquivo excluído.'); setEditando(null); setRecarregar((n) => n + 1);
+    } catch (err) { erro(err instanceof Error ? err.message : 'Falha ao excluir o arquivo.'); }
     finally { setEnviando(false); }
   }
 
@@ -190,6 +200,12 @@ export function DocumentosEmpresaPage() {
                 <input type="file" accept="application/pdf,image/jpeg,image/png" className="hidden"
                   onChange={(e) => void onAnexar(doc, e.target.files?.[0])} />
               </label>
+              {doc.arquivo_path && (
+                <button type="button" disabled={enviando} onClick={() => void onRemoverArquivo(doc)}
+                  className="ml-2 rounded-lg px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-60">
+                  Excluir arquivo
+                </button>
+              )}
               <p className="mt-1 text-xs text-slate-400">PDF, JPG ou PNG até 20MB.</p>
             </div>
           ) : (

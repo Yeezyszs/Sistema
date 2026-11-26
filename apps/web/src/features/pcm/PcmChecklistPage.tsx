@@ -21,8 +21,8 @@ const agoraMs = () => Date.now();
 export function PcmChecklistPage() {
   const hoje = new Date();
   const [colaboradorId, setColaboradorId] = useState('');
-  // Lista do formulário: Elétrica ou Mecânica (são duas folhas no papel).
-  const [lista, setLista] = useState<'' | 'eletrica' | 'mecanica'>('');
+  // Lista do formulário: Elétrica, Mecânica ou Encarregado (uma folha cada).
+  const [lista, setLista] = useState<'' | 'eletrica' | 'mecanica' | 'encarregado'>('');
   const [ano, setAno] = useState(hoje.getFullYear());
   const [mes, setMes] = useState(hoje.getMonth() + 1);
   // Estado local por célula (ferramenta|dia -> estado), sincronizado do banco.
@@ -71,7 +71,7 @@ export function PcmChecklistPage() {
   // mecânica); quem não tem função definida vê todas.
   const colaborador = data?.colaboradores.find((c) => c.id === colaboradorId);
   const funcao = (colaborador?.funcao ?? '').toLowerCase();
-  const listaEfetiva = lista || (funcao.includes('mec') ? 'mecanica' : funcao.includes('elét') || funcao.includes('elet') ? 'eletrica' : '');
+  const listaEfetiva = lista || (funcao.includes('encarreg') ? 'encarregado' : funcao.includes('mec') ? 'mecanica' : funcao.includes('elét') || funcao.includes('elet') ? 'eletrica' : '');
   const ferramentas = (data?.todas ?? []).filter((f) => !listaEfetiva || f.tipo === listaEfetiva);
   const anos = [hoje.getFullYear() - 1, hoje.getFullYear(), hoje.getFullYear() + 1];
 
@@ -133,6 +133,7 @@ export function PcmChecklistPage() {
             <option value="">Todas</option>
             <option value="mecanica">Mecânica</option>
             <option value="eletrica">Elétrica</option>
+            <option value="encarregado">Encarregado</option>
           </Select>
         </Field>
         <Field label="Mês">

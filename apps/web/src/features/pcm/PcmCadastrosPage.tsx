@@ -173,7 +173,7 @@ export function PcmCadastrosPage() {
       campos: [
         { nome: 'nome', label: 'Nome', obrigatorio: true },
         { nome: 'qty', label: 'Qtd', tipo: 'number' },
-        { nome: 'tipo', label: 'Checklist (tipo)', tipo: 'select', opcoes: ['eletrica', 'mecanica'] },
+        { nome: 'tipo', label: 'Checklist (tipo)', tipo: 'select', opcoes: ['eletrica', 'mecanica', 'encarregado'] },
         { nome: 'caixa', label: 'Caixa (inventário)', tipo: 'select', opcoes: ['VERDE', 'VERMELHA'] },
         { nome: 'area', label: 'Área', placeholder: 'Secagem / Ensaques' },
       ],
@@ -284,7 +284,7 @@ export function PcmCadastrosPage() {
           colunas={[
             ['Nome', (f) => f.nome],
             ['Qtd', (f) => String(f.qty ?? 1)],
-            ['Grupo', (f) => f.caixa ? `Caixa ${f.caixa}` : f.tipo === 'eletrica' ? 'Checklist elétrica' : f.tipo === 'mecanica' ? 'Checklist mecânica' : '—'],
+            ['Grupo', (f) => f.caixa ? `Caixa ${f.caixa}` : f.tipo === 'eletrica' ? 'Checklist elétrica' : f.tipo === 'mecanica' ? 'Checklist mecânica' : f.tipo === 'encarregado' ? 'Checklist encarregado' : '—'],
             ['Área', (f) => f.area || '—'],
           ]}
           onEditar={(f) => setReg(specs.ferramentas(f))}

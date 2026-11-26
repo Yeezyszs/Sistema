@@ -393,7 +393,7 @@ export function calcularIndicadores(
 export interface FerramentaPcm {
   id: string;
   org_id: string;
-  tipo: 'eletrica' | 'mecanica' | null;
+  tipo: 'eletrica' | 'mecanica' | 'encarregado' | null;
   caixa: string | null; // null = checklist | 'VERDE'/'VERMELHA' = inventário de caixa
   nome: string;
   qty: number | null;
